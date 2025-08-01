@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  habitlog-db:
+    image: mysql:8.0
+    container_name: habitlog-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - habitlog-network
+
+  habitlog-app:
+    build: .
+    container_name: habitlog-app
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - habitlog-db
+    networks:
+      - habitlog-network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - KAKAO_CLIENT_REST_API_KEY=${KAKAO_CLIENT_REST_API_KEY}
+      - KAKAO_ADMIN_KEY=${KAKAO_ADMIN_KEY}
+      - APPLE_TEAM_ID=${APPLE_TEAM_ID}
+      - APPLE_BUNDLE_ID=${APPLE_BUNDLE_ID}
+      - APPLE_KEY_ID=${APPLE_KEY_ID}
+      - APPLE_SERVICE_ID=${APPLE_SERVICE_ID}
+      - APPLE_PRIVATE_KEY_PATH=${APPLE_PRIVATE_KEY_PATH}
+      - APPLE_JWT_EXPIRATION_MINUTES=${APPLE_JWT_EXPIRATION_MINUTES}
+    volumes:
+      - ${APPLE_PRIVATE_KEY_PATH}:/app/AuthKey_BR37FCMBWW.p8
+
+volumes:
+  mysql_data:
+
+networks:
+  habitlog-network:
+    driver: bridge

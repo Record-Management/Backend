@@ -1,0 +1,6 @@
+.gradle          # Gradle 캐시 폴더 무시
+build            # 빌드 결과물 무시 (빌더 스테이지에서 다시 생성됨)
+.git             # Git 폴더 무시 (필요 없음)
+.gitignore       # 무시 규칙 파일도 필요 없음
+Dockerfile       # Dockerfile 자체를 이미지에 넣을 필요 없음
+*.md             # README.md 등 문서 제외

@@ -1,0 +1,38 @@
+package com.recordmanagement.habitlog.infrastructure.user.repository;
+
+import com.recordmanagement.habitlog.infrastructure.user.entity.UserEntity;
+import com.recordmanagement.habitlog.domain.user.model.SocialType;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+/**
+ * 사용자 JPA 저장소 인터페이스
+ *
+ * - Spring Data JPA를 활용하여 DB 접근 담당
+ * - UserEntity 기준 CRUD 및 커스텀 조회 메서드 제공
+ * - 소셜 로그인 관련 사용자 조회 및 존재 여부 확인 지원
+ *
+ * @since 1.0.0
+ * @version 1.0.0
+ */
+public interface UserJpaRepository extends JpaRepository<UserEntity, String> {
+
+    /**
+     * 소셜 타입과 소셜 ID로 사용자 조회
+     *
+     * @param socialType 소셜 로그인 플랫폼 타입 (KAKAO, APPLE 등)
+     * @param socialId 소셜 플랫폼 내 사용자 고유 ID
+     * @return Optional에 감싼 UserEntity, 없으면 빈 Optional 반환
+     */
+    Optional<UserEntity> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
+
+    /**
+     * 소셜 타입과 소셜 ID로 사용자 존재 여부 확인
+     *
+     * @param socialType 소셜 로그인 플랫폼 타입
+     * @param socialId 소셜 플랫폼 사용자 ID
+     * @return 존재하면 true, 아니면 false
+     */
+    boolean existsBySocialTypeAndSocialId(SocialType socialType, String socialId);
+}
