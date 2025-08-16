@@ -57,7 +57,11 @@ public class AuthController {
         log.info("소셜 로그인 성공: userId={}, isNewUser={}",
                 result.getUser().getId(), result.isNewUser());
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+        if (result.isNewUser()) {
+            return ResponseEntity.status(201).body(ApiResponse.created("새 사용자로 가입되었습니다.", response));
+        } else {
+            return ResponseEntity.ok(ApiResponse.success(response));
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.config.exception;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.recordmanagement.habitlog.common.response.ApiResponse;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -47,19 +48,19 @@ public class GlobalExceptionHandler {
     // ======= 비즈니스 예외 =======
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(CustomException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleCustomException(CustomException ex) {
         ErrorCode code = ex.getErrorCode();
         log.warn("[비즈니스 예외] [{}] {}", code.getCode(), code.getMessage());
         return ResponseEntity.status(code.getStatus())
-                .body(ErrorResponse.of(code));
+                .body(ApiResponse.from(code, code.getStatus()));
     }
 
     @ExceptionHandler(JwtAuthenticationException.class)
-    public ResponseEntity<ErrorResponse> handleJwtAuthenticationException(JwtAuthenticationException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleJwtAuthenticationException(JwtAuthenticationException ex) {
         ErrorCode code = ex.getErrorCode();
         log.warn("[JWT 인증 예외] [{}] {}", code.getCode(), code.getMessage());
         return ResponseEntity.status(code.getStatus())
-                .body(ErrorResponse.of(code));
+                .body(ApiResponse.from(code, code.getStatus()));
     }
 
     @ExceptionHandler(SocialLoginException.class)
@@ -89,14 +90,14 @@ public class GlobalExceptionHandler {
     // ======= 입력값 유효성 검사 예외 =======
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(MethodArgumentNotValidException ex) {
         String msg = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(fieldError -> fieldError.getDefaultMessage())
                 .orElse("입력값 검증에 실패했습니다.");
         log.warn("[유효성 검사 실패] {}", msg);
         return ResponseEntity.badRequest()
-                .body(ErrorResponse.of(ErrorCode.VALIDATION_FAIL, msg));
+                .body(ApiResponse.failure(ErrorCode.VALIDATION_FAIL.getCode(), 400, msg));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -277,10 +278,10 @@ public class GlobalExceptionHandler {
     // ======= 최종 전역 예외 처리 =======
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ApiResponse<Void>> handleException(Exception ex, HttpServletRequest req) {
         String uri = req.getRequestURI();
         log.error("[예상치 못한 서버 오류] 요청 URI: {} | 예외: {}", uri, ex.getClass().getSimpleName(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
+                .body(ApiResponse.from(ErrorCode.INTERNAL_SERVER_ERROR, 500));
     }
 }

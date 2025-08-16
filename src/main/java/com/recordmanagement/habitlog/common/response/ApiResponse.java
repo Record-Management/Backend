@@ -26,6 +26,7 @@ import lombok.Getter;
         ### 응답 구조
         - **success**: 요청 성공 여부 (boolean)
         - **code**: 상세 응답 코드 (string)  
+        - **statusCode**: HTTP 상태 코드 (integer)
         - **message**: 사용자 친화적 메시지 (string)
         - **data**: 실제 응답 데이터 (generic type)
         
@@ -39,6 +40,7 @@ import lombok.Getter;
         {
           "success": true,
           "code": "S200",
+          "statusCode": 200,
           "message": "요청이 성공적으로 처리되었습니다.",
           "data": {
             "id": "123",
@@ -85,6 +87,27 @@ public class ApiResponse<T> {
 
     @Schema(
         description = """
+            HTTP 상태 코드
+            
+            ### 표준 HTTP 상태 코드
+            - **200**: 성공 (OK)
+            - **201**: 생성됨 (Created)
+            - **204**: 내용 없음 (No Content)
+            - **400**: 잘못된 요청 (Bad Request)
+            - **401**: 인증 실패 (Unauthorized)
+            - **403**: 권한 없음 (Forbidden)
+            - **404**: 찾을 수 없음 (Not Found)
+            - **500**: 서버 오류 (Internal Server Error)
+            
+            응답 헤더의 HTTP 상태 코드와 동일한 값을 포함합니다.
+            """,
+        example = "200",
+        required = true
+    )
+    private final int statusCode;
+
+    @Schema(
+        description = """
             사용자 친화적 응답 메시지
             
             ### 용도
@@ -124,39 +147,64 @@ public class ApiResponse<T> {
      *
      * @param success 성공 여부
      * @param code 응답 코드
+     * @param statusCode HTTP 상태 코드
      * @param message 응답 메시지
      * @param data 응답 데이터
      */
     @Builder
-    public ApiResponse(boolean success, String code, String message, T data) {
+    public ApiResponse(boolean success, String code, int statusCode, String message, T data) {
         this.success = success;
         this.code = code;
+        this.statusCode = statusCode;
         this.message = message;
         this.data = data;
     }
 
     /**
-     * 기본 성공 응답 생성
+     * 기본 성공 응답 생성 (200 OK)
      *
      * @param data 응답 데이터
      * @param <T> 데이터 타입
      * @return 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, "S200", "요청이 성공적으로 처리되었습니다.", data);
+        return new ApiResponse<>(true, "S200", 200, "요청이 성공적으로 처리되었습니다.", data);
     }
 
     /**
-     * 데이터 없는 성공 응답 생성
+     * 데이터 없는 성공 응답 생성 (200 OK)
      *
      * @return 성공 ApiResponse 객체
      */
     public static ApiResponse<Void> success() {
-        return new ApiResponse<>(true, "S200", "요청이 성공적으로 처리되었습니다.", null);
+        return new ApiResponse<>(true, "S200", 200, "요청이 성공적으로 처리되었습니다.", null);
     }
 
     /**
-     * 커스텀 메시지 포함 성공 응답 생성
+     * 생성 성공 응답 생성 (201 Created)
+     *
+     * @param data 생성된 리소스 데이터
+     * @param <T> 데이터 타입
+     * @return 생성 성공 ApiResponse 객체
+     */
+    public static <T> ApiResponse<T> created(T data) {
+        return new ApiResponse<>(true, "S201", 201, "리소스가 성공적으로 생성되었습니다.", data);
+    }
+
+    /**
+     * 생성 성공 응답 생성 (201 Created)
+     *
+     * @param message 커스텀 메시지
+     * @param data 생성된 리소스 데이터
+     * @param <T> 데이터 타입
+     * @return 생성 성공 ApiResponse 객체
+     */
+    public static <T> ApiResponse<T> created(String message, T data) {
+        return new ApiResponse<>(true, "S201", 201, message, data);
+    }
+
+    /**
+     * 커스텀 메시지 포함 성공 응답 생성 (200 OK)
      *
      * @param message 응답 메시지
      * @param data 응답 데이터
@@ -164,29 +212,31 @@ public class ApiResponse<T> {
      * @return 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<>(true, "S200", message, data);
+        return new ApiResponse<>(true, "S200", 200, message, data);
     }
 
     /**
      * 실패 응답 생성
      *
      * @param code 실패 코드
+     * @param statusCode HTTP 상태 코드
      * @param message 실패 메시지
      * @param <T> 데이터 타입
      * @return 실패 ApiResponse 객체
      */
-    public static <T> ApiResponse<T> failure(String code, String message) {
-        return new ApiResponse<>(false, code, message, null);
+    public static <T> ApiResponse<T> failure(String code, int statusCode, String message) {
+        return new ApiResponse<>(false, code, statusCode, message, null);
     }
 
     /**
      * ErrorCode 객체 기반 실패 응답 생성
      *
      * @param errorCode 에러 코드 객체
+     * @param statusCode HTTP 상태 코드
      * @param <T> 데이터 타입
      * @return 실패 ApiResponse 객체
      */
-    public static <T> ApiResponse<T> from(ErrorCode errorCode) {
-        return failure(errorCode.getCode(), errorCode.getMessage());
+    public static <T> ApiResponse<T> from(ErrorCode errorCode, int statusCode) {
+        return failure(errorCode.getCode(), statusCode, errorCode.getMessage());
     }
 }
