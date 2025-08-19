@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.domain.user.model.Email;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
+import com.recordmanagement.habitlog.domain.record.model.RecordType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,6 +64,13 @@ public class UserEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "onboarding_completed", nullable = false)
+    private boolean onboardingCompleted;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "main_record_type")
+    private RecordType mainRecordType;
+
     /**
      * 도메인 모델(User)을 엔터티로 변환
      *
@@ -78,6 +86,8 @@ public class UserEntity {
                 .socialId(user.getSocialId())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .mainRecordType(user.getMainRecordType())
                 .build();
     }
 
@@ -113,6 +123,14 @@ public class UserEntity {
             var updatedAtField = User.class.getDeclaredField("updatedAt");
             updatedAtField.setAccessible(true);
             updatedAtField.set(user, this.updatedAt);
+
+            var onboardingCompletedField = User.class.getDeclaredField("onboardingCompleted");
+            onboardingCompletedField.setAccessible(true);
+            onboardingCompletedField.set(user, this.onboardingCompleted);
+
+            var mainRecordTypeField = User.class.getDeclaredField("mainRecordType");
+            mainRecordTypeField.setAccessible(true);
+            mainRecordTypeField.set(user, this.mainRecordType);
 
         } catch (Exception e) {
             throw new RuntimeException("도메인 필드 설정 실패", e);

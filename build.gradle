@@ -1,3 +1,9 @@
+buildscript {
+    dependencies {
+        classpath 'com.mysql:mysql-connector-j:8.0.33'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.5'
@@ -59,8 +65,19 @@ dependencies {
     
     // Flyway MySQL driver for Gradle tasks
     implementation 'com.mysql:mysql-connector-j'
+    
+    // AWS S3 for file upload
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+flyway {
+    url = 'jdbc:mysql://localhost:3306/habitlog_db'
+    user = 'jeonwooseon'
+    password = 'jkas9863'
+    locations = ['classpath:db/migration']
+    driver = 'com.mysql.cj.jdbc.Driver'
 }

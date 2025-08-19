@@ -145,6 +145,77 @@ public enum ErrorCode {
     @Schema(description = "날짜 범위 설정 오류")
     INVALID_DATE_RANGE(400, "E40044", "잘못된 날짜 범위입니다."),
 
+    // ------------------------------------------------------------------------
+    // 기록 관리 관련 에러 (E40050 ~ E40079)
+    // ------------------------------------------------------------------------
+
+    @Schema(description = "일상 기록 없음")
+    DAILY_RECORD_NOT_FOUND(404, "E40450", "일상 기록을 찾을 수 없습니다."),
+
+    @Schema(description = "운동 기록 없음")
+    EXERCISE_RECORD_NOT_FOUND(404, "E40451", "운동 기록을 찾을 수 없습니다."),
+
+    @Schema(description = "일정 기록 없음")
+    SCHEDULE_RECORD_NOT_FOUND(404, "E40452", "일정 기록을 찾을 수 없습니다."),
+
+    @Schema(description = "유효하지 않은 기분 타입")
+    INVALID_MOOD_TYPE(400, "E40050", "유효하지 않은 기분 타입입니다."),
+
+    @Schema(description = "유효하지 않은 운동 타입")
+    INVALID_EXERCISE_TYPE(400, "E40051", "유효하지 않은 운동 타입입니다."),
+
+    @Schema(description = "유효하지 않은 일정 타입")
+    INVALID_SCHEDULE_TYPE(400, "E40052", "유효하지 않은 일정 타입입니다."),
+
+    @Schema(description = "유효하지 않은 습관 타입")
+    INVALID_HABIT_TYPE(400, "E40053", "유효하지 않은 습관 타입입니다."),
+
+    @Schema(description = "하루 최대 기록 개수 초과")
+    DAILY_RECORD_LIMIT_EXCEEDED(400, "E40054", "하루 최대 기록 개수를 초과했습니다."),
+
+    @Schema(description = "기록 제목이 너무 긺")
+    RECORD_TITLE_TOO_LONG(400, "E40055", "기록 제목이 너무 깁니다. (최대 255자)"),
+
+    @Schema(description = "기록 내용이 너무 긺")
+    RECORD_CONTENT_TOO_LONG(400, "E40056", "기록 내용이 너무 깁니다. (최대 10000자)"),
+
+    @Schema(description = "유효하지 않은 날짜 형식")
+    INVALID_DATE_FORMAT(400, "E40057", "날짜 형식이 올바르지 않습니다."),
+
+    @Schema(description = "시작 날짜가 종료 날짜보다 늦음")
+    START_DATE_AFTER_END_DATE(400, "E40058", "시작 날짜가 종료 날짜보다 늦을 수 없습니다."),
+
+    @Schema(description = "시작 시간이 종료 시간보다 늦음")
+    START_TIME_AFTER_END_TIME(400, "E40059", "시작 시간이 종료 시간보다 늦을 수 없습니다."),
+
+    @Schema(description = "미래 날짜 기록 불가")
+    FUTURE_DATE_RECORD_NOT_ALLOWED(400, "E40060", "미래 날짜에는 기록할 수 없습니다."),
+
+    @Schema(description = "너무 과거 날짜 기록 불가")
+    TOO_OLD_DATE_RECORD_NOT_ALLOWED(400, "E40061", "너무 과거 날짜에는 기록할 수 없습니다."),
+
+    // ------------------------------------------------------------------------
+    // 파일 업로드 관련 에러 (E40070 ~ E40079)
+    // ------------------------------------------------------------------------
+
+    @Schema(description = "파일이 비어있음")
+    FILE_EMPTY(400, "E40070", "업로드할 파일이 비어있습니다."),
+
+    @Schema(description = "지원하지 않는 파일 형식")
+    UNSUPPORTED_FILE_FORMAT(400, "E40071", "지원하지 않는 파일 형식입니다."),
+
+    @Schema(description = "파일 크기 초과")
+    FILE_SIZE_EXCEEDED(400, "E40072", "파일 크기가 제한을 초과했습니다."),
+
+    @Schema(description = "파일 업로드 실패")
+    FILE_UPLOAD_FAILED(500, "E50006", "파일 업로드에 실패했습니다."),
+
+    @Schema(description = "파일 삭제 실패")
+    FILE_DELETE_FAILED(500, "E50007", "파일 삭제에 실패했습니다."),
+
+    @Schema(description = "S3 연결 오류")
+    S3_CONNECTION_ERROR(500, "E50008", "S3 서비스 연결에 실패했습니다."),
+
     // ============================================================================
     // 401 UNAUTHORIZED - 인증 관련 오류
     // ============================================================================

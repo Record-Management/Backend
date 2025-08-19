@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.domain.user.model;
 
+import com.recordmanagement.habitlog.domain.record.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -55,6 +56,12 @@ public class User {
     @Schema(description = "마지막 프로필 수정 시간", example = "2025-07-31T09:00:00")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "온보딩 완료 여부", example = "false")
+    private boolean onboardingCompleted;
+
+    @Schema(description = "메인 기록 타입")
+    private RecordType mainRecordType;
+
     /**
      * 신규 사용자 생성 생성자
      *
@@ -74,6 +81,7 @@ public class User {
         this.socialId = socialId;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.onboardingCompleted = false;
     }
 
     /**
@@ -88,6 +96,19 @@ public class User {
     public void updateProfile(String name, Email email) {
         this.name = name;
         this.email = email;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 온보딩 완료 처리
+     *
+     * - 온보딩 완료 상태를 true로 변경
+     * - 메인 기록 타입 설정
+     * - updatedAt 자동 갱신
+     */
+    public void completeOnboarding(RecordType mainRecordType) {
+        this.onboardingCompleted = true;
+        this.mainRecordType = mainRecordType;
         this.updatedAt = LocalDateTime.now();
     }
 

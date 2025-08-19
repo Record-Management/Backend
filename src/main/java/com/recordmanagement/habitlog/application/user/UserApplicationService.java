@@ -3,6 +3,8 @@ package com.recordmanagement.habitlog.application.user;
 import com.recordmanagement.habitlog.application.user.dto.UserRegistrationCommand;
 import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
+import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
+import com.recordmanagement.habitlog.application.user.dto.OnboardingStatusResponse;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.auth.repository.RefreshTokenRepository;
@@ -155,5 +157,38 @@ public class UserApplicationService {
         // - 기타 연관 데이터
         
         log.info("사용자 관련 데이터 삭제 완료: userId={}", user.getId().getValue());
+    }
+
+    /**
+     * 온보딩 완료 처리
+     * 사용자의 온보딩 완료 상태를 업데이트
+     * 
+     * @param command 온보딩 완료 커맨드
+     */
+    public void completeOnboarding(OnboardingCompletionCommand command) {
+        log.info("온보딩 완료 처리 시작: userId={}", command.getUserId());
+        
+        User user = userRepository.findById(UserId.of(command.getUserId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        user.completeOnboarding(command.getMainRecordType());
+        userRepository.save(user);
+        
+        log.info("온보딩 완료 처리 완료: userId={}", command.getUserId());
+    }
+
+    /**
+     * 온보딩 상태 조회
+     * 사용자의 온보딩 완료 여부를 반환
+     * 
+     * @param userId 사용자 ID
+     * @return 온보딩 상태 응답
+     */
+    @Transactional(readOnly = true)
+    public OnboardingStatusResponse getOnboardingStatus(String userId) {
+        User user = userRepository.findById(UserId.of(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        return new OnboardingStatusResponse(user.isOnboardingCompleted());
     }
 }
