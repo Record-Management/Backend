@@ -51,4 +51,6 @@ src/main/resources/firebase-service-account.json
 
 # Gradle Wrapper
 application.yml
-.claude
+
+# Gradle Wrapper JAR 파일
+settings.local.json
