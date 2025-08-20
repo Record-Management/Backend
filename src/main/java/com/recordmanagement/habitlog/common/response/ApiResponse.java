@@ -24,9 +24,8 @@ import lombok.Getter;
         모든 API 엔드포인트는 이 형태의 일관된 응답을 반환합니다.
         
         ### 응답 구조
-        - **success**: 요청 성공 여부 (boolean)
+        - **statusCode**: HTTP 상태 코드 (integer) - 성공/실패 판단 기준
         - **code**: 상세 응답 코드 (string)  
-        - **statusCode**: HTTP 상태 코드 (integer)
         - **message**: 사용자 친화적 메시지 (string)
         - **data**: 실제 응답 데이터 (generic type)
         
@@ -38,9 +37,8 @@ import lombok.Getter;
         """,
     example = """
         {
-          "success": true,
-          "code": "S200",
           "statusCode": 200,
+          "code": "S200",
           "message": "요청이 성공적으로 처리되었습니다.",
           "data": {
             "id": "123",
@@ -51,19 +49,6 @@ import lombok.Getter;
 )
 public class ApiResponse<T> {
 
-    @Schema(
-        description = """
-            요청 처리 성공 여부
-            
-            - **true**: 요청이 성공적으로 처리됨
-            - **false**: 요청 처리 중 오류 발생
-            
-            클라이언트는 이 값을 먼저 확인하여 성공/실패를 판단해야 합니다.
-            """,
-        example = "true",
-        required = true
-    )
-    private final boolean success;
 
     @Schema(
         description = """
@@ -145,15 +130,13 @@ public class ApiResponse<T> {
     /**
      * 생성자 (Lombok @Builder 사용)
      *
-     * @param success 성공 여부
      * @param code 응답 코드
      * @param statusCode HTTP 상태 코드
      * @param message 응답 메시지
      * @param data 응답 데이터
      */
     @Builder
-    public ApiResponse(boolean success, String code, int statusCode, String message, T data) {
-        this.success = success;
+    public ApiResponse(String code, int statusCode, String message, T data) {
         this.code = code;
         this.statusCode = statusCode;
         this.message = message;
@@ -168,7 +151,7 @@ public class ApiResponse<T> {
      * @return 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, "S200", 200, "요청이 성공적으로 처리되었습니다.", data);
+        return new ApiResponse<>("S200", 200, "요청이 성공적으로 처리되었습니다.", data);
     }
 
     /**
@@ -177,7 +160,7 @@ public class ApiResponse<T> {
      * @return 성공 ApiResponse 객체
      */
     public static ApiResponse<Void> success() {
-        return new ApiResponse<>(true, "S200", 200, "요청이 성공적으로 처리되었습니다.", null);
+        return new ApiResponse<>("S200", 200, "요청이 성공적으로 처리되었습니다.", null);
     }
 
     /**
@@ -188,7 +171,7 @@ public class ApiResponse<T> {
      * @return 생성 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> created(T data) {
-        return new ApiResponse<>(true, "S201", 201, "리소스가 성공적으로 생성되었습니다.", data);
+        return new ApiResponse<>("S201", 201, "리소스가 성공적으로 생성되었습니다.", data);
     }
 
     /**
@@ -200,7 +183,7 @@ public class ApiResponse<T> {
      * @return 생성 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> created(String message, T data) {
-        return new ApiResponse<>(true, "S201", 201, message, data);
+        return new ApiResponse<>("S201", 201, message, data);
     }
 
     /**
@@ -212,7 +195,7 @@ public class ApiResponse<T> {
      * @return 성공 ApiResponse 객체
      */
     public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<>(true, "S200", 200, message, data);
+        return new ApiResponse<>("S200", 200, message, data);
     }
 
     /**
@@ -225,7 +208,7 @@ public class ApiResponse<T> {
      * @return 실패 ApiResponse 객체
      */
     public static <T> ApiResponse<T> failure(String code, int statusCode, String message) {
-        return new ApiResponse<>(false, code, statusCode, message, null);
+        return new ApiResponse<>(code, statusCode, message, null);
     }
 
     /**
