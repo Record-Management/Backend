@@ -44,6 +44,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * - /swagger-ui/** : 모든 사용자 (API 문서 UI)
  * - /v3/api-docs/** : 모든 사용자 (OpenAPI 스펙)
  * - /api/auth/** : 모든 사용자 (로그인, 회원가입, 토큰 갱신)
+ * - /api/files/** : 인증된 사용자 (파일 업로드 - 보안상 인증 필요)
  * - /api/** : 인증된 사용자 (보호된 비즈니스 API)
  *
  * 비활성화된 기능:
@@ -95,6 +96,8 @@ public class SecurityConfig {
                         ).permitAll() // API 문서 관련 경로는 모두 허용
 
                         .requestMatchers("/api/auth/**").permitAll() // 인증 관련 API 공개
+
+                        .requestMatchers("/api/files/**").authenticated() // 파일 업로드 API는 인증 필요
 
                         .anyRequest().authenticated() // 그 외 모든 API는 인증 필요
                 )
