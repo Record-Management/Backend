@@ -78,6 +78,9 @@ public class UserEntity {
     @Column(name = "goal_days")
     private Integer goalDays;
 
+    @Column(name = "notification_enabled")
+    private Boolean notificationEnabled;
+
     /**
      * 도메인 모델(User)을 엔터티로 변환
      *
@@ -97,6 +100,7 @@ public class UserEntity {
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
+                .notificationEnabled(user.getNotificationEnabled())
                 .build();
     }
 
@@ -148,6 +152,10 @@ public class UserEntity {
             var goalDaysField = User.class.getDeclaredField("goalDays");
             goalDaysField.setAccessible(true);
             goalDaysField.set(user, this.goalDays);
+
+            var notificationEnabledField = User.class.getDeclaredField("notificationEnabled");
+            notificationEnabledField.setAccessible(true);
+            notificationEnabledField.set(user, this.notificationEnabled);
 
         } catch (Exception e) {
             throw new RuntimeException("도메인 필드 설정 실패", e);
