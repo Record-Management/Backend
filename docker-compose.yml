@@ -31,7 +31,13 @@ services:
       - habitlog-network
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=${SERVER_PORT}
       - JWT_SECRET=${JWT_SECRET}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
       - JWT_ACCESS_TOKEN_EXPIRE_TIME=${JWT_ACCESS_TOKEN_EXPIRE_TIME}
       - JWT_REFRESH_TOKEN_EXPIRE_TIME=${JWT_REFRESH_TOKEN_EXPIRE_TIME}
       - oauth.kakao.rest-api-key=${KAKAO_CLIENT_REST_API_KEY}
