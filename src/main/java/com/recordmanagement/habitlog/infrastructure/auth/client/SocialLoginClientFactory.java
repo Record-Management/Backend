@@ -1,8 +1,7 @@
 package com.recordmanagement.habitlog.infrastructure.auth.client;
 
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
-import com.recordmanagement.habitlog.config.exception.CustomException;
-import com.recordmanagement.habitlog.config.exception.ErrorCode;
+import com.recordmanagement.habitlog.config.exception.SocialLoginException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -42,12 +41,12 @@ public class SocialLoginClientFactory {
      *
      * @param socialType 사용할 소셜 타입 (KAKAO, APPLE 등)
      * @return 소셜 로그인 클라이언트 구현체
-     * @throws CustomException 지원하지 않는 소셜 타입일 경우
+     * @throws SocialLoginException 지원하지 않는 소셜 타입일 경우
      */
     public SocialLoginClient getClient(SocialType socialType) {
         SocialLoginClient client = clients.get(socialType);
         if (client == null) {
-            throw new CustomException(ErrorCode.SOCIAL_CLIENT_NOT_SUPPORTED);
+            throw SocialLoginException.unsupportedProvider(socialType != null ? socialType.toString() : "null");
         }
         return client;
     }

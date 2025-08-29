@@ -35,4 +35,12 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, String> {
      * @return 존재하면 true, 아니면 false
      */
     boolean existsBySocialTypeAndSocialId(SocialType socialType, String socialId);
+
+    /**
+     * 닉네임 존재 여부 확인
+     *
+     * @param name 확인할 닉네임
+     * @return 존재하면 true, 아니면 false
+     */
+    boolean existsByName(String name);
 }

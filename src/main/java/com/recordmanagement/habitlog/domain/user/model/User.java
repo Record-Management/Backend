@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 사용자 도메인 핵심 엔터티 (Aggregate Root)
@@ -62,6 +63,12 @@ public class User {
     @Schema(description = "메인 기록 타입")
     private RecordType mainRecordType;
 
+    @Schema(description = "생년월일", example = "1998-06-02")
+    private LocalDate birthDate;
+
+    @Schema(description = "목표 일수", example = "20")
+    private Integer goalDays;
+
     /**
      * 신규 사용자 생성 생성자
      *
@@ -103,12 +110,15 @@ public class User {
      * 온보딩 완료 처리
      *
      * - 온보딩 완료 상태를 true로 변경
-     * - 메인 기록 타입 설정
+     * - 모든 온보딩 데이터 한번에 설정
      * - updatedAt 자동 갱신
      */
-    public void completeOnboarding(RecordType mainRecordType) {
-        this.onboardingCompleted = true;
+    public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays) {
+        this.name = nickname;
         this.mainRecordType = mainRecordType;
+        this.birthDate = birthDate;
+        this.goalDays = goalDays;
+        this.onboardingCompleted = true;
         this.updatedAt = LocalDateTime.now();
     }
 

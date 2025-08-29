@@ -7,9 +7,9 @@ package com.recordmanagement.habitlog.domain.record.model;
  */
 public enum RecordType {
     EXERCISE("운동 기록"),
-    DAILY("일상 기록"),
-    SCHEDULE("일정"),
-    HABIT("습관");
+    DAILY("하루 기록"),
+    SCHEDULE("일정 기록"),
+    HABIT("습관 기록");
     
     private final String description;
     

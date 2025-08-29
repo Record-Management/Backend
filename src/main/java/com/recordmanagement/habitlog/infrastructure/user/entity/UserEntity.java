@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 사용자 JPA 엔터티
@@ -71,6 +72,12 @@ public class UserEntity {
     @Column(name = "main_record_type")
     private RecordType mainRecordType;
 
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    @Column(name = "goal_days")
+    private Integer goalDays;
+
     /**
      * 도메인 모델(User)을 엔터티로 변환
      *
@@ -88,6 +95,8 @@ public class UserEntity {
                 .updatedAt(user.getUpdatedAt())
                 .onboardingCompleted(user.isOnboardingCompleted())
                 .mainRecordType(user.getMainRecordType())
+                .birthDate(user.getBirthDate())
+                .goalDays(user.getGoalDays())
                 .build();
     }
 
@@ -131,6 +140,14 @@ public class UserEntity {
             var mainRecordTypeField = User.class.getDeclaredField("mainRecordType");
             mainRecordTypeField.setAccessible(true);
             mainRecordTypeField.set(user, this.mainRecordType);
+
+            var birthDateField = User.class.getDeclaredField("birthDate");
+            birthDateField.setAccessible(true);
+            birthDateField.set(user, this.birthDate);
+
+            var goalDaysField = User.class.getDeclaredField("goalDays");
+            goalDaysField.setAccessible(true);
+            goalDaysField.set(user, this.goalDays);
 
         } catch (Exception e) {
             throw new RuntimeException("도메인 필드 설정 실패", e);

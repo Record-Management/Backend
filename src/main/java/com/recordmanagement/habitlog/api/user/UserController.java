@@ -3,7 +3,6 @@ package com.recordmanagement.habitlog.api.user;
 import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
-import com.recordmanagement.habitlog.application.user.dto.OnboardingStatusResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
@@ -121,7 +120,10 @@ public class UserController {
 
         OnboardingCompletionCommand command = new OnboardingCompletionCommand(
                 userDetails.getUsername(),
-                request.getMainRecordType()
+                request.getNickname(),
+                request.getMainRecordType(),
+                request.getBirthDate(),
+                request.getGoalDays()
         );
 
         userApplicationService.completeOnboarding(command);
@@ -131,28 +133,4 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success());
     }
 
-    /**
-     * 온보딩 상태 조회 API
-     * 사용자의 온보딩 완료 여부를 조회
-     *
-     * @param userDetails 인증된 사용자 정보
-     * @return 온보딩 상태 응답
-     */
-    @Operation(
-        summary = "온보딩 상태 조회", 
-        description = "사용자의 온보딩 완료 여부를 조회합니다.",
-        security = @SecurityRequirement(name = "Bearer Authentication")
-    )
-    @GetMapping("/onboarding/status")
-    public ResponseEntity<ApiResponse<OnboardingStatusResponse>> getOnboardingStatus(
-            @AuthenticationPrincipal UserDetails userDetails) {
-
-        log.info("온보딩 상태 조회 요청: userId={}", userDetails.getUsername());
-
-        OnboardingStatusResponse response = userApplicationService.getOnboardingStatus(
-                userDetails.getUsername()
-        );
-
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
 }

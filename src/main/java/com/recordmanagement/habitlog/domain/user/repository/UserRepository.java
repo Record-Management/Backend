@@ -69,4 +69,12 @@ public interface UserRepository {
      * @return true: 존재함, false: 존재하지 않음
      */
     boolean existsBySocialTypeAndSocialId(SocialType socialType, String socialId);
+
+    /**
+     * 닉네임(name) 존재 여부 확인
+     *
+     * @param name 확인할 닉네임
+     * @return true: 존재함, false: 존재하지 않음
+     */
+    boolean existsByName(String name);
 }
