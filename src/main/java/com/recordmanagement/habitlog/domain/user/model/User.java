@@ -69,6 +69,9 @@ public class User {
     @Schema(description = "목표 일수", example = "20")
     private Integer goalDays;
 
+    @Schema(description = "알림 허용 여부", example = "true")
+    private Boolean notificationEnabled;
+
     /**
      * 신규 사용자 생성 생성자
      *
@@ -113,11 +116,12 @@ public class User {
      * - 모든 온보딩 데이터 한번에 설정
      * - updatedAt 자동 갱신
      */
-    public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays) {
+    public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays, Boolean notificationEnabled) {
         this.name = nickname;
         this.mainRecordType = mainRecordType;
         this.birthDate = birthDate;
         this.goalDays = goalDays;
+        this.notificationEnabled = notificationEnabled;
         this.onboardingCompleted = true;
         this.updatedAt = LocalDateTime.now();
     }

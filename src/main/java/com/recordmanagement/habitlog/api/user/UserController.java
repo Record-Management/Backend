@@ -123,7 +123,8 @@ public class UserController {
                 request.getNickname(),
                 request.getMainRecordType(),
                 request.getBirthDate(),
-                request.getGoalDays()
+                request.getGoalDays(),
+                request.getNotificationEnabled()
         );
 
         userApplicationService.completeOnboarding(command);

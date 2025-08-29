@@ -174,7 +174,8 @@ public class UserApplicationService {
             command.nickname(),
             command.mainRecordType(), 
             command.birthDate(),
-            command.goalDays()
+            command.goalDays(),
+            command.notificationEnabled()
         );
         userRepository.save(user);
         
