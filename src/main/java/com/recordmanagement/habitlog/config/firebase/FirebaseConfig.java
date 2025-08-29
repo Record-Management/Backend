@@ -24,7 +24,7 @@ import java.io.InputStream;
  * @since 2025.07.30
  * @version 1.0.0
  */
-@Configuration
+//@Configuration
 public class FirebaseConfig {
 
     /**
