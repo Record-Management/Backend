@@ -6,7 +6,12 @@ CREATE TABLE IF NOT EXISTS users (
     social_type VARCHAR(50) NOT NULL,
     social_id VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    updated_at TIMESTAMP NOT NULL,
+    onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    main_record_type VARCHAR(20),
+    birth_date DATE,
+    goal_days INT,
+    notification_enabled BOOLEAN DEFAULT FALSE
 );
 
 -- 인덱스 생성 (이미 존재하면 무시)
