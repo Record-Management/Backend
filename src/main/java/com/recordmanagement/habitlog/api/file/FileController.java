@@ -50,11 +50,11 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2025.08.19
  * @version 1.0.0
  */
-@RestController
-@RequestMapping("/api/files")
+//@RestController
+//@RequestMapping("/api/files")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "파일 업로드", description = "파일 업로드 관련 API")
+//@Tag(name = "파일 업로드", description = "파일 업로드 관련 API")
 public class FileController {
 
     private final S3FileUploadService s3FileUploadService;
