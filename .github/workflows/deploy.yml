@@ -22,7 +22,7 @@ jobs:
         echo "SSH key file size: $(wc -c ~/.ssh/id_rsa)"
         echo "SSH key first line: $(head -1 ~/.ssh/id_rsa)"
         echo "SSH key last line: $(tail -1 ~/.ssh/id_rsa)"
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
         
     - name: Deploy to EC2
       run: |
