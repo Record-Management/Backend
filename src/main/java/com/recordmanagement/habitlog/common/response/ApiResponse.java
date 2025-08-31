@@ -41,8 +41,14 @@ import lombok.Getter;
           "code": "S200",
           "message": "요청이 성공적으로 처리되었습니다.",
           "data": {
-            "id": "123",
-            "name": "example"
+            "user": {
+              "id": "user_123456",
+              "name": "홍길동",
+              "email": "hong@example.com"
+            },
+            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "isNewUser": false
           }
         }
         """
