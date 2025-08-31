@@ -100,8 +100,8 @@ public class OpenApiConfig {
                         .url("http://localhost:" + serverPort)
                         .description("로컬 개발 서버"),
                 new Server()
-                        .url("https://api-dev.habitlog.com")
-                        .description("개발 서버"),
+                        .url("http://54.180.82.163:8082")
+                        .description("개발 서버 (EC2)"),
                 new Server()
                         .url("https://api.habitlog.com")
                         .description("운영 서버")
