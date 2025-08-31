@@ -14,10 +14,10 @@ CREATE TABLE IF NOT EXISTS users (
     notification_enabled BOOLEAN DEFAULT FALSE
 );
 
--- 인덱스 생성 (이미 존재하면 무시)
-CREATE INDEX IF NOT EXISTS idx_users_email ON users (email);
-CREATE INDEX IF NOT EXISTS idx_users_social_login ON users (social_type, social_id);
+-- 인덱스 생성
+CREATE INDEX idx_users_email ON users (email);
+CREATE INDEX idx_users_social_login ON users (social_type, social_id);
 
--- 소셜 로그인 중복 방지를 위한 유니크 제약 (이미 존재하면 무시)
+-- 소셜 로그인 중복 방지를 위한 유니크 제약
 ALTER TABLE users 
-ADD CONSTRAINT IF NOT EXISTS uk_users_social_login UNIQUE (social_type, social_id);
+ADD CONSTRAINT uk_users_social_login UNIQUE (social_type, social_id);
