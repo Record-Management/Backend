@@ -9,6 +9,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 /**
  * Spring Security 보안 설정 클래스
@@ -81,6 +86,9 @@ public class SecurityConfig {
         http
                 // CSRF 보호 비활성화: REST API는 상태 저장 안 하므로 필요 없음
                 .csrf(AbstractHttpConfigurer::disable)
+                
+                // CORS 설정 (웹브라우저/Swagger UI 테스트용)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 세션 관리 정책: JWT 사용으로 세션 상태를 서버에 저장하지 않음
                 .sessionManagement(session ->
@@ -106,5 +114,21 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+    
+    /**
+     * CORS 설정 (웹브라우저/Swagger UI 테스트용)
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowCredentials(true);
+        
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
