@@ -101,10 +101,7 @@ public class OpenApiConfig {
                         .description("로컬 개발 서버"),
                 new Server()
                         .url("http://54.180.82.163:8082")
-                        .description("개발 서버 (EC2)"),
-                new Server()
-                        .url("https://api.habitlog.com")
-                        .description("운영 서버")
+                        .description("개발 서버 (EC2)")
         );
     }
 
