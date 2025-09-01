@@ -84,6 +84,7 @@ public class KakaoLoginClient implements SocialLoginClient {
     public static class KakaoUserResponse {
         private Long id;
         private KakaoAccount kakaoAccount;
+        private Properties properties;
     }
 
     /**
@@ -104,6 +105,16 @@ public class KakaoLoginClient implements SocialLoginClient {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Profile {
+        private String nickname;
+    }
+
+    /**
+     * 카카오 Properties 정보 객체
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Properties {
         private String nickname;
     }
 }
