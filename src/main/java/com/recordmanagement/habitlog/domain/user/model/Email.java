@@ -49,6 +49,9 @@ public class Email {
     }
 
     public static Email of(String value) {
+        if (value == null) {
+            return null;
+        }
         return new Email(value);
     }
 
