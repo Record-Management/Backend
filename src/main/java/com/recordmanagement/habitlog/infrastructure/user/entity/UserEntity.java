@@ -49,7 +49,7 @@ public class UserEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String email;
 
     @Enumerated(EnumType.STRING)
@@ -91,7 +91,7 @@ public class UserEntity {
         return UserEntity.builder()
                 .id(user.getId().getValue())
                 .name(user.getName())
-                .email(user.getEmail().getValue())
+                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
                 .socialType(user.getSocialType())
                 .socialId(user.getSocialId())
                 .createdAt(user.getCreatedAt())
