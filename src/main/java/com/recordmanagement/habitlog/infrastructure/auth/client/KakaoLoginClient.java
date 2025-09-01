@@ -46,13 +46,24 @@ public class KakaoLoginClient implements SocialLoginClient {
                     .bodyToMono(KakaoUserResponse.class)
                     .block();
 
-            if (response == null || response.getKakaoAccount() == null) {
+            if (response == null || response.getId() == null) {
                 throw new CustomException(ErrorCode.SOCIAL_USER_INFO_FETCH_FAILED);
+            }
+
+            String nickname = null;
+            if (response.getKakaoAccount() != null && response.getKakaoAccount().getProfile() != null) {
+                nickname = response.getKakaoAccount().getProfile().getNickname();
+            }
+            if (nickname == null && response.getProperties() != null) {
+                nickname = response.getProperties().getNickname();
+            }
+            if (nickname == null) {
+                nickname = "카카오 사용자 " + response.getId();
             }
 
             return SocialUserInfo.of(
                     String.valueOf(response.getId()),
-                    response.getKakaoAccount().getProfile().getNickname(),
+                    nickname,
                     null,
                     null,
                     null
