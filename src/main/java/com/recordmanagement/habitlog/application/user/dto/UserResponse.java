@@ -160,7 +160,7 @@ public class UserResponse {
         return UserResponse.builder()
                 .id(user.getId().getValue())
                 .name(user.getName())
-                .email(user.getEmail().getValue())
+                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
                 .socialType(user.getSocialType())
                 .createdAt(user.getCreatedAt())
                 .build();
