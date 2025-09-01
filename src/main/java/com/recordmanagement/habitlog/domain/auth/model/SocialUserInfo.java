@@ -38,22 +38,31 @@ public class SocialUserInfo {
     @Schema(description = "사용자 이메일 (선택적)", example = "wooseon@example.com", nullable = true)
     private String email;
 
+    @Schema(description = "프로필 이미지 URL (선택적)", example = "http://k.kakaocdn.net/dn/...", nullable = true)
+    private String profileImageUrl;
+
+    @Schema(description = "생년월일 (선택적)", example = "1990", nullable = true)
+    private String birthYear;
+
+
     /**
      * 정적 팩토리 메서드 - 검증 후 객체 생성
      *
      * @param socialId 소셜 플랫폼 고유 사용자 ID (필수)
      * @param name 사용자 이름/닉네임 (필수)
      * @param email 사용자 이메일 (선택적)
+     * @param profileImageUrl 프로필 이미지 URL (선택적)
+     * @param birthYear 생년월일 (선택적)
      * @return 검증된 SocialUserInfo 객체
      * @throws CustomException 필수 필드가 null이거나 빈 문자열인 경우
      */
-    public static SocialUserInfo of(String socialId, String name, String email) {
+    public static SocialUserInfo of(String socialId, String name, String email, String profileImageUrl, String birthYear) {
         if (socialId == null || socialId.trim().isEmpty()) {
             throw new CustomException(ErrorCode.SOCIAL_ID_NULL_OR_EMPTY);
         }
         if (name == null || name.trim().isEmpty()) {
             throw new CustomException(ErrorCode.SOCIAL_NAME_NULL_OR_EMPTY);
         }
-        return new SocialUserInfo(socialId, name, email);
+        return new SocialUserInfo(socialId, name, email, profileImageUrl, birthYear);
     }
 }

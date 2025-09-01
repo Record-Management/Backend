@@ -53,7 +53,9 @@ public class KakaoLoginClient implements SocialLoginClient {
             return SocialUserInfo.of(
                     String.valueOf(response.getId()),
                     response.getKakaoAccount().getProfile().getNickname(),
-                    response.getKakaoAccount().getEmail()
+                    null,
+                    null,
+                    null
             );
         } catch (Exception e) {
             throw new CustomException(ErrorCode.SOCIAL_USER_INFO_FETCH_FAILED);

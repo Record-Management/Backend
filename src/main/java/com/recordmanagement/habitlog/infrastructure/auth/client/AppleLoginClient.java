@@ -114,7 +114,9 @@ public class AppleLoginClient implements SocialLoginClient {
             return SocialUserInfo.of(
                 appleUserInfo.getSub(),
                 extractUserName(appleUserInfo),
-                appleUserInfo.getEmail()
+                appleUserInfo.getEmail(),
+                null,
+                null
             );
 
         } catch (SocialLoginException e) {
