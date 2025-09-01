@@ -30,11 +30,14 @@ jobs:
           echo "배포 시도 $i/3..."
           if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=3 ec2-user@${{ secrets.EC2_HOST }} "cd Backend && git pull origin main && docker-compose down && docker-compose build && docker-compose up -d && echo '배포 완료: $(date)'"; then
             echo "배포 성공!"
-            break
+            exit 0
           else
             echo "배포 실패, 30초 후 재시도..."
             if [ $i -lt 3 ]; then
               sleep 30
+            else
+              echo "모든 배포 시도 실패"
+              exit 1
             fi
           fi
         done
