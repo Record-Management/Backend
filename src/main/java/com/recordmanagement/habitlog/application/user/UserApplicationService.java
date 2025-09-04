@@ -26,8 +26,8 @@ import java.util.Optional;
  * 트랜잭션 경계 설정 및 데이터 일관성 보장
  *
  * @author 전우선
- * @since 2025.07.30
- * @version 1.0.0
+ * @since 2025.09.04
+ * @version 2.1.0
  */
 @Slf4j
 @Service
@@ -186,3 +186,4 @@ public class UserApplicationService {
     }
 
 }
+

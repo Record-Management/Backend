@@ -52,8 +52,8 @@ import jakarta.validation.Valid;
  * - 사용자는 본인 계정만 관리 가능
  * 
  * @author 전우선
- * @since 2025.08.01
- * @version 1.0.0
+ * @since 2025.09.04
+ * @version 2.1.0
  */
 @Slf4j
 @RestController
@@ -136,3 +136,4 @@ public class UserController {
     }
 
 }
+
