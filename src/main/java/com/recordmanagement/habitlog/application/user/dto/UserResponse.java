@@ -148,6 +148,9 @@ public class UserResponse {
     )
     private final LocalDateTime createdAt;
 
+    @Schema(description = "온보딩 완료 여부", example = "false")
+    private final boolean onboardingCompleted;
+
     /**
      * 도메인 User 객체를 UserResponse DTO로 변환
      * VO 타입들을 기본 타입으로 변환 후 안전하게 매핑
@@ -163,6 +166,7 @@ public class UserResponse {
                 .email(user.getEmail() != null ? user.getEmail().getValue() : null)
                 .socialType(user.getSocialType())
                 .createdAt(user.getCreatedAt())
+                .onboardingCompleted(user.isOnboardingCompleted())
                 .build();
     }
 
