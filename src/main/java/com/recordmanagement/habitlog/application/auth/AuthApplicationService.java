@@ -100,9 +100,20 @@ public class AuthApplicationService {
      * @return 갱신 결과 (새 액세스 토큰, 만료 시간 초 단위)
      */
     public RefreshTokenResult refreshAccessToken(RefreshTokenCommand command) {
-        String newAccessToken = refreshTokenService.refreshAccessToken(command.refreshToken());
+        String refreshTokenValue = command.refreshToken();
+        
+        // 토큰에서 사용자 ID 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(refreshTokenValue);
+        
+        // 사용자 정보 조회
+        UserResponse user = userApplicationService.findById(userId.toString())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        
+        // 새 액세스 토큰 발급
+        String newAccessToken = refreshTokenService.refreshAccessToken(refreshTokenValue);
         Long expiresIn = 3600L; // 1시간
-        return new RefreshTokenResult(newAccessToken, expiresIn);
+        
+        return RefreshTokenResult.of(newAccessToken, expiresIn, user);
     }
 
     /**

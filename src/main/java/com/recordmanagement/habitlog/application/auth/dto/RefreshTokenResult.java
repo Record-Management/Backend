@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.application.auth.dto;
 
+import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,9 @@ public class RefreshTokenResult {
     @Schema(description = "토큰 만료까지 남은 시간(초)", example = "3600")
     private final Long expiresIn;
 
+    @Schema(description = "사용자 정보")
+    private final UserResponse user;
+
     /**
      * 갱신 결과 객체 생성 팩토리 메서드
      *
@@ -33,10 +37,11 @@ public class RefreshTokenResult {
      * @param expiresIn 토큰 만료까지 남은 시간(초)
      * @return RefreshTokenResult 객체
      */
-    public static RefreshTokenResult of(String accessToken, Long expiresIn) {
+    public static RefreshTokenResult of(String accessToken, Long expiresIn, UserResponse user) {
         return RefreshTokenResult.builder()
                 .accessToken(accessToken)
                 .expiresIn(expiresIn)
+                .user(user)
                 .build();
     }
 }

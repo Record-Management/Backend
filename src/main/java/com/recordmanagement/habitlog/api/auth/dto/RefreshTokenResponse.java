@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.api.auth.dto;
 
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenResult;
+import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -92,6 +93,9 @@ public class RefreshTokenResponse {
     )
     private final Long expiresIn;
     
+    @Schema(description = "사용자 정보")
+    private final UserResponse user;
+    
     /**
      * RefreshTokenResult에서 Response DTO로 변환
      * 
@@ -102,6 +106,7 @@ public class RefreshTokenResponse {
         return RefreshTokenResponse.builder()
                 .accessToken(result.getAccessToken())
                 .expiresIn(result.getExpiresIn())
+                .user(result.getUser())
                 .build();
     }
 }
