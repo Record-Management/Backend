@@ -163,8 +163,9 @@ public class UserApplicationService {
      * 사용자의 온보딩 완료 상태를 업데이트
      * 
      * @param command 온보딩 완료 커맨드
+     * @return 완료된 사용자 정보 DTO
      */
-    public void completeOnboarding(OnboardingCompletionCommand command) {
+    public UserResponse completeOnboarding(OnboardingCompletionCommand command) {
         log.info("온보딩 완료 처리 시작: userId={}", command.userId());
         
         User user = userRepository.findById(UserId.of(command.userId()))
@@ -177,9 +178,11 @@ public class UserApplicationService {
             command.goalDays(),
             command.notificationEnabled()
         );
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
         
         log.info("온보딩 완료 처리 완료: userId={}", command.userId());
+        
+        return UserResponse.from(savedUser);
     }
 
 }

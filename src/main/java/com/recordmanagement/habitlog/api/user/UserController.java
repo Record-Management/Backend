@@ -112,7 +112,7 @@ public class UserController {
         security = @SecurityRequirement(name = "Bearer Authentication")
     )
     @PostMapping("/onboarding/complete")
-    public ResponseEntity<ApiResponse<Void>> completeOnboarding(
+    public ResponseEntity<ApiResponse<UserResponse>> completeOnboarding(
             @Valid @RequestBody OnboardingCompletionRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
@@ -127,11 +127,11 @@ public class UserController {
                 request.getNotificationEnabled()
         );
 
-        userApplicationService.completeOnboarding(command);
+        UserResponse user = userApplicationService.completeOnboarding(command);
 
         log.info("온보딩 완료 처리 완료: userId={}", userDetails.getUsername());
 
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 
 }
