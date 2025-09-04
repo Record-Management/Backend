@@ -103,10 +103,10 @@ public class AuthApplicationService {
         String refreshTokenValue = command.refreshToken();
         
         // 토큰에서 사용자 ID 추출
-        Long userId = jwtTokenProvider.getUserIdFromToken(refreshTokenValue);
+        String userId = jwtTokenProvider.getUserIdAsStringFromToken(refreshTokenValue);
         
         // 사용자 정보 조회
-        UserResponse user = userApplicationService.findById(userId.toString())
+        UserResponse user = userApplicationService.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
         // 새 액세스 토큰 발급
