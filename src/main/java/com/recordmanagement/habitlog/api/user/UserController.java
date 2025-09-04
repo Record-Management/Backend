@@ -3,6 +3,7 @@ package com.recordmanagement.habitlog.api.user;
 import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
+import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
