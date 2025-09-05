@@ -211,6 +211,22 @@ public class UserResponse {
     }
 
     /**
+     * 토큰 갱신용 UserResponse 생성
+     * 프론트엔드 호환성을 위해 최소 필드만 포함
+     *
+     * @param user 도메인 사용자 객체
+     * @return 토큰 갱신용 UserResponse DTO
+     */
+    public static UserResponse forRefreshToken(User user) {
+        return UserResponse.builder()
+                .id(user.getId().getValue())
+                .name(user.getName())
+                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .build();
+    }
+
+    /**
      * 직접 필드 값으로 UserResponse 객체 생성
      *
      * @param id 사용자 ID

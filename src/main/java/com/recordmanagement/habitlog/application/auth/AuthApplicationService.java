@@ -105,8 +105,8 @@ public class AuthApplicationService {
         // 토큰에서 사용자 ID 추출
         String userId = jwtTokenProvider.getUserIdAsStringFromToken(refreshTokenValue);
         
-        // 사용자 정보 조회
-        UserResponse user = userApplicationService.findById(userId)
+        // 사용자 정보 조회 (토큰 갱신용 최소 필드)
+        UserResponse user = userApplicationService.findByIdForRefreshToken(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
         // 새 액세스 토큰 발급

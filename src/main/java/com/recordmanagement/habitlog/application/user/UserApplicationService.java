@@ -120,6 +120,19 @@ public class UserApplicationService {
     }
 
     /**
+     * 토큰 갱신용 사용자 조회
+     * 프론트엔드 호환성을 위해 최소 필드만 포함
+     *
+     * @param userId 사용자 ID
+     * @return 사용자 정보 Optional (토큰 갱신용)
+     */
+    @Transactional(readOnly = true)
+    public Optional<UserResponse> findByIdForRefreshToken(String userId) {
+        return userRepository.findById(UserId.of(userId))
+                .map(UserResponse::forRefreshToken);
+    }
+
+    /**
      * 회원탈퇴 처리
      * 소셜 연결 해제 + 관련 데이터 삭제 + 계정 삭제를 순차적으로 처리
      * 

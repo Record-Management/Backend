@@ -36,7 +36,13 @@ import lombok.Getter;
         {
           "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
           "tokenType": "Bearer",
-          "expiresIn": 3600
+          "expiresIn": 3600,
+          "user": {
+            "id": "user_id",
+            "name": "이름",
+            "email": null,
+            "onboardingCompleted": false
+          }
         }
         """
 )
