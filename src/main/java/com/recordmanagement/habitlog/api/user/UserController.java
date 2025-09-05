@@ -119,6 +119,9 @@ public class UserController {
             Authentication authentication) {
 
         log.info("온보딩 완료 요청 수신");
+        log.info("요청 데이터: nickname=[{}], mainRecordType=[{}], birthDate=[{}], goalDays=[{}], notificationEnabled=[{}]", 
+                request.getNickname(), request.getMainRecordType(), request.getBirthDate(), 
+                request.getGoalDays(), request.getNotificationEnabled());
 
         String userId = authentication != null ? authentication.getName() : null;
         if (userId == null) {

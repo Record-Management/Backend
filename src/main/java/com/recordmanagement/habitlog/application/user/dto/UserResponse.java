@@ -184,7 +184,7 @@ public class UserResponse {
                 .socialType(user.getSocialType())
                 .createdAt(user.getCreatedAt())
                 .onboardingCompleted(user.isOnboardingCompleted())
-                .nickname(user.getNickname())
+                .nickname(user.getNickname() != null ? user.getNickname() : "")
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
