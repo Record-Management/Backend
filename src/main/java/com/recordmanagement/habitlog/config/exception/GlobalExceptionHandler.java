@@ -79,13 +79,6 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(code));
     }
 
-    @ExceptionHandler(HabitException.class)
-    public ResponseEntity<ErrorResponse> handleHabitException(HabitException ex) {
-        ErrorCode code = ex.getErrorCode();
-        log.warn("[습관 예외] [{}] {}", code.getCode(), code.getMessage());
-        return ResponseEntity.status(code.getStatus())
-                .body(ErrorResponse.of(code));
-    }
 
     // ======= 입력값 유효성 검사 예외 =======
 

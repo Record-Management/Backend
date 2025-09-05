@@ -4,7 +4,7 @@ import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.domain.user.model.Email;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
-import com.recordmanagement.habitlog.domain.record.model.RecordType;
+import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

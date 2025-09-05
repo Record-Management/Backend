@@ -1,6 +1,6 @@
 package com.recordmanagement.habitlog.domain.user.model;
 
-import com.recordmanagement.habitlog.domain.record.model.RecordType;
+import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Getter;

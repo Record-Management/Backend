@@ -2,7 +2,7 @@ package com.recordmanagement.habitlog.application.user.dto;
 
 import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
-import com.recordmanagement.habitlog.domain.record.model.RecordType;
+import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,9 +1,8 @@
-package com.recordmanagement.habitlog.domain.record.model;
+package com.recordmanagement.habitlog.domain.user.model;
 
 /**
- * 기록 타입 열거형
- * 
- * - 메인 화면에서 보여줄 기록 종류
+ * 사용자가 선택할 수 있는 메인 기록 타입
+ * 온보딩 시에만 사용되는 enum
  */
 public enum RecordType {
     EXERCISE("운동 기록"),
