@@ -18,3 +18,15 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_provider (provider),
     INDEX idx_onboarding_completed (onboarding_completed)
 );
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    token VARCHAR(255) NOT NULL,
+    user_id BIGINT NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_token (token),
+    INDEX idx_user_id (user_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
