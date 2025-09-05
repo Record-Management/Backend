@@ -2,12 +2,14 @@ package com.recordmanagement.habitlog.application.user.dto;
 
 import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
+import com.recordmanagement.habitlog.domain.record.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 사용자 정보를 API 응답용으로 변환하는 DTO
@@ -151,6 +153,21 @@ public class UserResponse {
     @Schema(description = "온보딩 완료 여부", example = "false")
     private final boolean onboardingCompleted;
 
+    @Schema(description = "사용자 닉네임", example = "홍길동")
+    private final String nickname;
+
+    @Schema(description = "메인 기록 타입", example = "EXERCISE")
+    private final RecordType mainRecordType;
+
+    @Schema(description = "생년월일", example = "1998-06-02")
+    private final LocalDate birthDate;
+
+    @Schema(description = "목표 일수", example = "20")
+    private final Integer goalDays;
+
+    @Schema(description = "알림 허용 여부", example = "true")
+    private final Boolean notificationEnabled;
+
     /**
      * 도메인 User 객체를 UserResponse DTO로 변환
      * VO 타입들을 기본 타입으로 변환 후 안전하게 매핑
@@ -167,6 +184,11 @@ public class UserResponse {
                 .socialType(user.getSocialType())
                 .createdAt(user.getCreatedAt())
                 .onboardingCompleted(user.isOnboardingCompleted())
+                .nickname(user.getNickname())
+                .mainRecordType(user.getMainRecordType())
+                .birthDate(user.getBirthDate())
+                .goalDays(user.getGoalDays())
+                .notificationEnabled(user.getNotificationEnabled())
                 .build();
     }
 

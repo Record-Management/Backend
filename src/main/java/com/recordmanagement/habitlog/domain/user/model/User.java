@@ -60,6 +60,9 @@ public class User {
     @Schema(description = "온보딩 완료 여부", example = "false")
     private boolean onboardingCompleted;
 
+    @Schema(description = "사용자 닉네임", example = "홍길동")
+    private String nickname;
+
     @Schema(description = "메인 기록 타입")
     private RecordType mainRecordType;
 
@@ -117,7 +120,7 @@ public class User {
      * - updatedAt 자동 갱신
      */
     public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays, Boolean notificationEnabled) {
-        this.name = nickname;
+        this.nickname = nickname;  // name이 아닌 nickname 필드에 저장
         this.mainRecordType = mainRecordType;
         this.birthDate = birthDate;
         this.goalDays = goalDays;
