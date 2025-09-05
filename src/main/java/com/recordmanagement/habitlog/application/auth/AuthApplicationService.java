@@ -73,7 +73,7 @@ public class AuthApplicationService {
                     command.getSocialType(),
                     socialUserInfo.getSocialId()
             );
-            user = userApplicationService.registerUser(registrationCommand);
+            user = userApplicationService.registerUserForSocialLogin(registrationCommand);
             isNewUser = true;
         }
 

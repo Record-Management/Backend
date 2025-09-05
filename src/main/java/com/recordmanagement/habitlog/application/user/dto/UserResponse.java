@@ -193,6 +193,24 @@ public class UserResponse {
     }
 
     /**
+     * 소셜 로그인용 UserResponse 생성
+     * 기본 정보만 포함하고 온보딩 관련 정보는 제외
+     *
+     * @param user 도메인 사용자 객체
+     * @return 소셜 로그인용 UserResponse DTO
+     */
+    public static UserResponse forSocialLogin(User user) {
+        return UserResponse.builder()
+                .id(user.getId().getValue())
+                .name(user.getName())
+                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
+                .socialType(user.getSocialType())
+                .createdAt(user.getCreatedAt())
+                .onboardingCompleted(user.isOnboardingCompleted())
+                .build();
+    }
+
+    /**
      * 직접 필드 값으로 UserResponse 객체 생성
      *
      * @param id 사용자 ID

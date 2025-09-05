@@ -42,7 +42,10 @@ import lombok.Getter;
           "user": {
             "id": "user_123456",
             "name": "홍길동", 
-            "email": "hong@example.com"
+            "email": "hong@example.com",
+            "socialType": "KAKAO",
+            "createdAt": "2025-09-02T02:46:41.454753",
+            "onboardingCompleted": false
           },
           "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
           "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",

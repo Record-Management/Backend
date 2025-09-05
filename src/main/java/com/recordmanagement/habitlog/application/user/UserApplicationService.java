@@ -70,6 +70,25 @@ public class UserApplicationService {
     }
 
     /**
+     * 소셜 로그인용 사용자 등록
+     * 기본 정보만 포함한 UserResponse 반환
+     *
+     * @param command 사용자 등록 커맨드 객체
+     * @return 등록 완료된 사용자 정보 DTO (소셜로그인용)
+     */
+    public UserResponse registerUserForSocialLogin(UserRegistrationCommand command) {
+        User user = userDomainService.createNewUser(
+                command.getName(),
+                command.getEmail(),
+                command.getSocialType(),
+                command.getSocialId()
+        );
+
+        User savedUser = userRepository.save(user);
+        return UserResponse.forSocialLogin(savedUser);
+    }
+
+    /**
      * 소셜 로그인 사용자 조회
      * 소셜 타입과 소셜 ID 조합으로 사용자 검색
      * 조회 결과를 UserResponse DTO로 변환하여 반환
@@ -82,7 +101,7 @@ public class UserApplicationService {
     @Transactional(readOnly = true)
     public Optional<UserResponse> findBySocialLogin(SocialType socialType, String socialId) {
         return userRepository.findBySocialTypeAndSocialId(socialType, socialId)
-                .map(UserResponse::from);
+                .map(UserResponse::forSocialLogin);
     }
 
     /**
