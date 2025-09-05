@@ -85,7 +85,44 @@ public class AuthController {
      * @param request 소셜 로그인 요청 DTO
      * @return 로그인 결과 및 토큰 정보
      */
-    @Operation(summary = "소셜 로그인", description = "소셜 플랫폼 액세스 토큰으로 로그인 처리 및 토큰 발급")
+    @Operation(
+        summary = "소셜 로그인", 
+        description = "소셜 플랫폼 액세스 토큰으로 로그인 처리 및 토큰 발급",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "로그인 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                        implementation = com.recordmanagement.habitlog.common.response.ApiResponse.class
+                    ),
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "S200",
+                          "message": "로그인이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "user": {
+                              "id": "user_123456",
+                              "name": "홍길동",
+                              "email": "hong@example.com",
+                              "socialType": "KAKAO",
+                              "createdAt": "2025-09-02T02:46:41.454753",
+                              "onboardingCompleted": false
+                            },
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+                            "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+                            "isNewUser": false
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
     @PostMapping("/social-login")
     public ResponseEntity<ApiResponse<SocialLoginResponse>> socialLogin(
             @Valid @RequestBody SocialLoginRequest request) {
@@ -117,7 +154,38 @@ public class AuthController {
      * @param request 리프레시 토큰 요청 DTO
      * @return 새로운 액세스 토큰 응답 DTO
      */
-    @Operation(summary = "액세스 토큰 갱신", description = "유효한 리프레시 토큰으로 액세스 토큰 재발급")
+    @Operation(
+        summary = "액세스 토큰 갱신", 
+        description = "유효한 리프레시 토큰으로 액세스 토큰 재발급",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "토큰 갱신 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "S200",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+                            "expiresIn": 3600,
+                            "user": {
+                              "id": "user_id",
+                              "name": "이름",
+                              "email": null,
+                              "onboardingCompleted": false
+                            }
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<RefreshTokenResponse>> refreshToken(
             @Valid @RequestBody RefreshTokenRequest request) {
@@ -140,7 +208,28 @@ public class AuthController {
      * @param request 로그아웃 요청 DTO (토큰, 전체 기기 로그아웃 여부)
      * @return 빈 성공 응답
      */
-    @Operation(summary = "로그아웃", description = "리프레시 토큰 폐기 및 로그아웃 처리")
+    @Operation(
+        summary = "로그아웃", 
+        description = "리프레시 토큰 폐기 및 로그아웃 처리",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "로그아웃 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "S200",
+                          "message": "로그아웃되었습니다."
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
             @Valid @RequestBody LogoutRequest request) {

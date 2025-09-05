@@ -79,7 +79,13 @@ public class UserController {
     @Operation(
         summary = "회원탈퇴", 
         description = "소셜 플랫폼 연결해제와 함께 계정을 완전히 삭제합니다.",
-        security = @SecurityRequirement(name = "Bearer Authentication")
+        security = @SecurityRequirement(name = "Bearer Authentication"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "204",
+                description = "탈퇴 성공 (응답 본문 없음)"
+            )
+        }
     )
     @DeleteMapping("/withdrawal")
     public ResponseEntity<ApiResponse<Void>> withdrawUser(
@@ -111,7 +117,38 @@ public class UserController {
     @Operation(
         summary = "온보딩 완료", 
         description = "사용자의 온보딩 과정 완료를 처리합니다.",
-        security = @SecurityRequirement(name = "Bearer Authentication")
+        security = @SecurityRequirement(name = "Bearer Authentication"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "온보딩 완료 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "name": "카카오닉네임",
+                            "nickname": "홍길동",
+                            "email": null,
+                            "socialType": "KAKAO",
+                            "mainRecordType": "EXERCISE",
+                            "birthDate": "1998-06-02",
+                            "goalDays": 20,
+                            "notificationEnabled": true,
+                            "onboardingCompleted": true,
+                            "createdAt": "2025-09-02T02:46:41.454753"
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
     )
     @PostMapping("/onboarding/complete")
     public ResponseEntity<ApiResponse<UserResponse>> completeOnboarding(
