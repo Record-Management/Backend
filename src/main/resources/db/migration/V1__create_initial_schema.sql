@@ -1,21 +1,21 @@
 -- V1: 초기 스키마 생성
 
 CREATE TABLE IF NOT EXISTS users (
-    user_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    social_id VARCHAR(255) NOT NULL UNIQUE,
-    provider ENUM('KAKAO', 'APPLE') NOT NULL,
-    onboarding_completed BOOLEAN DEFAULT FALSE,
-    nickname VARCHAR(6),
-    main_record_type ENUM('PHOTO', 'TEXT') DEFAULT NULL,
-    birth_date DATE DEFAULT NULL,
-    goal_days INT DEFAULT NULL,
-    notification_enabled BOOLEAN DEFAULT NULL,
-    refresh_token TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    social_type ENUM('KAKAO', 'APPLE') NOT NULL,
+    social_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    main_record_type ENUM('EXERCISE', 'DAILY', 'SCHEDULE', 'HABIT'),
+    birth_date DATE,
+    goal_days INT,
+    notification_enabled BOOLEAN,
     
     INDEX idx_social_id (social_id),
-    INDEX idx_provider (provider),
+    INDEX idx_social_type (social_type),
     INDEX idx_onboarding_completed (onboarding_completed)
 );
 
