@@ -169,6 +169,8 @@ public class UserApplicationService {
         User user = userRepository.findById(UserId.of(command.userId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
+        log.info("Command에서 받은 닉네임: [{}]", command.nickname());
+        
         try {
             user.completeOnboarding(
                 command.nickname(),
@@ -177,6 +179,8 @@ public class UserApplicationService {
                 command.goalDays(),
                 command.notificationEnabled()
             );
+            
+            log.info("온보딩 완료 후 User의 닉네임: [{}]", user.getNickname());
         } catch (IllegalStateException e) {
             log.warn("온보딩 중복 완료 시도 발생");
             throw new CustomException(ErrorCode.USER_ONBOARDING_ALREADY_COMPLETED);
