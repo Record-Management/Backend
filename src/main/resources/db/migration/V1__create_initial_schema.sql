@@ -20,13 +20,10 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    token VARCHAR(255) NOT NULL,
-    user_id BIGINT NOT NULL,
+    token VARCHAR(512) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(255) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    INDEX idx_token (token),
-    INDEX idx_user_id (user_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    INDEX idx_user_id (user_id)
 );
