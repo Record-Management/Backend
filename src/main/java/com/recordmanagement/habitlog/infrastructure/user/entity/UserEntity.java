@@ -68,6 +68,9 @@ public class UserEntity {
     @Column(name = "onboarding_completed", nullable = false)
     private boolean onboardingCompleted;
 
+    @Column(name = "nickname", length = 6)
+    private String nickname;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "main_record_type")
     private RecordType mainRecordType;
@@ -97,6 +100,7 @@ public class UserEntity {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .onboardingCompleted(user.isOnboardingCompleted())
+                .nickname(user.getNickname())
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
@@ -140,6 +144,10 @@ public class UserEntity {
             var onboardingCompletedField = User.class.getDeclaredField("onboardingCompleted");
             onboardingCompletedField.setAccessible(true);
             onboardingCompletedField.set(user, this.onboardingCompleted);
+
+            var nicknameField = User.class.getDeclaredField("nickname");
+            nicknameField.setAccessible(true);
+            nicknameField.set(user, this.nickname);
 
             var mainRecordTypeField = User.class.getDeclaredField("mainRecordType");
             mainRecordTypeField.setAccessible(true);

@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL,
     onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    nickname VARCHAR(6),
     main_record_type ENUM('EXERCISE', 'DAILY', 'SCHEDULE', 'HABIT'),
     birth_date DATE,
     goal_days INT,
