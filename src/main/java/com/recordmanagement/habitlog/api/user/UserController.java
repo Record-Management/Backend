@@ -7,13 +7,14 @@ import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
+import com.recordmanagement.habitlog.config.exception.CustomException;
+import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
@@ -83,12 +84,12 @@ public class UserController {
     @DeleteMapping("/withdrawal")
     public ResponseEntity<ApiResponse<Void>> withdrawUser(
             @Valid @RequestBody UserWithdrawalRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Authentication authentication) {
 
         log.info("회원탈퇴 요청 수신");
 
         UserWithdrawalCommand command = new UserWithdrawalCommand(
-                userDetails.getUsername(), // JWT에서 추출된 사용자 ID
+                authentication.getName(), // JWT에서 추출된 사용자 ID
                 request.getReason()
         );
 
@@ -115,12 +116,18 @@ public class UserController {
     @PostMapping("/onboarding/complete")
     public ResponseEntity<ApiResponse<UserResponse>> completeOnboarding(
             @Valid @RequestBody OnboardingCompletionRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            Authentication authentication) {
 
         log.info("온보딩 완료 요청 수신");
 
+        String userId = authentication != null ? authentication.getName() : null;
+        if (userId == null) {
+            log.error("인증 실패: authentication이 null입니다");
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+        
         OnboardingCompletionCommand command = new OnboardingCompletionCommand(
-                userDetails.getUsername(),
+                userId,
                 request.getNickname(),
                 request.getMainRecordType(),
                 request.getBirthDate(),
