@@ -118,8 +118,13 @@ public class User {
      * - 온보딩 완료 상태를 true로 변경
      * - 모든 온보딩 데이터 한번에 설정
      * - updatedAt 자동 갱신
+     * - 이미 온보딩이 완료된 경우 예외 발생
      */
     public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays, Boolean notificationEnabled) {
+        if (this.onboardingCompleted) {
+            throw new IllegalStateException("이미 온보딩이 완료된 사용자입니다.");
+        }
+        
         this.nickname = nickname;  // name이 아닌 nickname 필드에 저장
         this.mainRecordType = mainRecordType;
         this.birthDate = birthDate;

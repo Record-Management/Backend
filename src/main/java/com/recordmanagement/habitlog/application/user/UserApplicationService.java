@@ -107,7 +107,7 @@ public class UserApplicationService {
      * @param command 회원탈퇴 커맨드
      */
     public void withdrawUser(UserWithdrawalCommand command) {
-        log.info("회원탈퇴 시작: userId={}", command.getUserId());
+        log.info("회원탈퇴 처리 시작");
         
         // 1. 사용자 조회
         User user = userRepository.findById(UserId.of(command.getUserId()))
@@ -120,8 +120,7 @@ public class UserApplicationService {
                     user.getSocialId()
             );
         } catch (Exception e) {
-            log.warn("소셜 연결 해제 실패, 계속 진행: userId={}, error={}", 
-                    command.getUserId(), e.getMessage());
+            log.warn("소셜 연결 해제 실패, 계속 진행: error={}", e.getMessage());
         }
         
         try {
@@ -131,11 +130,10 @@ public class UserApplicationService {
             // 4. 사용자 계정 삭제
             userRepository.delete(user);
             
-            log.info("회원탈퇴 완료: userId={}, reason={}", 
-                    command.getUserId(), command.getReason());
+            log.info("회원탈퇴 완료: reason={}", command.getReason());
                     
         } catch (Exception e) {
-            log.error("회원탈퇴 실패: userId={}, error={}", command.getUserId(), e.getMessage());
+            log.error("회원탈퇴 실패: error={}", e.getMessage());
             throw new CustomException(ErrorCode.USER_WITHDRAWAL_FAILED);
         }
     }
@@ -155,7 +153,7 @@ public class UserApplicationService {
         // - 사용자 설정 데이터
         // - 기타 연관 데이터
         
-        log.info("사용자 관련 데이터 삭제 완료: userId={}", user.getId().getValue());
+        log.info("사용자 관련 데이터 삭제 완료");
     }
 
     /**
@@ -166,21 +164,27 @@ public class UserApplicationService {
      * @return 완료된 사용자 정보 DTO
      */
     public UserResponse completeOnboarding(OnboardingCompletionCommand command) {
-        log.info("온보딩 완료 처리 시작: userId={}", command.userId());
+        log.info("온보딩 완료 처리 시작");
         
         User user = userRepository.findById(UserId.of(command.userId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        user.completeOnboarding(
-            command.nickname(),
-            command.mainRecordType(), 
-            command.birthDate(),
-            command.goalDays(),
-            command.notificationEnabled()
-        );
+        try {
+            user.completeOnboarding(
+                command.nickname(),
+                command.mainRecordType(), 
+                command.birthDate(),
+                command.goalDays(),
+                command.notificationEnabled()
+            );
+        } catch (IllegalStateException e) {
+            log.warn("온보딩 중복 완료 시도 발생");
+            throw new CustomException(ErrorCode.USER_ONBOARDING_ALREADY_COMPLETED);
+        }
+        
         User savedUser = userRepository.save(user);
         
-        log.info("온보딩 완료 처리 완료: userId={}", command.userId());
+        log.info("온보딩 완료 처리 완료");
         
         return UserResponse.from(savedUser);
     }

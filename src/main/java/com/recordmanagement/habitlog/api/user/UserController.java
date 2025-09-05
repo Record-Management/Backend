@@ -85,7 +85,7 @@ public class UserController {
             @Valid @RequestBody UserWithdrawalRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("회원탈퇴 요청: userId={}", userDetails.getUsername());
+        log.info("회원탈퇴 요청 수신");
 
         UserWithdrawalCommand command = new UserWithdrawalCommand(
                 userDetails.getUsername(), // JWT에서 추출된 사용자 ID
@@ -94,7 +94,7 @@ public class UserController {
 
         userApplicationService.withdrawUser(command);
 
-        log.info("회원탈퇴 처리 완료: userId={}", userDetails.getUsername());
+        log.info("회원탈퇴 처리 완료");
 
         return ResponseEntity.noContent().build();
     }
@@ -117,7 +117,7 @@ public class UserController {
             @Valid @RequestBody OnboardingCompletionRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        log.info("온보딩 완료 요청: userId={}", userDetails.getUsername());
+        log.info("온보딩 완료 요청 수신");
 
         OnboardingCompletionCommand command = new OnboardingCompletionCommand(
                 userDetails.getUsername(),
@@ -130,7 +130,7 @@ public class UserController {
 
         UserResponse user = userApplicationService.completeOnboarding(command);
 
-        log.info("온보딩 완료 처리 완료: userId={}", userDetails.getUsername());
+        log.info("온보딩 완료 처리 완료");
 
         return ResponseEntity.ok(ApiResponse.success(user));
     }

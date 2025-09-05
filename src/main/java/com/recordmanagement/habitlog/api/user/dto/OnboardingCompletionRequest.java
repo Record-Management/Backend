@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
+import com.recordmanagement.habitlog.common.validation.ValidBirthDate;
 import java.time.LocalDate;
 
 /**
@@ -40,6 +41,7 @@ public class OnboardingCompletionRequest {
     
     @NotNull(message = "생년월일은 필수입니다")
     @Past(message = "생년월일은 과거 날짜여야 합니다")
+    @ValidBirthDate
     @Schema(description = "생년월일", example = "1998-06-02")
     private LocalDate birthDate;
     
