@@ -35,7 +35,6 @@ import lombok.Getter;
     example = """
         {
           "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-          "tokenType": "Bearer",
           "expiresIn": 3600,
           "user": {
             "id": "user_id",
@@ -68,14 +67,6 @@ public class RefreshTokenResponse {
     )
     private final String accessToken;
     
-    /** 토큰 타입 (항상 "Bearer") */
-    @Schema(
-        description = "토큰 타입 (OAuth2 표준에 따라 항상 'Bearer')",
-        example = "Bearer",
-        defaultValue = "Bearer",
-        required = true
-    )
-    private final String tokenType = "Bearer";
     
     /** 토큰 만료까지 남은 시간 (초 단위) */
     @Schema(

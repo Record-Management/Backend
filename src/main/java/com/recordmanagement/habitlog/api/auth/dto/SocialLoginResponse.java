@@ -1,7 +1,6 @@
 package com.recordmanagement.habitlog.api.auth.dto;
 
 import com.recordmanagement.habitlog.application.auth.dto.SocialLoginResult;
-import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,10 +57,10 @@ public class SocialLoginResponse {
     /** 로그인한 사용자 정보 */
     @Schema(
         description = "로그인한 사용자의 기본 정보",
-        implementation = UserResponse.class,
+        implementation = SocialLoginUserResponse.class,
         required = true
     )
-    private final UserResponse user;
+    private final SocialLoginUserResponse user;
     
     /** JWT 액세스 토큰 */
     @Schema(
@@ -130,7 +129,7 @@ public class SocialLoginResponse {
      */
     public static SocialLoginResponse from(SocialLoginResult result) {
         return SocialLoginResponse.builder()
-                .user(result.getUser())
+                .user(SocialLoginUserResponse.from(result.getUser()))
                 .accessToken(result.getAccessToken())
                 .refreshToken(result.getRefreshToken())
                 .isNewUser(result.isNewUser())
