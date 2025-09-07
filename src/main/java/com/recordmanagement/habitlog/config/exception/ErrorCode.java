@@ -142,6 +142,9 @@ public enum ErrorCode {
     @Schema(description = "파일 크기 초과")
     FILE_SIZE_EXCEEDED(400, "E40072", "파일 크기가 제한을 초과했습니다."),
 
+    @Schema(description = "파일 개수 초과")
+    FILE_COUNT_EXCEEDED(400, "E40073", "파일 개수가 최대 3개를 초과했습니다."),
+
     @Schema(description = "파일 업로드 실패")
     FILE_UPLOAD_FAILED(500, "E50006", "파일 업로드에 실패했습니다."),
 
@@ -195,6 +198,9 @@ public enum ErrorCode {
     @Schema(description = "특정 데이터 접근 권한 없음")
     RESOURCE_ACCESS_DENIED(403, "E40304", "해당 데이터에 접근할 권한이 없습니다."),
 
+    @Schema(description = "기록 접근 권한 없음")
+    RECORD_ACCESS_DENIED(403, "E40305", "해당 기록에 접근할 권한이 없습니다."),
+
     // ============================================================================
     // 404 NOT FOUND - 리소스 없음
     // ============================================================================
@@ -213,6 +219,9 @@ public enum ErrorCode {
 
     @Schema(description = "API 엔드포인트 없음")
     API_ENDPOINT_NOT_FOUND(404, "E40405", "존재하지 않는 API 엔드포인트입니다."),
+
+    @Schema(description = "기록 정보 없음")
+    RECORD_NOT_FOUND(404, "E40406", "존재하지 않는 기록입니다."),
 
     // ============================================================================
     // 405 METHOD NOT ALLOWED - HTTP 메서드 오류

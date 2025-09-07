@@ -160,11 +160,7 @@ public class UserController {
                 request.getNickname(), request.getMainRecordType(), request.getBirthDate(), 
                 request.getGoalDays(), request.getNotificationEnabled());
 
-        String userId = authentication != null ? authentication.getName() : null;
-        if (userId == null) {
-            log.error("인증 실패: authentication이 null입니다");
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
-        }
+        String userId = authentication.getName();
         
         OnboardingCompletionCommand command = new OnboardingCompletionCommand(
                 userId,

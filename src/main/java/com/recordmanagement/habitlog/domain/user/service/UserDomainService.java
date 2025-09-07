@@ -1,5 +1,7 @@
 package com.recordmanagement.habitlog.domain.user.service;
 
+import com.recordmanagement.habitlog.config.exception.CustomException;
+import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.user.model.Email;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
@@ -59,7 +61,7 @@ public class UserDomainService {
      */
     public User createNewUser(String name, String email, SocialType socialType, String socialId) {
         if (isDuplicateUser(socialType, socialId)) {
-            throw new IllegalArgumentException("이미 존재하는 사용자입니다.");
+            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
         return new User(name, Email.of(email), socialType, socialId);

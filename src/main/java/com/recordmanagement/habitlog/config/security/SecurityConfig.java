@@ -96,18 +96,30 @@ public class SecurityConfig {
 
                 // URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
+                        // API 문서 및 개발/테스트용 경로 - 인증 불필요
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
-                                "/webjars/**"
-                        ).permitAll() // API 문서 관련 경로는 모두 허용
-
-                        .requestMatchers("/api/auth/**").permitAll() // 인증 관련 API 공개
-
-                        .requestMatchers("/api/files/**").authenticated() // 파일 업로드 API는 인증 필요
-
-                        .anyRequest().authenticated() // 그 외 모든 API는 인증 필요
+                                "/webjars/**",
+                                "/favicon.ico",
+                                "/error"
+                        ).permitAll()
+                        
+                        // 소셜 로그인, 토큰 갱신 - 인증 불필요
+                        .requestMatchers(
+                                "/api/auth/social-login",
+                                "/api/auth/refresh"
+                        ).permitAll()
+                        
+                        // 로그아웃 - 인증 필요 (토큰이 있어야 로그아웃 가능)
+                        .requestMatchers("/api/auth/logout").authenticated()
+                        
+                        // S3 연결 테스트 - 개발용이므로 인증 불필요 (현재 비활성화)
+                        // .requestMatchers("/api/files/test-connection").permitAll()
+                        
+                        // 나머지 모든 API - 인증 필요
+                        .anyRequest().authenticated()
                 )
 
                 // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞에 등록

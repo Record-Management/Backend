@@ -1,5 +1,7 @@
 package com.recordmanagement.habitlog.domain.user.model;
 
+import com.recordmanagement.habitlog.config.exception.CustomException;
+import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
@@ -122,7 +124,7 @@ public class User {
      */
     public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays, Boolean notificationEnabled) {
         if (this.onboardingCompleted) {
-            throw new IllegalStateException("이미 온보딩이 완료된 사용자입니다.");
+            throw new CustomException(ErrorCode.USER_ONBOARDING_ALREADY_COMPLETED);
         }
         
         this.nickname = nickname;  // name이 아닌 nickname 필드에 저장
