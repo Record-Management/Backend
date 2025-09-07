@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.infrastructure.auth.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recordmanagement.habitlog.domain.auth.model.SocialUserInfo;
 import com.recordmanagement.habitlog.config.exception.SocialLoginException;
@@ -10,6 +11,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -23,8 +25,14 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigInteger;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Apple 로그인 클라이언트 구현체 (프로덕션 버전)
@@ -55,11 +63,16 @@ public class AppleLoginClient implements SocialLoginClient {
 
     private static final String APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token";
     private static final String APPLE_ISSUER = "https://appleid.apple.com";
-    private static final String APPLE_AUDIENCE_PREFIX = "https://appleid.apple.com";
+    private static final String APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys";
 
     private final RestTemplate restTemplate;
     private final AppleJwtUtils appleJwtUtils;
     private final ObjectMapper objectMapper;
+    
+    // Apple 공개 키 캐시
+    private Map<String, PublicKey> publicKeyCache = new HashMap<>();
+    private long lastKeyRefreshTime = 0;
+    private static final long KEY_CACHE_DURATION = 24 * 60 * 60 * 1000; // 24시간
 
     @Value("${social.apple.team-id}")
     private String teamId;
@@ -164,26 +177,42 @@ public class AppleLoginClient implements SocialLoginClient {
     }
 
     /**
-     * ID Token 파싱 및 상세 검증
+     * ID Token 파싱 및 상세 검증 (Apple 공개 키로 서명 검증)
      */
     private AppleUserInfo parseAndValidateIdToken(String idToken) {
         try {
-            // JWT 파싱 (서명 검증 없이 클레임만 추출)
-            // 실제 운영환경에서는 Apple 공개키로 서명 검증 권장
+            // 1. JWT 헤더에서 키 ID 추출
             String[] chunks = idToken.split("\\.");
+            if (chunks.length != 3) {
+                throw new IllegalArgumentException("Invalid JWT structure");
+            }
+            
+            String headerJson = new String(Base64.getUrlDecoder().decode(chunks[0]));
+            JsonNode headerNode = objectMapper.readTree(headerJson);
+            String keyId = headerNode.get("kid").asText();
+            String algorithm = headerNode.get("alg").asText();
+            
+            log.info("Apple JWT 헤더 - kid: {}, alg: {}", keyId, algorithm);
+            
+            // 2. Apple 공개 키 가져오기
+            PublicKey publicKey = getApplePublicKey(keyId);
+            
+            // 3. JWT 서명 검증 및 파싱
             Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(publicKey)
+                    .requireIssuer(APPLE_ISSUER)
                     .build()
-                    .parseClaimsJwt(chunks[0] + "." + chunks[1] + ".") // 서명 부분 제거
+                    .parseClaimsJws(idToken)
                     .getBody();
 
-            // 상세 검증
+            // 4. 추가 검증
             validateClaims(claims);
             
             return new AppleUserInfo(
                 claims.getSubject(),
                 claims.get("email", String.class),
-                claims.get("email_verified", String.class),
-                claims.get("is_private_email", String.class),
+                String.valueOf(claims.get("email_verified", Boolean.class)),
+                String.valueOf(claims.get("is_private_email", Boolean.class)),
                 claims.getIssuer(),
                 claims.getAudience(),
                 claims.getExpiration().getTime(),
@@ -359,6 +388,97 @@ public class AppleLoginClient implements SocialLoginClient {
         }
         
         return sub.substring(0, 4) + "***" + sub.substring(sub.length() - 4);
+    }
+
+    /**
+     * Apple 공개 키 가져오기 (JWKS 엔드포인트 사용)
+     */
+    private PublicKey getApplePublicKey(String keyId) {
+        try {
+            // 캐시 확인 및 갱신
+            if (needsKeyRefresh() || !publicKeyCache.containsKey(keyId)) {
+                refreshApplePublicKeys();
+            }
+            
+            PublicKey publicKey = publicKeyCache.get(keyId);
+            if (publicKey == null) {
+                log.error("Apple 공개 키를 찾을 수 없음: {}", keyId);
+                throw new IllegalArgumentException("Apple 공개 키를 찾을 수 없습니다: " + keyId);
+            }
+            
+            return publicKey;
+            
+        } catch (Exception e) {
+            log.error("Apple 공개 키 조회 실패", e);
+            throw new RuntimeException("Apple 공개 키 조회에 실패했습니다", e);
+        }
+    }
+    
+    /**
+     * Apple JWKS에서 공개 키 목록 갱신
+     */
+    private synchronized void refreshApplePublicKeys() {
+        try {
+            log.info("Apple 공개 키 갱신 시작");
+            
+            ResponseEntity<String> response = restTemplate.getForEntity(APPLE_JWKS_URL, String.class);
+            if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+                throw new RuntimeException("Apple JWKS 조회 실패: HTTP " + response.getStatusCode());
+            }
+            
+            JsonNode jwksNode = objectMapper.readTree(response.getBody());
+            JsonNode keysNode = jwksNode.get("keys");
+            
+            Map<String, PublicKey> newKeys = new HashMap<>();
+            
+            for (JsonNode keyNode : keysNode) {
+                String kid = keyNode.get("kid").asText();
+                String kty = keyNode.get("kty").asText();
+                String use = keyNode.has("use") ? keyNode.get("use").asText() : "sig";
+                
+                if ("RSA".equals(kty) && "sig".equals(use)) {
+                    String n = keyNode.get("n").asText();
+                    String e = keyNode.get("e").asText();
+                    
+                    PublicKey publicKey = createRSAPublicKey(n, e);
+                    newKeys.put(kid, publicKey);
+                    
+                    log.debug("Apple 공개 키 로드됨: {}", kid);
+                }
+            }
+            
+            publicKeyCache = newKeys;
+            lastKeyRefreshTime = System.currentTimeMillis();
+            
+            log.info("Apple 공개 키 갱신 완료: {} 개 키 로드됨", newKeys.size());
+            
+        } catch (Exception e) {
+            log.error("Apple 공개 키 갱신 실패", e);
+            throw new RuntimeException("Apple 공개 키 갱신에 실패했습니다", e);
+        }
+    }
+    
+    /**
+     * RSA 공개 키 생성
+     */
+    private PublicKey createRSAPublicKey(String nStr, String eStr) throws Exception {
+        byte[] nBytes = Base64.getUrlDecoder().decode(nStr);
+        byte[] eBytes = Base64.getUrlDecoder().decode(eStr);
+        
+        BigInteger modulus = new BigInteger(1, nBytes);
+        BigInteger exponent = new BigInteger(1, eBytes);
+        
+        RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+        KeyFactory factory = KeyFactory.getInstance("RSA");
+        
+        return factory.generatePublic(spec);
+    }
+    
+    /**
+     * 키 캐시 갱신이 필요한지 확인
+     */
+    private boolean needsKeyRefresh() {
+        return (System.currentTimeMillis() - lastKeyRefreshTime) > KEY_CACHE_DURATION;
     }
 
     /**
