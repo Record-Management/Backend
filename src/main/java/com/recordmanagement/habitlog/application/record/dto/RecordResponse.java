@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.domain.user.model.RecordType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public record RecordResponse(
@@ -14,6 +15,7 @@ public record RecordResponse(
     String content,
     List<String> imageUrls,
     LocalDate recordDate,
+    LocalTime recordTime,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {
@@ -26,6 +28,7 @@ public record RecordResponse(
             record.getContent(),
             record.getImageUrls(),
             record.getRecordDate(),
+            record.getRecordTime(),
             record.getCreatedAt(),
             record.getUpdatedAt()
         );

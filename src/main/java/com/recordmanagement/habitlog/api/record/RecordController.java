@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -43,6 +44,22 @@ public class RecordController {
     }
     
     @Operation(summary = "기록 작성", description = "새로운 기록을 작성합니다")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        description = "기록 작성 요청",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "type": "DAILY",
+                    "emotion": "😊",
+                    "content": "오늘은 정말 좋은 하루였다",
+                    "imageUrls": ["https://example.com/image1.jpg"],
+                    "recordDate": "2025-01-07",
+                    "recordTime": "10:30"
+                }
+                """)
+        )
+    )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "기록 작성 성공",
@@ -59,6 +76,7 @@ public class RecordController {
                         "content": "오늘은 정말 좋은 하루였다",
                         "imageUrls": ["https://example.com/image1.jpg"],
                         "recordDate": "2025-01-07",
+                        "recordTime": "10:30",
                         "createdAt": "2025-01-07T10:30:00",
                         "updatedAt": "2025-01-07T10:30:00"
                     }
@@ -71,8 +89,8 @@ public class RecordController {
             @Valid @RequestBody CreateRecordRequest request,
             Authentication authentication) {
         
-        log.info("기록 작성 요청: type=[{}], content=[{}], recordDate=[{}]", 
-                request.getType(), request.getContent(), request.getRecordDate());
+        log.info("기록 작성 요청: type=[{}], content=[{}], recordDate=[{}], recordTime=[{}]", 
+                request.getType(), request.getContent(), request.getRecordDate(), request.getRecordTime());
         
         String userIdValue = authentication.getName();
         UserId userId = UserId.of(userIdValue);
@@ -83,7 +101,8 @@ public class RecordController {
             request.getEmotion(),
             request.getContent(),
             request.getImageUrls(),
-            request.getRecordDate()
+            request.getRecordDate(),
+            request.getRecordTime()
         );
         
         RecordResponse response = recordApplicationService.createRecord(command);
@@ -94,6 +113,21 @@ public class RecordController {
     }
     
     @Operation(summary = "기록 수정", description = "기존 기록을 수정합니다")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
+        description = "기록 수정 요청",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "type": "EXERCISE",
+                    "emotion": "😍",
+                    "content": "수정된 내용입니다",
+                    "imageUrls": ["https://example.com/image2.jpg"],
+                    "recordTime": "11:15"
+                }
+                """)
+        )
+    )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "기록 수정 성공",
@@ -110,6 +144,7 @@ public class RecordController {
                         "content": "수정된 내용입니다",
                         "imageUrls": ["https://example.com/image2.jpg"],
                         "recordDate": "2025-01-07",
+                        "recordTime": "11:15",
                         "createdAt": "2025-01-07T10:30:00",
                         "updatedAt": "2025-01-07T11:15:00"
                     }
@@ -123,7 +158,8 @@ public class RecordController {
             @Valid @RequestBody UpdateRecordRequest request,
             Authentication authentication) {
         
-        log.info("기록 수정 요청: recordId=[{}], content=[{}]", recordId, request.getContent());
+        log.info("기록 수정 요청: recordId=[{}], content=[{}], recordTime=[{}]", 
+                recordId, request.getContent(), request.getRecordTime());
         
         String userIdValue = authentication.getName();
         UserId userId = UserId.of(userIdValue);
@@ -134,7 +170,8 @@ public class RecordController {
             request.getType(),
             request.getEmotion(),
             request.getContent(),
-            request.getImageUrls()
+            request.getImageUrls(),
+            request.getRecordTime()
         );
         
         RecordResponse response = recordApplicationService.updateRecord(command);
@@ -251,6 +288,7 @@ public class RecordController {
                                 "content": "오늘은 정말 좋은 하루였습니다. 아침에 운동도 하고 친구들과 맛있는 음식도 먹었어요.",
                                 "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
                                 "recordDate": "2025-01-07",
+                                "recordTime": "15:21",
                                 "createdAt": "2025-01-07T15:21:00",
                                 "updatedAt": "2025-01-07T15:21:00"
                             }

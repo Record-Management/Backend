@@ -6,6 +6,7 @@ import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public record CreateRecordCommand(
@@ -14,7 +15,8 @@ public record CreateRecordCommand(
     String emotion,
     String content,
     List<String> imageUrls,
-    LocalDate recordDate
+    LocalDate recordDate,
+    LocalTime recordTime
 ) {
     
     public CreateRecordCommand {
@@ -31,6 +33,9 @@ public record CreateRecordCommand(
             throw new CustomException(ErrorCode.VALIDATION_FAIL);
         }
         if (recordDate == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (recordTime == null) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
         if (imageUrls == null) {

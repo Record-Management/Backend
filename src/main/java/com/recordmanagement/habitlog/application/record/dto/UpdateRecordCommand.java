@@ -6,6 +6,7 @@ import com.recordmanagement.habitlog.domain.record.model.RecordId;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public record UpdateRecordCommand(
@@ -14,7 +15,8 @@ public record UpdateRecordCommand(
     RecordType type,
     String emotion,
     String content,
-    List<String> imageUrls
+    List<String> imageUrls,
+    LocalTime recordTime
 ) {
     
     public UpdateRecordCommand {

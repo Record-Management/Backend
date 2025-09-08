@@ -8,6 +8,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,6 +43,9 @@ public class RecordEntity {
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
     
+    @Column(name = "record_time")
+    private LocalTime recordTime;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -52,7 +56,7 @@ public class RecordEntity {
     }
     
     public RecordEntity(String id, String userId, RecordType type, String emotion,
-                       String content, String imageUrls, LocalDate recordDate,
+                       String content, String imageUrls, LocalDate recordDate, LocalTime recordTime,
                        LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
@@ -61,6 +65,7 @@ public class RecordEntity {
         this.content = content;
         this.imageUrls = imageUrls;
         this.recordDate = recordDate;
+        this.recordTime = recordTime;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -74,6 +79,7 @@ public class RecordEntity {
             record.getContent(),
             String.join(",", record.getImageUrls()),
             record.getRecordDate(),
+            record.getRecordTime(),
             record.getCreatedAt(),
             record.getUpdatedAt()
         );
@@ -92,6 +98,7 @@ public class RecordEntity {
             this.content,
             imageUrlList,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             this.updatedAt
         );
@@ -105,6 +112,7 @@ public class RecordEntity {
     public String getContent() { return content; }
     public String getImageUrls() { return imageUrls; }
     public LocalDate getRecordDate() { return recordDate; }
+    public LocalTime getRecordTime() { return recordTime; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class CreateRecordRequest {
@@ -25,6 +26,9 @@ public class CreateRecordRequest {
     @NotNull(message = "기록 날짜는 필수입니다")
     private LocalDate recordDate;
     
+    @NotNull(message = "기록 시간은 필수입니다")
+    private LocalTime recordTime;
+    
     // Getters and Setters
     public RecordType getType() { return type; }
     public void setType(RecordType type) { this.type = type; }
@@ -40,4 +44,7 @@ public class CreateRecordRequest {
     
     public LocalDate getRecordDate() { return recordDate; }
     public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
+    
+    public LocalTime getRecordTime() { return recordTime; }
+    public void setRecordTime(LocalTime recordTime) { this.recordTime = recordTime; }
 }

@@ -42,7 +42,8 @@ public class RecordApplicationService {
             command.emotion(),
             command.content(),
             command.imageUrls(),
-            command.recordDate()
+            command.recordDate(),
+            command.recordTime()
         );
         
         Record savedRecord = recordRepository.save(record);
@@ -62,6 +63,11 @@ public class RecordApplicationService {
             .updateEmotion(command.emotion())
             .updateContent(command.content())
             .updateImages(command.imageUrls());
+            
+        // recordTime이 제공되면 업데이트
+        if (command.recordTime() != null) {
+            updatedRecord = updatedRecord.updateTime(command.recordTime());
+        }
         
         Record savedRecord = recordRepository.save(updatedRecord);
         return RecordResponse.from(savedRecord);

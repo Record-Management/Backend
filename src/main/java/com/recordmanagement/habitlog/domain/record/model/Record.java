@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class Record {
@@ -16,11 +17,12 @@ public class Record {
     private final String content;
     private final List<String> imageUrls;
     private final LocalDate recordDate;
+    private final LocalTime recordTime;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     public Record(RecordId id, UserId userId, RecordType type, String emotion, 
-                 String content, List<String> imageUrls, LocalDate recordDate, 
+                 String content, List<String> imageUrls, LocalDate recordDate, LocalTime recordTime,
                  LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
@@ -29,12 +31,13 @@ public class Record {
         this.content = content;
         this.imageUrls = imageUrls != null ? List.copyOf(imageUrls) : List.of();
         this.recordDate = recordDate;
+        this.recordTime = recordTime;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
     
     public static Record create(UserId userId, RecordType type, String emotion, 
-                              String content, List<String> imageUrls, LocalDate recordDate) {
+                              String content, List<String> imageUrls, LocalDate recordDate, LocalTime recordTime) {
         LocalDateTime now = LocalDateTime.now();
         return new Record(
             RecordId.generate(),
@@ -44,6 +47,7 @@ public class Record {
             content,
             imageUrls,
             recordDate,
+            recordTime,
             now,
             now
         );
@@ -58,6 +62,7 @@ public class Record {
             newContent,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -72,6 +77,7 @@ public class Record {
             this.content,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -86,6 +92,7 @@ public class Record {
             this.content,
             newImageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -100,6 +107,22 @@ public class Record {
             this.content,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
+            this.createdAt,
+            LocalDateTime.now()
+        );
+    }
+    
+    public Record updateTime(LocalTime newRecordTime) {
+        return new Record(
+            this.id,
+            this.userId,
+            this.type,
+            this.emotion,
+            this.content,
+            this.imageUrls,
+            this.recordDate,
+            newRecordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -113,6 +136,7 @@ public class Record {
     public String getContent() { return content; }
     public List<String> getImageUrls() { return List.copyOf(imageUrls); }
     public LocalDate getRecordDate() { return recordDate; }
+    public LocalTime getRecordTime() { return recordTime; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
