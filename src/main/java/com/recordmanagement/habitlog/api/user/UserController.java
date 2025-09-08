@@ -3,10 +3,13 @@ package com.recordmanagement.habitlog.api.user;
 import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
+import com.recordmanagement.habitlog.application.user.dto.FcmTokenUpdateCommand;
 import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
+import com.recordmanagement.habitlog.api.user.dto.FcmTokenUpdateRequest;
+import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -176,6 +179,61 @@ public class UserController {
         log.info("온보딩 완료 처리 완료");
 
         return ResponseEntity.ok(ApiResponse.success(user));
+    }
+
+    @Operation(
+        summary = "FCM 토큰 업데이트",
+        description = "푸시 알림을 위한 FCM 토큰을 업데이트합니다.",
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "FCM 토큰 업데이트 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        name = "성공 응답",
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "U200",
+                          "message": "FCM 토큰이 성공적으로 업데이트되었습니다",
+                          "data": null
+                        }
+                        """
+                    )
+                )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음"
+            )
+        }
+    )
+    // TODO: Firebase 설정 완료 후 주석 해제
+    // @PutMapping("/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> updateFcmToken(
+            @Valid @RequestBody FcmTokenUpdateRequest request,
+            Authentication authentication) {
+
+        log.info("FCM 토큰 업데이트 요청 수신");
+
+        String userId = authentication.getName();
+        
+        FcmTokenUpdateCommand command = new FcmTokenUpdateCommand(
+                UserId.of(userId),
+                request.getFcmToken()
+        );
+
+        userApplicationService.updateFcmToken(command);
+
+        log.info("FCM 토큰 업데이트 완료");
+
+        return ResponseEntity.ok(ApiResponse.success("FCM 토큰이 성공적으로 업데이트되었습니다", null));
     }
 
 }

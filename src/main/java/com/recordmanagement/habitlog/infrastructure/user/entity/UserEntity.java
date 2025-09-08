@@ -84,6 +84,9 @@ public class UserEntity {
     @Column(name = "notification_enabled")
     private Boolean notificationEnabled;
 
+    @Column(name = "fcm_token", length = 1000)
+    private String fcmToken;
+
     /**
      * 도메인 모델(User)을 엔터티로 변환
      *
@@ -105,6 +108,7 @@ public class UserEntity {
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
                 .notificationEnabled(user.getNotificationEnabled())
+                .fcmToken(null)  // TODO: Firebase 설정 후 user.getFcmToken()으로 변경
                 .build();
     }
 
@@ -164,6 +168,11 @@ public class UserEntity {
             var notificationEnabledField = User.class.getDeclaredField("notificationEnabled");
             notificationEnabledField.setAccessible(true);
             notificationEnabledField.set(user, this.notificationEnabled);
+
+            // TODO: Firebase 설정 후 주석 해제
+            // var fcmTokenField = User.class.getDeclaredField("fcmToken");
+            // fcmTokenField.setAccessible(true);
+            // fcmTokenField.set(user, this.fcmToken);
 
         } catch (Exception e) {
             throw new RuntimeException("도메인 필드 설정 실패", e);

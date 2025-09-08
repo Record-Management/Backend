@@ -77,6 +77,9 @@ public class User {
     @Schema(description = "알림 허용 여부", example = "true")
     private Boolean notificationEnabled;
 
+    @Schema(description = "FCM 토큰 (푸시 알림용)", example = "dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuLi4u")
+    private String fcmToken;
+
     /**
      * 신규 사용자 생성 생성자
      *
@@ -133,6 +136,19 @@ public class User {
         this.goalDays = goalDays;
         this.notificationEnabled = notificationEnabled;
         this.onboardingCompleted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * FCM 토큰 업데이트
+     *
+     * - 푸시 알림을 위한 FCM 토큰 설정
+     * - updatedAt 자동 갱신
+     *
+     * @param fcmToken FCM 토큰
+     */
+    public void updateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
         this.updatedAt = LocalDateTime.now();
     }
 
