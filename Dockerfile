@@ -17,7 +17,6 @@ RUN gradle clean build -x test --no-daemon --stacktrace
 # 2단계: Runtime stage
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-
 # build/libs 디렉토리에서 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
 
