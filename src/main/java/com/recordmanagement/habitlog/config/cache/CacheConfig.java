@@ -12,10 +12,11 @@ import java.util.List;
  * 캐시 설정
  * 
  * 성능 최적화를 위한 캐싱 전략:
- * - calendar: 캘린더 조회 결과 (TTL: 10분)
- * - user: 사용자 정보 (TTL: 30분)
+ * - calendar: 캘린더 조회 결과 (애플리케이션 재시작 시 초기화)
+ * - user: 사용자 정보
  * 
- * TODO: 운영 환경에서는 Redis로 교체 권장
+ * 인메모리 캐시로 단일 서버 환경에서 충분한 성능 제공
+ * 별도 외부 캐시 서버 없이도 효과적인 캐싱 지원
  */
 @Configuration
 @EnableCaching

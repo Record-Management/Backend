@@ -19,7 +19,7 @@ public interface RecordRepository {
     
     List<Record> findByUserIdAndRecordDateBetween(UserId userId, LocalDate startDate, LocalDate endDate);
     
-    List<Record> findByUserIdAndType(UserId userId, RecordType type);
+    List<Record> findByUserIdAndRecordDateBetweenAndTypeIn(UserId userId, LocalDate startDate, LocalDate endDate, List<RecordType> types);
     
     void deleteById(RecordId recordId);
     

@@ -17,11 +17,12 @@ public interface JpaRecordRepository extends JpaRepository<RecordEntity, String>
     
     List<RecordEntity> findByUserIdAndRecordDateBetween(String userId, LocalDate startDate, LocalDate endDate);
     
-    List<RecordEntity> findByUserIdAndType(String userId, RecordType type);
-    
     @Query("SELECT r FROM RecordEntity r WHERE r.userId = :userId ORDER BY r.recordDate DESC, r.createdAt DESC")
     List<RecordEntity> findByUserIdOrderByRecordDateDescCreatedAtDesc(@Param("userId") String userId);
     
     // 페이지네이션 지원 메서드 추가
     Page<RecordEntity> findByUserIdOrderByRecordDateDescCreatedAtDesc(@Param("userId") String userId, Pageable pageable);
+    
+    // 캘린더 타입별 필터링 지원 메서드
+    List<RecordEntity> findByUserIdAndRecordDateBetweenAndTypeIn(String userId, LocalDate startDate, LocalDate endDate, List<RecordType> types);
 }

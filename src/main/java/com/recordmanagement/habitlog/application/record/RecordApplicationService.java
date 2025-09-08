@@ -5,7 +5,6 @@ import com.recordmanagement.habitlog.application.record.dto.CalendarResponse;
 import com.recordmanagement.habitlog.application.record.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.RecordResponse;
-import com.recordmanagement.habitlog.application.record.dto.RecordsByTypeResponse;
 import com.recordmanagement.habitlog.application.record.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
@@ -78,16 +77,25 @@ public class RecordApplicationService {
         recordRepository.deleteById(RecordId.from(recordId));
     }
     
-    @Cacheable(value = "calendar", key = "#userId + '_' + #year + '_' + #month")
+    @Cacheable(value = "calendar", key = "#userId + '_' + #year + '_' + #month + '_' + (#types != null ? #types.toString() : 'ALL')")
     @Transactional(readOnly = true)
-    public CalendarResponse getCalendar(String userId, int year, int month) {
+    public CalendarResponse getCalendar(String userId, int year, int month, List<RecordType> types) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
         
-        List<Record> records = recordRepository.findByUserIdAndRecordDateBetween(
-            UserId.of(userId), startDate, endDate
-        );
+        List<Record> records;
+        
+        // 타입 필터링이 있으면 필터링된 결과, 없으면 전체 조회
+        if (types != null && !types.isEmpty()) {
+            records = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
+                UserId.of(userId), startDate, endDate, types
+            );
+        } else {
+            records = recordRepository.findByUserIdAndRecordDateBetween(
+                UserId.of(userId), startDate, endDate
+            );
+        }
         
         // 날짜별로 그룹핑
         Map<LocalDate, List<Record>> recordsByDate = records.stream()
@@ -110,15 +118,6 @@ public class RecordApplicationService {
         );
         
         return DailyRecordResponse.of(date, records);
-    }
-    
-    @Transactional(readOnly = true)
-    public RecordsByTypeResponse getRecordsByType(String userId, RecordType type) {
-        List<Record> records = recordRepository.findByUserIdAndType(
-            UserId.of(userId), type
-        );
-        
-        return RecordsByTypeResponse.of(type, records);
     }
     
     /**

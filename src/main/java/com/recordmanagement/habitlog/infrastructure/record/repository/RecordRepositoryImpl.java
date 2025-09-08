@@ -51,16 +51,16 @@ public class RecordRepositoryImpl implements RecordRepository {
     }
     
     @Override
-    public List<Record> findByUserIdAndType(UserId userId, RecordType type) {
-        return jpaRecordRepository.findByUserIdAndType(userId.getValue(), type)
-                .stream()
-                .map(RecordEntity::toDomain)
-                .toList();
+    public void deleteById(RecordId recordId) {
+        jpaRecordRepository.deleteById(recordId.value());
     }
     
     @Override
-    public void deleteById(RecordId recordId) {
-        jpaRecordRepository.deleteById(recordId.value());
+    public List<Record> findByUserIdAndRecordDateBetweenAndTypeIn(UserId userId, LocalDate startDate, LocalDate endDate, List<RecordType> types) {
+        return jpaRecordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(userId.getValue(), startDate, endDate, types)
+                .stream()
+                .map(RecordEntity::toDomain)
+                .toList();
     }
     
     @Override

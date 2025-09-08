@@ -7,7 +7,6 @@ import com.recordmanagement.habitlog.application.record.dto.CalendarResponse;
 import com.recordmanagement.habitlog.application.record.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.RecordResponse;
-import com.recordmanagement.habitlog.application.record.dto.RecordsByTypeResponse;
 import com.recordmanagement.habitlog.application.record.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.model.RecordId;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
@@ -15,6 +14,7 @@ import com.recordmanagement.habitlog.config.jwt.JwtTokenProvider;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/records")
@@ -173,7 +174,7 @@ public class RecordController {
         return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 삭제되었습니다", null));
     }
     
-    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다")
+    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "캘린더 조회 성공",
@@ -214,16 +215,18 @@ public class RecordController {
     public ResponseEntity<ApiResponse<CalendarResponse>> getCalendar(
             @PathVariable int year,
             @PathVariable int month,
+            @Parameter(description = "필터링할 기록 타입 목록. 미지정시 모든 타입 조회", example = "DAILY,EXERCISE") 
+            @RequestParam(required = false) List<RecordType> types,
             Authentication authentication) {
         
-        log.info("캘린더 조회 요청: year=[{}], month=[{}]", year, month);
+        log.info("캘린더 조회 요청: year=[{}], month=[{}], types=[{}]", year, month, types);
         
         String userIdValue = authentication.getName();
         
-        CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month);
+        CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month, types);
         
-        log.info("캘린더 조회 완료: year=[{}], month=[{}], records count=[{}]", 
-                year, month, response.dailyRecords().size());
+        log.info("캘린더 조회 완료: year=[{}], month=[{}], types=[{}], records count=[{}]", 
+                year, month, types, response.dailyRecords().size());
         
         return ResponseEntity.ok(ApiResponse.success("캘린더가 성공적으로 조회되었습니다", response));
     }
@@ -274,51 +277,4 @@ public class RecordController {
         return ResponseEntity.ok(ApiResponse.success("일일 기록이 성공적으로 조회되었습니다", response));
     }
     
-    @Operation(summary = "타입별 기록 조회", description = "특정 타입의 모든 기록을 조회합니다")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "타입별 기록 조회 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "success": true,
-                    "message": "타입별 기록이 성공적으로 조회되었습니다",
-                    "data": {
-                        "type": "EXERCISE",
-                        "typeDescription": "운동 기록",
-                        "totalCount": 15,
-                        "records": [
-                            {
-                                "id": "550e8400-e29b-41d4-a716-446655440000",
-                                "type": "EXERCISE",
-                                "emotion": "💪",
-                                "content": "오늘 헬스장에서 1시간 운동했습니다!",
-                                "imageUrls": ["https://example.com/workout.jpg"],
-                                "recordDate": "2025-01-07",
-                                "createdAt": "2025-01-07T18:30:00",
-                                "updatedAt": "2025-01-07T18:30:00"
-                            }
-                        ]
-                    }
-                }
-                """)
-        )
-    )
-    @GetMapping("/type/{type}")
-    public ResponseEntity<ApiResponse<RecordsByTypeResponse>> getRecordsByType(
-            @PathVariable RecordType type,
-            Authentication authentication) {
-        
-        log.info("타입별 기록 조회 요청: type=[{}]", type);
-        
-        String userIdValue = authentication.getName();
-        
-        RecordsByTypeResponse response = recordApplicationService.getRecordsByType(userIdValue, type);
-        
-        log.info("타입별 기록 조회 완료: type=[{}], records count=[{}]", 
-                type, response.totalCount());
-        
-        return ResponseEntity.ok(ApiResponse.success("타입별 기록이 성공적으로 조회되었습니다", response));
-    }
 }
