@@ -9,9 +9,9 @@ import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.RecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.model.RecordId;
-import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.config.jwt.JwtTokenProvider;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
+import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -61,13 +61,14 @@ public class RecordController {
         )
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
+        responseCode = "201",
         description = "기록 작성 성공",
         content = @Content(
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "success": true,
+                    "statusCode": 201,
+                    "code": "S201",
                     "message": "기록이 성공적으로 작성되었습니다",
                     "data": {
                         "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -109,7 +110,7 @@ public class RecordController {
         
         log.info("기록 작성 완료: recordId=[{}]", response.id());
         
-        return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 작성되었습니다", response));
+        return ResponseEntity.status(201).body(ApiResponse.created("기록이 성공적으로 작성되었습니다", response));
     }
     
     @Operation(summary = "기록 수정", description = "기존 기록을 수정합니다")
@@ -135,7 +136,8 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "success": true,
+                    "statusCode": 200,
+                    "code": "S200",
                     "message": "기록이 성공적으로 수정되었습니다",
                     "data": {
                         "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -189,8 +191,10 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "success": true,
-                    "message": "기록이 성공적으로 삭제되었습니다"
+                    "statusCode": 200,
+                    "code": "S200",
+                    "message": "기록이 성공적으로 삭제되었습니다",
+                    "data": null
                 }
                 """)
         )
@@ -219,7 +223,8 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "success": true,
+                    "statusCode": 200,
+                    "code": "S200",
                     "message": "캘린더가 성공적으로 조회되었습니다",
                     "data": {
                         "year": 2025,
@@ -276,7 +281,8 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "success": true,
+                    "statusCode": 200,
+                    "code": "S200",
                     "message": "일일 기록이 성공적으로 조회되었습니다",
                     "data": {
                         "date": "2025-01-07",
