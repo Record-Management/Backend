@@ -43,14 +43,15 @@ public class RecordController {
         this.recordApplicationService = recordApplicationService;
     }
     
-    @Operation(summary = "기록 작성", description = "새로운 기록을 작성합니다")
+    // ==================== 타입별 생성 API ====================
+    
+    @Operation(summary = "하루 기록 작성", description = "새로운 하루 기록을 작성합니다")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        description = "기록 작성 요청",
+        description = "하루 기록 작성 요청",
         content = @Content(
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "type": "DAILY",
                     "emotion": "😊",
                     "content": "오늘은 정말 좋은 하루였다",
                     "imageUrls": ["https://example.com/image1.jpg"],
@@ -60,45 +61,52 @@ public class RecordController {
                 """)
         )
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "201",
-        description = "기록 작성 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 201,
-                    "code": "S201",
-                    "message": "기록이 성공적으로 작성되었습니다",
-                    "data": {
-                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                        "type": "DAILY",
-                        "emotion": "😊",
-                        "content": "오늘은 정말 좋은 하루였다",
-                        "imageUrls": ["https://example.com/image1.jpg"],
-                        "recordDate": "2025-01-07",
-                        "recordTime": "10:30",
-                        "createdAt": "2025-01-07T10:30:00",
-                        "updatedAt": "2025-01-07T10:30:00"
-                    }
-                }
-                """)
-        )
-    )
-    @PostMapping
-    public ResponseEntity<ApiResponse<RecordResponse>> createRecord(
+    @PostMapping("/daily")
+    public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
             @Valid @RequestBody CreateRecordRequest request,
             Authentication authentication) {
+        return createRecordByType(request, authentication, RecordType.DAILY);
+    }
+    
+    @Operation(summary = "운동 기록 작성", description = "새로운 운동 기록을 작성합니다")
+    @PostMapping("/exercise")
+    public ResponseEntity<ApiResponse<RecordResponse>> createExerciseRecord(
+            @Valid @RequestBody CreateRecordRequest request,
+            Authentication authentication) {
+        return createRecordByType(request, authentication, RecordType.EXERCISE);
+    }
+    
+    @Operation(summary = "습관 기록 작성", description = "새로운 습관 기록을 작성합니다")
+    @PostMapping("/habit")
+    public ResponseEntity<ApiResponse<RecordResponse>> createHabitRecord(
+            @Valid @RequestBody CreateRecordRequest request,
+            Authentication authentication) {
+        return createRecordByType(request, authentication, RecordType.HABIT);
+    }
+    
+    @Operation(summary = "일정 기록 작성", description = "새로운 일정 기록을 작성합니다")
+    @PostMapping("/schedule")
+    public ResponseEntity<ApiResponse<RecordResponse>> createScheduleRecord(
+            @Valid @RequestBody CreateRecordRequest request,
+            Authentication authentication) {
+        return createRecordByType(request, authentication, RecordType.SCHEDULE);
+    }
+    
+    // 공통 생성 로직
+    private ResponseEntity<ApiResponse<RecordResponse>> createRecordByType(
+            CreateRecordRequest request, 
+            Authentication authentication, 
+            RecordType recordType) {
         
-        log.info("기록 작성 요청: type=[{}], content=[{}], recordDate=[{}], recordTime=[{}]", 
-                request.getType(), request.getContent(), request.getRecordDate(), request.getRecordTime());
+        log.info("{}작성 요청: content=[{}], recordDate=[{}], recordTime=[{}]", 
+                recordType.getDescription(), request.getContent(), request.getRecordDate(), request.getRecordTime());
         
         String userIdValue = authentication.getName();
         UserId userId = UserId.of(userIdValue);
         
         CreateRecordCommand command = new CreateRecordCommand(
             userId,
-            request.getType(),
+            recordType, // 파라미터에서 받은 타입 사용
             request.getEmotion(),
             request.getContent(),
             request.getImageUrls(),
@@ -108,60 +116,72 @@ public class RecordController {
         
         RecordResponse response = recordApplicationService.createRecord(command);
         
-        log.info("기록 작성 완료: recordId=[{}]", response.id());
+        log.info("{}작성 완료: recordId=[{}]", recordType.getDescription(), response.id());
         
-        return ResponseEntity.status(201).body(ApiResponse.created("기록이 성공적으로 작성되었습니다", response));
+        return ResponseEntity.status(201).body(ApiResponse.created(recordType.getDescription() + "이 성공적으로 작성되었습니다", response));
     }
     
-    @Operation(summary = "기록 수정", description = "기존 기록을 수정합니다")
+    // ==================== 타입별 수정 API ====================
+    
+    @Operation(summary = "하루 기록 수정", description = "기존 하루 기록을 수정합니다")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-        description = "기록 수정 요청",
+        description = "하루 기록 수정 요청",
         content = @Content(
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "type": "EXERCISE",
                     "emotion": "😍",
-                    "content": "수정된 내용입니다",
+                    "content": "수정된 하루 내용입니다",
                     "imageUrls": ["https://example.com/image2.jpg"],
                     "recordTime": "11:15"
                 }
                 """)
         )
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "기록 수정 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "기록이 성공적으로 수정되었습니다",
-                    "data": {
-                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                        "type": "EXERCISE",
-                        "emotion": "😍",
-                        "content": "수정된 내용입니다",
-                        "imageUrls": ["https://example.com/image2.jpg"],
-                        "recordDate": "2025-01-07",
-                        "recordTime": "11:15",
-                        "createdAt": "2025-01-07T10:30:00",
-                        "updatedAt": "2025-01-07T11:15:00"
-                    }
-                }
-                """)
-        )
-    )
-    @PutMapping("/{recordId}")
-    public ResponseEntity<ApiResponse<RecordResponse>> updateRecord(
+    @PutMapping("/daily/{recordId}")
+    public ResponseEntity<ApiResponse<RecordResponse>> updateDailyRecord(
             @PathVariable String recordId,
             @Valid @RequestBody UpdateRecordRequest request,
             Authentication authentication) {
+        return updateRecordByType(recordId, request, authentication, RecordType.DAILY);
+    }
+    
+    @Operation(summary = "운동 기록 수정", description = "기존 운동 기록을 수정합니다")
+    @PutMapping("/exercise/{recordId}")
+    public ResponseEntity<ApiResponse<RecordResponse>> updateExerciseRecord(
+            @PathVariable String recordId,
+            @Valid @RequestBody UpdateRecordRequest request,
+            Authentication authentication) {
+        return updateRecordByType(recordId, request, authentication, RecordType.EXERCISE);
+    }
+    
+    @Operation(summary = "습관 기록 수정", description = "기존 습관 기록을 수정합니다")
+    @PutMapping("/habit/{recordId}")
+    public ResponseEntity<ApiResponse<RecordResponse>> updateHabitRecord(
+            @PathVariable String recordId,
+            @Valid @RequestBody UpdateRecordRequest request,
+            Authentication authentication) {
+        return updateRecordByType(recordId, request, authentication, RecordType.HABIT);
+    }
+    
+    @Operation(summary = "일정 기록 수정", description = "기존 일정 기록을 수정합니다")
+    @PutMapping("/schedule/{recordId}")
+    public ResponseEntity<ApiResponse<RecordResponse>> updateScheduleRecord(
+            @PathVariable String recordId,
+            @Valid @RequestBody UpdateRecordRequest request,
+            Authentication authentication) {
+        return updateRecordByType(recordId, request, authentication, RecordType.SCHEDULE);
+    }
+    
+    // 공통 수정 로직
+    private ResponseEntity<ApiResponse<RecordResponse>> updateRecordByType(
+            String recordId,
+            UpdateRecordRequest request,
+            Authentication authentication, 
+            RecordType recordType) {
         
-        log.info("기록 수정 요청: recordId=[{}], content=[{}], recordTime=[{}]", 
-                recordId, request.getContent(), request.getRecordTime());
+        log.info("{}수정 요청: recordId=[{}], content=[{}], recordTime=[{}]", 
+                recordType.getDescription(), recordId, request.getContent(), request.getRecordTime());
         
         String userIdValue = authentication.getName();
         UserId userId = UserId.of(userIdValue);
@@ -169,7 +189,7 @@ public class RecordController {
         UpdateRecordCommand command = new UpdateRecordCommand(
             RecordId.from(recordId),
             userId,
-            request.getType(),
+            recordType, // 파라미터에서 받은 타입 사용
             request.getEmotion(),
             request.getContent(),
             request.getImageUrls(),
@@ -178,12 +198,14 @@ public class RecordController {
         
         RecordResponse response = recordApplicationService.updateRecord(command);
         
-        log.info("기록 수정 완료: recordId=[{}]", response.id());
+        log.info("{}수정 완료: recordId=[{}]", recordType.getDescription(), response.id());
         
-        return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 수정되었습니다", response));
+        return ResponseEntity.ok(ApiResponse.success(recordType.getDescription() + "이 성공적으로 수정되었습니다", response));
     }
     
-    @Operation(summary = "기록 삭제", description = "기록을 삭제합니다")
+    // ==================== 통합 API (삭제/조회) ====================
+    
+    @Operation(summary = "기록 삭제", description = "기록을 삭제합니다 (모든 타입 공통)")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "기록 삭제 성공",

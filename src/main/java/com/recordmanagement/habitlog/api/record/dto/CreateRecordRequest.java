@@ -1,6 +1,5 @@
 package com.recordmanagement.habitlog.api.record.dto;
 
-import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -11,8 +10,7 @@ import java.util.List;
 
 public class CreateRecordRequest {
     
-    @NotNull(message = "기록 타입은 필수입니다")
-    private RecordType type;
+    // 기록 타입은 URL 경로로 결정되므로 제거
     
     private String emotion;
     
@@ -30,8 +28,7 @@ public class CreateRecordRequest {
     private LocalTime recordTime;
     
     // Getters and Setters
-    public RecordType getType() { return type; }
-    public void setType(RecordType type) { this.type = type; }
+    // getType() 메서드 제거됨
     
     public String getEmotion() { return emotion; }
     public void setEmotion(String emotion) { this.emotion = emotion; }
