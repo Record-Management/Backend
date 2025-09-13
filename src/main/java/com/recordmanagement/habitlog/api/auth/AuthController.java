@@ -47,11 +47,11 @@ import jakarta.validation.Valid;
  * 
  * 인증 플로우:
  * 1. 클라이언트에서 소셜 플랫폼 로그인
- * 2. 소셜 액세스 토큰을 이 API에 전송
- * 3. 소셜 플랫폼에서 사용자 정보 조회
- * 4. 신규 사용자면 회원가입, 기존 사용자면 로그인 처리
- *    - Apple의 경우: 먼저 socialId로 조회, 없으면 이메일로 기존 사용자 검색하여 재로그인 지원
- * 5. JWT 액세스 토큰 + 리프레시 토큰 반환
+ * 2. 카카오: accessToken, Apple: identityToken을 API에 전송
+ * 3. 토큰에서 사용자 식별정보(sub/id) 추출
+ * 4. socialId로 기존 사용자 조회
+ * 5. 신규 사용자면 회원가입, 기존 사용자면 로그인 처리
+ * 6. JWT 액세스 토큰 + 리프레시 토큰 반환
  * 
  * JWT 토큰 정책:
  * - 액세스 토큰 만료시간: 1시간
@@ -64,10 +64,10 @@ import jakarta.validation.Valid;
  * - 온보딩 미완료 상태로 초기화
  * - UserController에서 온보딩 완료 처리 필요
  * 
- * Apple 재로그인 지원:
- * - 사용자가 "Sign in with Apple" 연결 해제 후 재로그인 시 새로운 sub 발급
- * - 이메일을 통해 기존 사용자를 찾아 socialId 업데이트
- * - 앱 재설치 후에도 기존 계정 복구 가능
+ * Apple identityToken 방식:
+ * - identityToken에서 sub를 직접 추출하여 안정적으로 사용자 식별
+ * - 같은 Apple ID면 동일한 sub로 자동 계정 복구
+ * - 앱 재설치, 재로그인 등 모든 시나리오에서 안정적 동작
  * 
  * 보안 고려사항:
  * - 소셜 토큰 검증을 통한 사용자 신원 확인
@@ -99,15 +99,15 @@ public class AuthController {
     @Operation(
         summary = "소셜 로그인", 
         description = """
-            소셜 플랫폼 액세스 토큰으로 로그인 처리 및 토큰 발급
+            소셜 플랫폼 토큰으로 로그인 처리 및 JWT 토큰 발급
             
-            ### Apple 재로그인 지원
-            - Apple에서 연결 해제 후 재로그인 시 새로운 sub가 발급되는 경우
-            - 이메일을 통해 기존 사용자를 찾아 socialId 자동 업데이트
-            - 앱 재설치 후에도 기존 계정 데이터 복구 가능
+            ### Apple 로그인 (identityToken 방식)
+            - identityToken에서 sub를 추출하여 안정적으로 사용자 식별
+            - 동일한 Apple ID는 항상 같은 sub로 매핑되어 계정 복구 자동화
+            - 앱 재설치, 재로그인 등 모든 시나리오에서 안정적 동작
             
             ### 카카오 로그인
-            - socialId 기반 일반적인 로그인 처리
+            - accessToken으로 카카오 사용자 ID 추출하여 처리
             """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

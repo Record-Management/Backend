@@ -29,10 +29,10 @@ import java.util.Optional;
  * 소셜 로그인, 토큰 갱신, 로그아웃, Apple 재로그인 등의 Use Case 처리
  * 트랜잭션 단위로 동작하며 예외 발생 시 전체 롤백 보장
  * 
- * Apple 재로그인 특별 처리:
- * - 먼저 socialId로 기존 사용자 조회
- * - Apple + 이메일로 기존 사용자 조회하여 재로그인 지원
- * - socialId 업데이트를 통한 계정 복구
+ * identityToken 방식 처리:
+ * - 카카오: accessToken으로 사용자 ID 추출
+ * - Apple: identityToken(JWT)에서 sub 추출하여 안정적 식별
+ * - 단순하고 일관된 socialId 기반 로그인 처리
  *
  * @author 전우선
  * @since 2025.07.30
@@ -59,50 +59,33 @@ public class AuthApplicationService {
     }
 
     /**
-     * 소셜 로그인 처리
+     * 소셜 로그인 처리 (단순화된 방식)
      * 소셜 플랫폼으로부터 사용자 정보를 조회하고,
-     * 기존 사용자라면 바로 로그인, 신규 사용자면 회원가입 후 로그인 처리
-     * Apple의 경우 재로그인 시 이메일로 기존 사용자 찾아서 socialId 업데이트
+     * socialId 기반으로 기존 사용자 조회 후 로그인 처리
+     * identityToken 방식으로 Apple sub를 안정적으로 처리
      * JWT 액세스 토큰과 리프레시 토큰을 생성해 반환
      *
-     * @param command 소셜 로그인 요청 정보 (소셜 타입, 액세스 토큰)
+     * @param command 소셜 로그인 요청 정보 (소셜 타입, identityToken/accessToken)
      * @return 로그인 결과 (사용자 정보, 액세스 토큰, 리프레시 토큰, 신규 사용자 여부)
      */
     public SocialLoginResult socialLogin(SocialLoginCommand command) {
         SocialUserInfo socialUserInfo = socialLoginService.getUserInfo(command.getSocialType(), command.getAccessToken());
 
-        // 1. 먼저 socialId로 기존 사용자 조회 (기본 케이스)
+        // socialId로 기존 사용자 조회 (단순하고 안정적)
         Optional<UserResponse> existingUser = userApplicationService.findBySocialLogin(command.getSocialType(), socialUserInfo.getSocialId());
 
         UserResponse user;
         boolean isNewUser = false;
 
         if (existingUser.isPresent()) {
-            // 기존 사용자 (socialId가 일치)
+            // 기존 사용자 로그인
             user = existingUser.get();
-        } else if (command.getSocialType() == SocialType.APPLE && socialUserInfo.getEmail() != null) {
-            // 2. Apple인 경우 이메일로 기존 사용자 찾기 (재로그인 케이스)
-            Optional<UserResponse> userByEmail = userApplicationService.findByEmailAndSocialType(
-                    socialUserInfo.getEmail(), 
-                    SocialType.APPLE
-            );
-            
-            if (userByEmail.isPresent()) {
-                // 기존 Apple 사용자의 socialId 업데이트 (재로그인)
-                user = userApplicationService.updateUserSocialId(
-                        userByEmail.get().getId(), 
-                        socialUserInfo.getSocialId()
-                );
-                log.info("Apple 재로그인 처리 완료: userId={}, email={}", user.getId(), socialUserInfo.getEmail());
-            } else {
-                // 신규 사용자
-                user = createNewUser(socialUserInfo, command.getSocialType());
-                isNewUser = true;
-            }
+            log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
         } else {
-            // 3. 신규 사용자 (카카오 또는 Apple 신규 가입)
+            // 신규 사용자 가입
             user = createNewUser(socialUserInfo, command.getSocialType());
             isNewUser = true;
+            log.info("신규 사용자 가입: userId={}, socialType={}", user.getId(), command.getSocialType());
         }
 
         String accessToken = generateAccessToken(user);

@@ -97,35 +97,35 @@ public class AppleLoginClient implements SocialLoginClient {
     }
 
     /**
-     * Apple 사용자 정보 조회 (프로덕션 버전)
+     * Apple 사용자 정보 조회 (identityToken 방식)
      * 
-     * Apple ID Token을 검증하고 사용자 정보를 추출합니다.
-     * 강화된 보안 검증과 에러 핸들링을 포함합니다.
+     * Apple identityToken(JWT)을 파싱하여 sub를 추출하고 사용자 정보를 반환합니다.
+     * 단순하고 안정적인 방식으로 Apple 로그인을 처리합니다.
      *
-     * @param idToken Apple ID Token (JWT 형태)
-     * @return 검증된 사용자 정보
+     * @param identityToken Apple identityToken (JWT 형태)
+     * @return 검증된 사용자 정보 (주로 sub 기반)
      * @throws SocialLoginException 토큰이 유효하지 않거나 검증 실패 시
      */
     @Override
-    public SocialUserInfo getUserInfo(String idToken) {
+    public SocialUserInfo getUserInfo(String identityToken) {
         try {
-            log.info("Apple 사용자 정보 조회 시작");
+            log.info("Apple identityToken 처리 시작");
             
             // 1. 기본 유효성 검사
-            validateInputToken(idToken);
+            validateInputToken(identityToken);
             
             // 2. JWT 구조 검증
-            validateJwtStructure(idToken);
+            validateJwtStructure(identityToken);
             
-            // 3. ID Token 파싱 및 검증
-            AppleUserInfo appleUserInfo = parseAndValidateIdToken(idToken);
+            // 3. identityToken 파싱 및 검증 (단순화)
+            AppleUserInfo appleUserInfo = parseAndValidateIdToken(identityToken);
             
             // 4. 사용자 정보 로그 (개인정보 제외)
             logUserInfoSafely(appleUserInfo);
             
-            // 5. 도메인 객체로 변환
+            // 5. 도메인 객체로 변환 (sub 중심)
             return SocialUserInfo.of(
-                appleUserInfo.getSub(),
+                appleUserInfo.getSub(),  // 가장 중요한 식별자
                 extractUserName(appleUserInfo),
                 appleUserInfo.getEmail(),
                 null,
@@ -144,14 +144,14 @@ public class AppleLoginClient implements SocialLoginClient {
     /**
      * 입력 토큰 기본 유효성 검사
      */
-    private void validateInputToken(String idToken) {
-        if (!StringUtils.hasText(idToken)) {
-            log.error("Apple ID Token이 null이거나 비어있음");
+    private void validateInputToken(String identityToken) {
+        if (!StringUtils.hasText(identityToken)) {
+            log.error("Apple identityToken이 null이거나 비어있음");
             throw SocialLoginException.invalidAccessToken();
         }
         
-        if (idToken.length() > 8192) { // JWT 최대 길이 제한
-            log.error("Apple ID Token이 너무 김: {} bytes", idToken.length());
+        if (identityToken.length() > 8192) { // JWT 최대 길이 제한
+            log.error("Apple identityToken이 너무 김: {} bytes", identityToken.length());
             throw SocialLoginException.invalidAccessToken();
         }
     }
@@ -159,8 +159,8 @@ public class AppleLoginClient implements SocialLoginClient {
     /**
      * JWT 구조 검증 (Header.Payload.Signature)
      */
-    private void validateJwtStructure(String idToken) {
-        String[] chunks = idToken.split("\\.");
+    private void validateJwtStructure(String identityToken) {
+        String[] chunks = identityToken.split("\\.");
         if (chunks.length != 3) {
             log.error("잘못된 JWT 구조: {} 부분으로 구성됨 (3개 필요)", chunks.length);
             throw SocialLoginException.appleIdTokenInvalid();
@@ -171,18 +171,18 @@ public class AppleLoginClient implements SocialLoginClient {
             Base64.getUrlDecoder().decode(chunks[0]); // Header
             Base64.getUrlDecoder().decode(chunks[1]); // Payload
         } catch (IllegalArgumentException e) {
-            log.error("JWT Base64 디코딩 실패", e);
+            log.error("identityToken Base64 디코딩 실패", e);
             throw SocialLoginException.appleIdTokenInvalid();
         }
     }
 
     /**
-     * ID Token 파싱 및 상세 검증 (Apple 공개 키로 서명 검증)
+     * identityToken 파싱 및 상세 검증 (Apple 공개 키로 서명 검증)
      */
-    private AppleUserInfo parseAndValidateIdToken(String idToken) {
+    private AppleUserInfo parseAndValidateIdToken(String identityToken) {
         try {
             // 1. JWT 헤더에서 키 ID 추출
-            String[] chunks = idToken.split("\\.");
+            String[] chunks = identityToken.split("\\.");
             if (chunks.length != 3) {
                 throw new IllegalArgumentException("Invalid JWT structure");
             }
@@ -192,7 +192,7 @@ public class AppleLoginClient implements SocialLoginClient {
             String keyId = headerNode.get("kid").asText();
             String algorithm = headerNode.get("alg").asText();
             
-            log.info("Apple JWT 헤더 - kid: {}, alg: {}", keyId, algorithm);
+            log.info("Apple identityToken 헤더 - kid: {}, alg: {}", keyId, algorithm);
             
             // 2. Apple 공개 키 가져오기
             PublicKey publicKey = getApplePublicKey(keyId);
@@ -202,7 +202,7 @@ public class AppleLoginClient implements SocialLoginClient {
                     .setSigningKey(publicKey)
                     .requireIssuer(APPLE_ISSUER)
                     .build()
-                    .parseClaimsJws(idToken)
+                    .parseClaimsJws(identityToken)
                     .getBody();
 
             // 4. 추가 검증
