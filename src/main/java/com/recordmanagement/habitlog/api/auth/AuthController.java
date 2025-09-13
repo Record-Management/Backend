@@ -231,7 +231,21 @@ public class AuthController {
      */
     @Operation(
         summary = "로그아웃", 
-        description = "리프레시 토큰 폐기 및 로그아웃 처리",
+        description = """
+            리프레시 토큰을 폐기하여 로그아웃 처리합니다.
+            
+            ### 인증 방식
+            - Authorization 헤더 불필요
+            - 요청 본문의 refreshToken으로만 인증 처리
+            
+            ### 로그아웃 옵션
+            - **단일 기기 로그아웃 (allDevices: false)**: 현재 기기만 로그아웃
+            - **전체 기기 로그아웃 (allDevices: true)**: 모든 기기에서 강제 로그아웃
+            
+            ### 특징
+            - 만료된 토큰도 로그아웃 처리 가능
+            - 토큰 탈취 의심 시 allDevices=true 권장
+            """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
