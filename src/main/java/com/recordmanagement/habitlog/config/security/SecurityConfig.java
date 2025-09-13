@@ -106,15 +106,13 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         
-                        // 소셜 로그인, 토큰 갱신, Apple Transfer Sub - 인증 불필요
+                        // 소셜 로그인, 토큰 갱신, 로그아웃, Apple Transfer Sub - 인증 불필요
                         .requestMatchers(
                                 "/api/auth/social-login",
                                 "/api/auth/refresh",
+                                "/api/auth/logout",
                                 "/api/auth/apple-transfer-sub"
                         ).permitAll()
-                        
-                        // 로그아웃 - 인증 필요 (토큰이 있어야 로그아웃 가능)
-                        .requestMatchers("/api/auth/logout").authenticated()
                         
                         // S3 연결 테스트 - 개발용이므로 인증 불필요 (현재 비활성화)
                         // .requestMatchers("/api/files/test-connection").permitAll()
