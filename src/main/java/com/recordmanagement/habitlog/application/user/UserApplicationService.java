@@ -134,6 +134,46 @@ public class UserApplicationService {
     }
 
     /**
+     * 이메일과 소셜 타입으로 사용자 조회
+     * Apple 재로그인 시 기존 사용자 찾기용
+     *
+     * @param email 사용자 이메일
+     * @param socialType 소셜 타입
+     * @return 사용자 정보 Optional
+     */
+    @Transactional(readOnly = true)
+    public Optional<UserResponse> findByEmailAndSocialType(String email, SocialType socialType) {
+        if (email == null || email.trim().isEmpty()) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmailAndSocialType(email.trim().toLowerCase(), socialType)
+                .map(UserResponse::forSocialLogin);
+    }
+
+    /**
+     * 기존 사용자의 socialId 업데이트
+     * Apple 재로그인 시 새로운 sub로 업데이트
+     *
+     * @param userId 사용자 ID
+     * @param newSocialId 새로운 소셜 ID
+     * @return 업데이트된 사용자 정보
+     */
+    @Transactional
+    public UserResponse updateUserSocialId(String userId, String newSocialId) {
+        User user = userRepository.findById(UserId.of(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        log.info("사용자 socialId 업데이트: userId={}, oldSocialId={}, newSocialId={}", 
+                userId, user.getSocialId(), newSocialId);
+        
+        User updatedUser = user.updateSocialId(newSocialId);
+        User savedUser = userRepository.save(updatedUser);
+        
+        log.info("사용자 socialId 업데이트 완료: userId={}", userId);
+        return UserResponse.forSocialLogin(savedUser);
+    }
+
+    /**
      * 회원탈퇴 처리
      * 소셜 연결 해제 + 관련 데이터 삭제 + 계정 삭제를 순차적으로 처리
      * 

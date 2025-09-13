@@ -140,6 +140,45 @@ public class User {
     }
 
     /**
+     * 소셜 ID 업데이트
+     * Apple 재로그인 시 새로운 sub로 업데이트하기 위함
+     * 기존 User 객체를 복사하되 socialId만 변경하여 새 객체 생성
+     *
+     * @param newSocialId 새로운 소셜 ID
+     * @return 업데이트된 User 객체 (불변성 유지)
+     */
+    public User updateSocialId(String newSocialId) {
+        User newUser = new User(this.name, this.email, this.socialType, newSocialId);
+        
+        // 기존 필드들을 리플렉션으로 복사
+        try {
+            setFieldValue(newUser, "id", this.id);
+            setFieldValue(newUser, "nickname", this.nickname);
+            setFieldValue(newUser, "mainRecordType", this.mainRecordType);
+            setFieldValue(newUser, "birthDate", this.birthDate);
+            setFieldValue(newUser, "goalDays", this.goalDays);
+            setFieldValue(newUser, "notificationEnabled", this.notificationEnabled);
+            setFieldValue(newUser, "fcmToken", this.fcmToken);
+            setFieldValue(newUser, "onboardingCompleted", this.onboardingCompleted);
+            setFieldValue(newUser, "createdAt", this.createdAt);
+            setFieldValue(newUser, "updatedAt", LocalDateTime.now());  // 업데이트 시간 갱신
+        } catch (Exception e) {
+            throw new RuntimeException("socialId 업데이트 중 필드 복사 실패", e);
+        }
+        
+        return newUser;
+    }
+
+    /**
+     * 리플렉션을 사용하여 필드 값 설정
+     */
+    private void setFieldValue(Object target, String fieldName, Object value) throws Exception {
+        var field = User.class.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
+    }
+
+    /**
      * FCM 토큰 업데이트
      *
      * - 푸시 알림을 위한 FCM 토큰 설정

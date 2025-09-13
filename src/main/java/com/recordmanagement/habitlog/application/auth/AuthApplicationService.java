@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.application.auth.dto.SocialLoginResult;
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenCommand;
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenResult;
 import com.recordmanagement.habitlog.application.auth.dto.LogoutCommand;
+import com.recordmanagement.habitlog.application.auth.dto.AppleTransferSubCommand;
 import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserRegistrationCommand;
 import com.recordmanagement.habitlog.application.user.dto.UserResponse;
@@ -12,6 +13,10 @@ import com.recordmanagement.habitlog.config.jwt.JwtTokenProvider;
 import com.recordmanagement.habitlog.domain.auth.model.SocialUserInfo;
 import com.recordmanagement.habitlog.domain.auth.service.SocialLoginService;
 import com.recordmanagement.habitlog.domain.auth.service.RefreshTokenService;
+import com.recordmanagement.habitlog.domain.user.model.SocialType;
+import com.recordmanagement.habitlog.config.exception.CustomException;
+import com.recordmanagement.habitlog.config.exception.ErrorCode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,13 +26,19 @@ import java.util.Optional;
  * 인증 애플리케이션 서비스
  * 인증 관련 비즈니스 로직을 담당하며,
  * 도메인 서비스와 애플리케이션 계층을 연결하는 중간 계층 역할 수행
- * 소셜 로그인, 토큰 갱신, 로그아웃 등의 Use Case 처리
+ * 소셜 로그인, 토큰 갱신, 로그아웃, Apple 재로그인 등의 Use Case 처리
  * 트랜잭션 단위로 동작하며 예외 발생 시 전체 롤백 보장
+ * 
+ * Apple 재로그인 특별 처리:
+ * - 먼저 socialId로 기존 사용자 조회
+ * - Apple + 이메일로 기존 사용자 조회하여 재로그인 지원
+ * - socialId 업데이트를 통한 계정 복구
  *
  * @author 전우선
  * @since 2025.07.30
  * @version 1.0.0
  */
+@Slf4j
 @Service
 @Transactional
 public class AuthApplicationService {
@@ -51,6 +62,7 @@ public class AuthApplicationService {
      * 소셜 로그인 처리
      * 소셜 플랫폼으로부터 사용자 정보를 조회하고,
      * 기존 사용자라면 바로 로그인, 신규 사용자면 회원가입 후 로그인 처리
+     * Apple의 경우 재로그인 시 이메일로 기존 사용자 찾아서 socialId 업데이트
      * JWT 액세스 토큰과 리프레시 토큰을 생성해 반환
      *
      * @param command 소셜 로그인 요청 정보 (소셜 타입, 액세스 토큰)
@@ -59,21 +71,37 @@ public class AuthApplicationService {
     public SocialLoginResult socialLogin(SocialLoginCommand command) {
         SocialUserInfo socialUserInfo = socialLoginService.getUserInfo(command.getSocialType(), command.getAccessToken());
 
+        // 1. 먼저 socialId로 기존 사용자 조회 (기본 케이스)
         Optional<UserResponse> existingUser = userApplicationService.findBySocialLogin(command.getSocialType(), socialUserInfo.getSocialId());
 
         UserResponse user;
         boolean isNewUser = false;
 
         if (existingUser.isPresent()) {
+            // 기존 사용자 (socialId가 일치)
             user = existingUser.get();
-        } else {
-            UserRegistrationCommand registrationCommand = new UserRegistrationCommand(
-                    socialUserInfo.getName(),
-                    socialUserInfo.getEmail(),
-                    command.getSocialType(),
-                    socialUserInfo.getSocialId()
+        } else if (command.getSocialType() == SocialType.APPLE && socialUserInfo.getEmail() != null) {
+            // 2. Apple인 경우 이메일로 기존 사용자 찾기 (재로그인 케이스)
+            Optional<UserResponse> userByEmail = userApplicationService.findByEmailAndSocialType(
+                    socialUserInfo.getEmail(), 
+                    SocialType.APPLE
             );
-            user = userApplicationService.registerUserForSocialLogin(registrationCommand);
+            
+            if (userByEmail.isPresent()) {
+                // 기존 Apple 사용자의 socialId 업데이트 (재로그인)
+                user = userApplicationService.updateUserSocialId(
+                        userByEmail.get().getId(), 
+                        socialUserInfo.getSocialId()
+                );
+                log.info("Apple 재로그인 처리 완료: userId={}, email={}", user.getId(), socialUserInfo.getEmail());
+            } else {
+                // 신규 사용자
+                user = createNewUser(socialUserInfo, command.getSocialType());
+                isNewUser = true;
+            }
+        } else {
+            // 3. 신규 사용자 (카카오 또는 Apple 신규 가입)
+            user = createNewUser(socialUserInfo, command.getSocialType());
             isNewUser = true;
         }
 
@@ -81,6 +109,19 @@ public class AuthApplicationService {
         String refreshToken = generateRefreshToken(user);
 
         return new SocialLoginResult(user, accessToken, refreshToken, isNewUser);
+    }
+
+    /**
+     * 신규 사용자 생성
+     */
+    private UserResponse createNewUser(SocialUserInfo socialUserInfo, SocialType socialType) {
+        UserRegistrationCommand registrationCommand = new UserRegistrationCommand(
+                socialUserInfo.getName(),
+                socialUserInfo.getEmail(),
+                socialType,
+                socialUserInfo.getSocialId()
+        );
+        return userApplicationService.registerUserForSocialLogin(registrationCommand);
     }
 
     private String generateAccessToken(UserResponse user) {
@@ -140,5 +181,48 @@ public class AuthApplicationService {
                 refreshTokenService.invalidateRefreshToken(command.refreshToken());
             }
         }
+    }
+
+    /**
+     * Apple Transfer Sub 처리
+     * Apple에서 사용자 실명 정보 변경으로 새로운 sub가 발급된 경우 기존 계정과 연결
+     * 
+     * @param command Apple Transfer Sub 처리 커맨드
+     * @return 업데이트된 사용자 정보
+     */
+    public UserResponse processAppleTransferSub(AppleTransferSubCommand command) {
+        log.info("Apple Transfer Sub 처리 시작: oldSub={}, newSub={}", 
+                command.oldSub(), command.newSub());
+        
+        // 1. 기존 사용자 조회
+        Optional<UserResponse> existingUser = userApplicationService.findBySocialLogin(
+                SocialType.APPLE, command.oldSub()
+        );
+        
+        if (existingUser.isEmpty()) {
+            log.error("Apple Transfer Sub 처리 실패 - 기존 사용자를 찾을 수 없음: oldSub={}", command.oldSub());
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+        
+        // 2. 새 sub로 이미 가입된 사용자가 있는지 확인
+        Optional<UserResponse> conflictUser = userApplicationService.findBySocialLogin(
+                SocialType.APPLE, command.newSub()
+        );
+        
+        if (conflictUser.isPresent()) {
+            log.error("Apple Transfer Sub 처리 실패 - 새 sub로 이미 가입된 사용자 존재: newSub={}", command.newSub());
+            throw new CustomException(ErrorCode.SOCIAL_ID_ALREADY_EXISTS);
+        }
+        
+        // 3. socialId 업데이트
+        UserResponse updatedUser = userApplicationService.updateUserSocialId(
+                existingUser.get().getId(), 
+                command.newSub()
+        );
+        
+        log.info("Apple Transfer Sub 처리 완료: userId={}, oldSub={}, newSub={}", 
+                updatedUser.getId(), command.oldSub(), command.newSub());
+        
+        return updatedUser;
     }
 }

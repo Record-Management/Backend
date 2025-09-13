@@ -55,6 +55,16 @@ public interface UserRepository {
     Optional<User> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
 
     /**
+     * 이메일과 소셜 타입으로 사용자 조회
+     * Apple 재로그인 시 기존 사용자 찾기용
+     *
+     * @param email 사용자 이메일
+     * @param socialType 소셜 로그인 플랫폼 타입
+     * @return 조회된 사용자 (없으면 Optional.empty())
+     */
+    Optional<User> findByEmailAndSocialType(String email, SocialType socialType);
+
+    /**
      * 사용자 엔터티 삭제
      *
      * @param user 삭제할 사용자 엔터티

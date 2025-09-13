@@ -6,6 +6,7 @@ import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenCommand;
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenResult;
 import com.recordmanagement.habitlog.application.auth.dto.SocialLoginCommand;
 import com.recordmanagement.habitlog.application.auth.dto.SocialLoginResult;
+import com.recordmanagement.habitlog.application.auth.dto.AppleTransferSubCommand;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
 import com.recordmanagement.habitlog.api.auth.dto.LogoutRequest;
@@ -13,6 +14,8 @@ import com.recordmanagement.habitlog.api.auth.dto.RefreshTokenRequest;
 import com.recordmanagement.habitlog.api.auth.dto.RefreshTokenResponse;
 import com.recordmanagement.habitlog.api.auth.dto.SocialLoginRequest;
 import com.recordmanagement.habitlog.api.auth.dto.SocialLoginResponse;
+import com.recordmanagement.habitlog.api.auth.dto.AppleTransferSubRequest;
+import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +38,8 @@ import jakarta.validation.Valid;
  * - JWT 액세스 토큰 발급
  * - 리프레시 토큰을 통한 토큰 갱신
  * - 로그아웃 처리
+ * - Apple 재로그인 지원 (이메일 기반 기존 사용자 복구)
+ * - Apple Transfer Sub 처리 (실명 정보 변경 시 sub 업데이트)
  * 
  * 지원하는 소셜 플랫폼:
  * - KAKAO: 카카오 로그인
@@ -45,6 +50,7 @@ import jakarta.validation.Valid;
  * 2. 소셜 액세스 토큰을 이 API에 전송
  * 3. 소셜 플랫폼에서 사용자 정보 조회
  * 4. 신규 사용자면 회원가입, 기존 사용자면 로그인 처리
+ *    - Apple의 경우: 먼저 socialId로 조회, 없으면 이메일로 기존 사용자 검색하여 재로그인 지원
  * 5. JWT 액세스 토큰 + 리프레시 토큰 반환
  * 
  * JWT 토큰 정책:
@@ -57,6 +63,11 @@ import jakarta.validation.Valid;
  * - 소셜 플랫폼에서 받은 정보로 자동 회원가입
  * - 온보딩 미완료 상태로 초기화
  * - UserController에서 온보딩 완료 처리 필요
+ * 
+ * Apple 재로그인 지원:
+ * - 사용자가 "Sign in with Apple" 연결 해제 후 재로그인 시 새로운 sub 발급
+ * - 이메일을 통해 기존 사용자를 찾아 socialId 업데이트
+ * - 앱 재설치 후에도 기존 계정 복구 가능
  * 
  * 보안 고려사항:
  * - 소셜 토큰 검증을 통한 사용자 신원 확인
@@ -87,7 +98,17 @@ public class AuthController {
      */
     @Operation(
         summary = "소셜 로그인", 
-        description = "소셜 플랫폼 액세스 토큰으로 로그인 처리 및 토큰 발급",
+        description = """
+            소셜 플랫폼 액세스 토큰으로 로그인 처리 및 토큰 발급
+            
+            ### Apple 재로그인 지원
+            - Apple에서 연결 해제 후 재로그인 시 새로운 sub가 발급되는 경우
+            - 이메일을 통해 기존 사용자를 찾아 socialId 자동 업데이트
+            - 앱 재설치 후에도 기존 계정 데이터 복구 가능
+            
+            ### 카카오 로그인
+            - socialId 기반 일반적인 로그인 처리
+            """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -246,5 +267,62 @@ public class AuthController {
         log.info("로그아웃 성공");
 
         return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    /**
+     * Apple Transfer Sub 처리 API
+     * 
+     * Apple에서 사용자 실명 정보 변경으로 새로운 sub가 발급된 경우 기존 계정과 연결
+     * 
+     * @param request Apple Transfer Sub 요청 DTO
+     * @return 업데이트된 사용자 정보
+     */
+    @Operation(
+        summary = "Apple Transfer Sub 처리",
+        description = "Apple 사용자 실명 정보 변경으로 새로운 sub가 발급된 경우 기존 계정과 연결",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "Transfer Sub 처리 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "S200",
+                          "message": "Apple Transfer Sub 처리가 완료되었습니다.",
+                          "data": {
+                            "id": "user_123456",
+                            "name": "사용자",
+                            "email": "user@privaterelay.appleid.com",
+                            "socialType": "APPLE",
+                            "onboardingCompleted": true
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @PostMapping("/apple-transfer-sub")
+    public ResponseEntity<ApiResponse<UserResponse>> processAppleTransferSub(
+            @Valid @RequestBody AppleTransferSubRequest request) {
+
+        log.info("Apple Transfer Sub 처리 요청: oldSub={}, newSub={}", 
+                request.getOldSub(), request.getNewSub());
+
+        AppleTransferSubCommand command = new AppleTransferSubCommand(
+                request.getOldSub(),
+                request.getNewSub(),
+                request.getTransferSub()
+        );
+
+        UserResponse updatedUser = authApplicationService.processAppleTransferSub(command);
+
+        log.info("Apple Transfer Sub 처리 성공: userId={}", updatedUser.getId());
+
+        return ResponseEntity.ok(ApiResponse.success("Apple Transfer Sub 처리가 완료되었습니다.", updatedUser));
     }
 }

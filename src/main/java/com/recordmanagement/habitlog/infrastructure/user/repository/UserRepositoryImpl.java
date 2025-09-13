@@ -69,6 +69,20 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
+     * 이메일과 소셜 타입으로 사용자 조회
+     * Apple 재로그인 시 기존 사용자 찾기용
+     *
+     * @param email 사용자 이메일
+     * @param socialType 소셜 로그인 플랫폼 타입
+     * @return Optional<User> 조회 결과
+     */
+    @Override
+    public Optional<User> findByEmailAndSocialType(String email, SocialType socialType) {
+        return userJpaRepository.findByEmailAndSocialType(email, socialType)
+                .map(UserEntity::toDomain);
+    }
+
+    /**
      * 사용자 삭제
      *
      * @param user 삭제할 User 도메인 객체

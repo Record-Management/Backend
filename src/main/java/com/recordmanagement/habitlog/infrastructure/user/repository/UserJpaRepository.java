@@ -28,6 +28,16 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, String> {
     Optional<UserEntity> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
 
     /**
+     * 이메일과 소셜 타입으로 사용자 조회
+     * Apple 재로그인 시 기존 사용자 찾기용
+     *
+     * @param email 사용자 이메일
+     * @param socialType 소셜 로그인 플랫폼 타입
+     * @return Optional에 감싼 UserEntity, 없으면 빈 Optional 반환
+     */
+    Optional<UserEntity> findByEmailAndSocialType(String email, SocialType socialType);
+
+    /**
      * 소셜 타입과 소셜 ID로 사용자 존재 여부 확인
      *
      * @param socialType 소셜 로그인 플랫폼 타입
