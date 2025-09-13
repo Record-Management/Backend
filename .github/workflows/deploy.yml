@@ -48,5 +48,9 @@ jobs:
           sleep 10
           docker-compose ps
           
+          echo "6. Docker 정리 중..."
+          chmod +x scripts/docker-cleanup.sh
+          ./scripts/docker-cleanup.sh
+          
           echo "=== 배포 완료: $(date) ==="
         EOF
