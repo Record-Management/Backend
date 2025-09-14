@@ -110,6 +110,77 @@ public class UserController {
     }
 
     /**
+     * 내 정보 조회 API
+     * 현재 로그인한 사용자의 모든 정보를 반환 (mainRecordType 포함)
+     *
+     * @param authentication 인증된 사용자 정보
+     * @return 사용자 상세 정보
+     */
+    @Operation(
+        summary = "내 정보 조회",
+        description = """
+            현재 로그인한 사용자의 상세 정보를 조회합니다.
+            
+            ### 포함 정보
+            - 기본 프로필 (이름, 이메일, 닉네임)
+            - 메인 기록 타입 (DAILY/HABIT/EXERCISE/SCHEDULE)
+            - 온보딩 정보 (생년월일, 목표일수, 알림 설정)
+            - 계정 상태 (온보딩 완료 여부, 생성 시간)
+            
+            ### 사용 시나리오
+            - 앱 시작 시 사용자 정보 로드
+            - 프로필 화면 표시
+            - 설정 화면 초기값 설정
+            - 메인 기록 타입 확인
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "내 정보 조회 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "name": "카카오닉네임",
+                            "nickname": "홍길동",
+                            "email": "user@example.com",
+                            "socialType": "KAKAO",
+                            "mainRecordType": "EXERCISE",
+                            "birthDate": "1998-06-02",
+                            "goalDays": 20,
+                            "notificationEnabled": true,
+                            "onboardingCompleted": true,
+                            "createdAt": "2025-09-02T02:46:41.454753"
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> getMyInfo(Authentication authentication) {
+        
+        log.info("내 정보 조회 요청 수신");
+        
+        String userId = authentication.getName();
+        UserResponse user = userApplicationService.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        log.info("내 정보 조회 완료: userId={}", userId);
+        
+        return ResponseEntity.ok(ApiResponse.success(user));
+    }
+
+    /**
      * 온보딩 완료 API
      * 사용자가 온보딩 과정을 완료했을 때 호출
      *
