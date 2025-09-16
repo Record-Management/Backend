@@ -21,15 +21,13 @@ public record CalendarRecordResponse(
     public record RecordSummary(
         String id,
         RecordType type,
-        String emotion,
-        boolean hasImages
+        String emotion
     ) {
         public static RecordSummary from(Record record) {
             return new RecordSummary(
                 record.getId().value(),
                 record.getType(),
-                record.getEmotion(),
-                !record.getImageUrls().isEmpty()
+                record.getEmotion()
             );
         }
     }
