@@ -61,14 +61,31 @@ public class FileController {
             Authentication authentication) {
         
         String userId = authentication.getName();
-        log.info("파일 업로드 요청: userId=[{}], count=[{}]", userId, files.size());
+        log.info("파일 업로드 요청: userId=[{}], count=[{}]", userId, files != null ? files.size() : 0);
         
-        List<String> fileUrls = s3FileService.uploadMultipleFiles(files);
-        FileUploadResponse response = new FileUploadResponse(fileUrls);
+        // 추가 로깅 for 디버깅
+        if (files != null) {
+            for (int i = 0; i < files.size(); i++) {
+                MultipartFile file = files.get(i);
+                log.info("파일[{}]: name=[{}], originalFilename=[{}], size=[{}], contentType=[{}], empty=[{}]", 
+                    i, file.getName(), file.getOriginalFilename(), file.getSize(), 
+                    file.getContentType(), file.isEmpty());
+            }
+        } else {
+            log.warn("files 파라미터가 null입니다");
+        }
         
-        log.info("파일 업로드 완료: userId=[{}], count=[{}]", userId, fileUrls.size());
-        
-        return ResponseEntity.ok(ApiResponse.success("파일이 성공적으로 업로드되었습니다", response));
+        try {
+            List<String> fileUrls = s3FileService.uploadMultipleFiles(files);
+            FileUploadResponse response = new FileUploadResponse(fileUrls);
+            
+            log.info("파일 업로드 완료: userId=[{}], count=[{}], urls=[{}]", userId, fileUrls.size(), fileUrls);
+            
+            return ResponseEntity.ok(ApiResponse.success("파일이 성공적으로 업로드되었습니다", response));
+        } catch (Exception e) {
+            log.error("파일 업로드 중 예외 발생: userId=[{}]", userId, e);
+            throw e;
+        }
     }
     
     public record FileUploadResponse(List<String> fileUrls) {}
