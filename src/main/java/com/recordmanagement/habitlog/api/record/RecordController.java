@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -45,7 +46,8 @@ public class RecordController {
     
     // ==================== 타입별 생성 API ====================
     
-    @Operation(summary = "하루 기록 작성", description = "새로운 하루 기록을 작성합니다")
+    @Operation(summary = "하루 기록 작성", description = "새로운 하루 기록을 작성합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "하루 기록 작성 요청",
         content = @Content(
@@ -68,7 +70,8 @@ public class RecordController {
         return createRecordByType(request, authentication, RecordType.DAILY);
     }
     
-    @Operation(summary = "운동 기록 작성", description = "새로운 운동 기록을 작성합니다")
+    @Operation(summary = "운동 기록 작성", description = "새로운 운동 기록을 작성합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/exercise")
     public ResponseEntity<ApiResponse<RecordResponse>> createExerciseRecord(
             @Valid @RequestBody CreateRecordRequest request,
@@ -76,7 +79,8 @@ public class RecordController {
         return createRecordByType(request, authentication, RecordType.EXERCISE);
     }
     
-    @Operation(summary = "습관 기록 작성", description = "새로운 습관 기록을 작성합니다")
+    @Operation(summary = "습관 기록 작성", description = "새로운 습관 기록을 작성합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/habit")
     public ResponseEntity<ApiResponse<RecordResponse>> createHabitRecord(
             @Valid @RequestBody CreateRecordRequest request,
@@ -84,7 +88,8 @@ public class RecordController {
         return createRecordByType(request, authentication, RecordType.HABIT);
     }
     
-    @Operation(summary = "일정 기록 작성", description = "새로운 일정 기록을 작성합니다")
+    @Operation(summary = "일정 기록 작성", description = "새로운 일정 기록을 작성합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/schedule")
     public ResponseEntity<ApiResponse<RecordResponse>> createScheduleRecord(
             @Valid @RequestBody CreateRecordRequest request,
@@ -123,7 +128,8 @@ public class RecordController {
     
     // ==================== 타입별 수정 API ====================
     
-    @Operation(summary = "하루 기록 수정", description = "기존 하루 기록을 수정합니다")
+    @Operation(summary = "하루 기록 수정", description = "기존 하루 기록을 수정합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "하루 기록 수정 요청",
         content = @Content(
@@ -146,7 +152,8 @@ public class RecordController {
         return updateRecordByType(recordId, request, authentication, RecordType.DAILY);
     }
     
-    @Operation(summary = "운동 기록 수정", description = "기존 운동 기록을 수정합니다")
+    @Operation(summary = "운동 기록 수정", description = "기존 운동 기록을 수정합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PutMapping("/exercise/{recordId}")
     public ResponseEntity<ApiResponse<RecordResponse>> updateExerciseRecord(
             @PathVariable String recordId,
@@ -155,7 +162,8 @@ public class RecordController {
         return updateRecordByType(recordId, request, authentication, RecordType.EXERCISE);
     }
     
-    @Operation(summary = "습관 기록 수정", description = "기존 습관 기록을 수정합니다")
+    @Operation(summary = "습관 기록 수정", description = "기존 습관 기록을 수정합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PutMapping("/habit/{recordId}")
     public ResponseEntity<ApiResponse<RecordResponse>> updateHabitRecord(
             @PathVariable String recordId,
@@ -164,7 +172,8 @@ public class RecordController {
         return updateRecordByType(recordId, request, authentication, RecordType.HABIT);
     }
     
-    @Operation(summary = "일정 기록 수정", description = "기존 일정 기록을 수정합니다")
+    @Operation(summary = "일정 기록 수정", description = "기존 일정 기록을 수정합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @PutMapping("/schedule/{recordId}")
     public ResponseEntity<ApiResponse<RecordResponse>> updateScheduleRecord(
             @PathVariable String recordId,
@@ -205,7 +214,8 @@ public class RecordController {
     
     // ==================== 통합 API (삭제/조회) ====================
     
-    @Operation(summary = "기록 삭제", description = "기록을 삭제합니다 (모든 타입 공통)")
+    @Operation(summary = "기록 삭제", description = "기록을 삭제합니다 (모든 타입 공통)",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "기록 삭제 성공",
@@ -237,7 +247,8 @@ public class RecordController {
         return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 삭제되었습니다", null));
     }
     
-    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.")
+    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "캘린더 조회 성공",
@@ -293,7 +304,8 @@ public class RecordController {
         return ResponseEntity.ok(ApiResponse.success("캘린더가 성공적으로 조회되었습니다", response));
     }
     
-    @Operation(summary = "특정 날짜 기록 조회", description = "특정 날짜의 모든 기록을 상세 조회합니다")
+    @Operation(summary = "특정 날짜 기록 조회", description = "특정 날짜의 모든 기록을 상세 조회합니다",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "일일 기록 조회 성공",

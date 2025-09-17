@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,8 @@ public class FileController {
         this.s3FileService = s3FileService;
     }
     
-    @Operation(summary = "파일 업로드", description = "이미지 파일을 S3에 업로드합니다 (1~3개)")
+    @Operation(summary = "파일 업로드", description = "이미지 파일을 S3에 업로드합니다 (1~3개)",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "파일 업로드 성공",
