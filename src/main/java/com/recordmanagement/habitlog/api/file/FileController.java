@@ -3,6 +3,7 @@ package com.recordmanagement.habitlog.api.file;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -54,6 +55,8 @@ public class FileController {
     )
     @PostMapping("/upload")
     public ResponseEntity<ApiResponse<FileUploadResponse>> uploadFiles(
+            @Parameter(description = "업로드할 이미지 파일들 (1-3개)", 
+                      content = @Content(mediaType = "multipart/form-data"))
             @RequestParam("files") List<MultipartFile> files,
             Authentication authentication) {
         
