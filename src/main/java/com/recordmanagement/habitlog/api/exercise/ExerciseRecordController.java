@@ -361,8 +361,8 @@ public class ExerciseRecordController {
                 """)
         )
     )
-    @GetMapping("/daily/{date}")
-    public ResponseEntity<ApiResponse<DailyExerciseRecordResponse>> getDailyExerciseRecords(
+    @GetMapping("/date/{date}")
+    public ResponseEntity<ApiResponse<DailyExerciseRecordResponse>> getExerciseRecordsByDate(
             @PathVariable LocalDate date,
             Authentication authentication) {
         

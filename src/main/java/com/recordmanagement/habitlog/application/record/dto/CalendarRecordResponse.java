@@ -28,5 +28,12 @@ public record CalendarRecordResponse(
                 record.getType()
             );
         }
+        
+        public static RecordSummary from(UnifiedRecordResponse unified) {
+            return new RecordSummary(
+                unified.id(),
+                unified.type()
+            );
+        }
     }
 }

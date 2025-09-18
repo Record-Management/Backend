@@ -5,12 +5,16 @@ import com.recordmanagement.habitlog.application.record.dto.CalendarResponse;
 import com.recordmanagement.habitlog.application.record.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.RecordResponse;
+import com.recordmanagement.habitlog.application.record.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.record.model.Record;
 import com.recordmanagement.habitlog.domain.record.model.RecordId;
 import com.recordmanagement.habitlog.domain.record.repository.RecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
+import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,9 +34,12 @@ import java.util.stream.Collectors;
 public class RecordApplicationService {
     
     private final RecordRepository recordRepository;
+    private final ExerciseRecordRepository exerciseRecordRepository;
     
-    public RecordApplicationService(RecordRepository recordRepository) {
+    public RecordApplicationService(RecordRepository recordRepository, 
+                                   ExerciseRecordRepository exerciseRecordRepository) {
         this.recordRepository = recordRepository;
+        this.exerciseRecordRepository = exerciseRecordRepository;
     }
     
     @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
@@ -102,41 +110,80 @@ public class RecordApplicationService {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
+        UserId userIdObj = UserId.of(userId);
         
-        List<Record> records;
+        // 모든 타입의 기록을 통합하여 조회
+        List<UnifiedRecordResponse> allRecords = new ArrayList<>();
         
-        // 타입 필터링이 있으면 필터링된 결과, 없으면 전체 조회
-        if (types != null && !types.isEmpty()) {
-            records = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
-                UserId.of(userId), startDate, endDate, types
-            );
-        } else {
-            records = recordRepository.findByUserIdAndRecordDateBetween(
-                UserId.of(userId), startDate, endDate
-            );
+        // 타입 필터링 처리
+        List<RecordType> targetTypes = (types != null && !types.isEmpty()) ? types : 
+            List.of(RecordType.DAILY, RecordType.EXERCISE); // 현재 구현된 타입들
+        
+        // 각 타입별로 조회
+        for (RecordType type : targetTypes) {
+            switch (type) {
+                case DAILY -> {
+                    List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
+                        userIdObj, startDate, endDate, List.of(RecordType.DAILY)
+                    );
+                    allRecords.addAll(dailyRecords.stream()
+                        .map(UnifiedRecordResponse::fromRecord)
+                        .toList());
+                }
+                case EXERCISE -> {
+                    List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(
+                        userIdObj, startDate, endDate
+                    );
+                    allRecords.addAll(exerciseRecords.stream()
+                        .map(UnifiedRecordResponse::fromExerciseRecord)
+                        .toList());
+                }
+                // TODO: HABIT, SCHEDULE 타입 추가
+            }
         }
         
-        // 날짜별로 그룹핑
-        Map<LocalDate, List<Record>> recordsByDate = records.stream()
-            .collect(Collectors.groupingBy(Record::getRecordDate));
+        // 날짜별로 그룹핑 (UnifiedRecordResponse 기준)
+        Map<LocalDate, List<UnifiedRecordResponse>> recordsByDate = allRecords.stream()
+            .collect(Collectors.groupingBy(UnifiedRecordResponse::recordDate));
         
-        // 캘린더 응답 생성
-        List<CalendarRecordResponse> dailyRecords = recordsByDate.entrySet()
+        // 캘린더 응답 생성 - CalendarRecordResponse.RecordSummary로 변환
+        List<CalendarRecordResponse> calendarRecords = recordsByDate.entrySet()
             .stream()
-            .map(entry -> CalendarRecordResponse.of(entry.getKey(), entry.getValue()))
+            .map(entry -> {
+                List<CalendarRecordResponse.RecordSummary> summaries = entry.getValue().stream()
+                    .map(CalendarRecordResponse.RecordSummary::from)
+                    .toList();
+                return new CalendarRecordResponse(entry.getKey(), summaries);
+            })
             .sorted((a, b) -> a.date().compareTo(b.date()))
             .toList();
         
-        return CalendarResponse.of(yearMonth, dailyRecords);
+        return CalendarResponse.of(yearMonth, calendarRecords);
     }
     
     @Transactional(readOnly = true)
-    public DailyRecordResponse getDailyRecords(String userId, LocalDate date) {
-        List<Record> records = recordRepository.findByUserIdAndRecordDate(
-            UserId.of(userId), date
-        );
+    public DailyRecordResponse getRecordsByDate(String userId, LocalDate date) {
+        UserId userIdObj = UserId.of(userId);
         
-        return DailyRecordResponse.of(date, records);
+        // 모든 타입의 기록을 조회
+        List<UnifiedRecordResponse> allRecords = new ArrayList<>();
+        
+        // 1. 일상 기록 조회
+        List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDate(userIdObj, date);
+        allRecords.addAll(dailyRecords.stream()
+            .map(UnifiedRecordResponse::fromRecord)
+            .toList());
+        
+        // 2. 운동 기록 조회
+        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDate(userIdObj, date);
+        allRecords.addAll(exerciseRecords.stream()
+            .map(UnifiedRecordResponse::fromExerciseRecord)
+            .toList());
+        
+        // TODO: 3. 습관 기록 조회
+        // TODO: 4. 일정 기록 조회
+        
+        return DailyRecordResponse.of(date, allRecords);
     }
     
     /**

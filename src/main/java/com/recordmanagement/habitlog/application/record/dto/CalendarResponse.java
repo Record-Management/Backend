@@ -6,14 +6,14 @@ import java.util.List;
 public record CalendarResponse(
     int year,
     int month,
-    List<CalendarRecordResponse> dailyRecords
+    List<CalendarRecordResponse> monthlyRecords
 ) {
     
-    public static CalendarResponse of(YearMonth yearMonth, List<CalendarRecordResponse> dailyRecords) {
+    public static CalendarResponse of(YearMonth yearMonth, List<CalendarRecordResponse> monthlyRecords) {
         return new CalendarResponse(
             yearMonth.getYear(),
             yearMonth.getMonthValue(),
-            dailyRecords
+            monthlyRecords
         );
     }
 }

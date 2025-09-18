@@ -433,7 +433,7 @@ public class RecordController {
                     "data": {
                         "year": 2025,
                         "month": 1,
-                        "dailyRecords": [
+                        "monthlyRecords": [
                             {
                                 "date": "2025-01-07",
                                 "records": [
@@ -468,36 +468,51 @@ public class RecordController {
         CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month, types);
         
         log.info("캘린더 조회 완료: year=[{}], month=[{}], types=[{}], records count=[{}]", 
-                year, month, types, response.dailyRecords().size());
+                year, month, types, response.monthlyRecords().size());
         
         return ResponseEntity.ok(ApiResponse.success("캘린더가 성공적으로 조회되었습니다", response));
     }
     
-    @Operation(summary = "특정 날짜 기록 조회", description = "특정 날짜의 모든 기록을 상세 조회합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(summary = "특정 날짜 모든 기록 조회", 
+               description = "특정 날짜의 모든 타입 기록(일상, 운동, 습관, 일정)을 통합하여 조회합니다",
+               security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
-        description = "일일 기록 조회 성공",
+        description = "날짜별 기록 조회 성공",
         content = @Content(
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
                     "statusCode": 200,
                     "code": "S200",
-                    "message": "일일 기록이 성공적으로 조회되었습니다",
+                    "message": "날짜별 기록이 성공적으로 조회되었습니다",
                     "data": {
                         "date": "2025-01-07",
                         "records": [
                             {
                                 "id": "550e8400-e29b-41d4-a716-446655440000",
                                 "type": "DAILY",
-                                "emotion": "😊",
-                                "content": "오늘은 정말 좋은 하루였습니다. 아침에 운동도 하고 친구들과 맛있는 음식도 먹었어요.",
-                                "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
                                 "recordDate": "2025-01-07",
                                 "recordTime": "15:21",
                                 "createdAt": "2025-01-07T15:21:00",
-                                "updatedAt": "2025-01-07T15:21:00"
+                                "updatedAt": "2025-01-07T15:21:00",
+                                "imageUrls": ["https://example.com/image1.jpg"],
+                                "emotion": "😊",
+                                "content": "오늘은 정말 좋은 하루였습니다."
+                            },
+                            {
+                                "id": "660e8400-e29b-41d4-a716-446655440001",
+                                "type": "EXERCISE",
+                                "recordDate": "2025-01-07",
+                                "recordTime": null,
+                                "createdAt": "2025-01-07T16:30:00",
+                                "updatedAt": "2025-01-07T16:30:00",
+                                "imageUrls": [],
+                                "exerciseType": "CARDIO",
+                                "exerciseTimeMinutes": 30,
+                                "stepCount": 5000,
+                                "weight": 70.5,
+                                "dailyNote": "오늘 운동 너무 힘들었지만 뿌듯해요!"
                             }
                         ]
                     }
@@ -505,21 +520,21 @@ public class RecordController {
                 """)
         )
     )
-    @GetMapping("/daily/{date}")
-    public ResponseEntity<ApiResponse<DailyRecordResponse>> getDailyRecords(
+    @GetMapping("/date/{date}")
+    public ResponseEntity<ApiResponse<DailyRecordResponse>> getRecordsByDate(
             @PathVariable LocalDate date,
             Authentication authentication) {
         
-        log.info("일일 기록 조회 요청: date=[{}]", date);
+        log.info("날짜별 기록 조회 요청: date=[{}]", date);
         
         String userIdValue = authentication.getName();
         
-        DailyRecordResponse response = recordApplicationService.getDailyRecords(userIdValue, date);
+        DailyRecordResponse response = recordApplicationService.getRecordsByDate(userIdValue, date);
         
-        log.info("일일 기록 조회 완료: date=[{}], records count=[{}]", 
+        log.info("날짜별 기록 조회 완료: date=[{}], records count=[{}]", 
                 date, response.records().size());
         
-        return ResponseEntity.ok(ApiResponse.success("일일 기록이 성공적으로 조회되었습니다", response));
+        return ResponseEntity.ok(ApiResponse.success("날짜별 기록이 성공적으로 조회되었습니다", response));
     }
     
 }
