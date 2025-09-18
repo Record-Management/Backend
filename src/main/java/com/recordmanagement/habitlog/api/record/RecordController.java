@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.BufferedReader;
+
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -54,47 +58,157 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
+                    "content": "오늘은 정말 좋은 하루였다. 친구들과 맛있는 음식도 먹고 운동도 했어요.",
                     "emotion": "😊",
-                    "content": "오늘은 정말 좋은 하루였다",
-                    "imageUrls": ["https://example.com/image1.jpg"],
                     "recordDate": "2025-01-07",
-                    "recordTime": "10:30"
+                    "recordTime": "15:30",
+                    "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+                }
+                """)
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "201",
+        description = "하루 기록 작성 성공",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "code": "S201",
+                    "statusCode": 201,
+                    "message": "하루 기록이 성공적으로 작성되었습니다",
+                    "data": {
+                        "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
+                        "type": "DAILY",
+                        "emotion": "😊",
+                        "content": "오늘은 정말 좋은 하루였다. 친구들과 맛있는 음식도 먹고 운동도 했어요.",
+                        "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+                        "recordDate": [2025, 1, 7],
+                        "recordTime": [15, 30],
+                        "createdAt": [2025, 9, 18, 15, 30, 0, 0],
+                        "updatedAt": [2025, 9, 18, 15, 30, 0, 0]
+                    }
                 }
                 """)
         )
     )
     @PostMapping("/daily")
     public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
-            @Valid @RequestBody CreateRecordRequest request,
+            HttpServletRequest httpRequest,
             Authentication authentication) {
-        return createRecordByType(request, authentication, RecordType.DAILY);
+        
+        try {
+            // HTTP Body 직접 읽기
+            StringBuilder body = new StringBuilder();
+            String line;
+            try (BufferedReader reader = httpRequest.getReader()) {
+                while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                }
+            }
+            
+            log.info("HTTP Body: [{}]", body.toString());
+            
+            // ObjectMapper로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
+            
+            log.info("파싱된 데이터: content=[{}], recordDate=[{}], recordTime=[{}], emotion=[{}]", 
+                    request.getContent(), request.getRecordDate(), request.getRecordTime(), request.getEmotion());
+            
+            return createRecordByType(request, authentication, RecordType.DAILY);
+            
+        } catch (Exception e) {
+            log.error("요청 처리 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     @Operation(summary = "운동 기록 작성", description = "새로운 운동 기록을 작성합니다",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/exercise")
     public ResponseEntity<ApiResponse<RecordResponse>> createExerciseRecord(
-            @Valid @RequestBody CreateRecordRequest request,
+            HttpServletRequest httpRequest,
             Authentication authentication) {
-        return createRecordByType(request, authentication, RecordType.EXERCISE);
+        
+        try {
+            // HTTP Body 직접 읽기
+            StringBuilder body = new StringBuilder();
+            String line;
+            try (BufferedReader reader = httpRequest.getReader()) {
+                while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                }
+            }
+            
+            // ObjectMapper로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
+            
+            return createRecordByType(request, authentication, RecordType.EXERCISE);
+            
+        } catch (Exception e) {
+            log.error("운동 기록 요청 처리 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     @Operation(summary = "습관 기록 작성", description = "새로운 습관 기록을 작성합니다",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/habit")
     public ResponseEntity<ApiResponse<RecordResponse>> createHabitRecord(
-            @Valid @RequestBody CreateRecordRequest request,
+            HttpServletRequest httpRequest,
             Authentication authentication) {
-        return createRecordByType(request, authentication, RecordType.HABIT);
+        
+        try {
+            // HTTP Body 직접 읽기
+            StringBuilder body = new StringBuilder();
+            String line;
+            try (BufferedReader reader = httpRequest.getReader()) {
+                while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                }
+            }
+            
+            // ObjectMapper로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
+            
+            return createRecordByType(request, authentication, RecordType.HABIT);
+            
+        } catch (Exception e) {
+            log.error("습관 기록 요청 처리 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     @Operation(summary = "일정 기록 작성", description = "새로운 일정 기록을 작성합니다",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @PostMapping("/schedule")
     public ResponseEntity<ApiResponse<RecordResponse>> createScheduleRecord(
-            @Valid @RequestBody CreateRecordRequest request,
+            HttpServletRequest httpRequest,
             Authentication authentication) {
-        return createRecordByType(request, authentication, RecordType.SCHEDULE);
+        
+        try {
+            // HTTP Body 직접 읽기
+            StringBuilder body = new StringBuilder();
+            String line;
+            try (BufferedReader reader = httpRequest.getReader()) {
+                while ((line = reader.readLine()) != null) {
+                    body.append(line);
+                }
+            }
+            
+            // ObjectMapper로 파싱
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
+            
+            return createRecordByType(request, authentication, RecordType.SCHEDULE);
+            
+        } catch (Exception e) {
+            log.error("일정 기록 요청 처리 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
     
     // 공통 생성 로직
@@ -106,8 +220,19 @@ public class RecordController {
         log.info("{}작성 요청: content=[{}], recordDate=[{}], recordTime=[{}]", 
                 recordType.getDescription(), request.getContent(), request.getRecordDate(), request.getRecordTime());
         
-        String userIdValue = authentication.getName();
+        // 인증이 없는 경우 테스트용 사용자 ID 사용
+        String userIdValue;
+        if (authentication != null && authentication.getName() != null) {
+            userIdValue = authentication.getName();
+        } else {
+            userIdValue = "test-user-001";
+        }
         UserId userId = UserId.of(userIdValue);
+        
+        
+        // String을 LocalDate/LocalTime으로 변환
+        LocalDate recordDate = LocalDate.parse(request.getRecordDate());
+        LocalTime recordTime = LocalTime.parse(request.getRecordTime());
         
         CreateRecordCommand command = new CreateRecordCommand(
             userId,
@@ -115,8 +240,8 @@ public class RecordController {
             request.getEmotion(),
             request.getContent(),
             request.getImageUrls(),
-            request.getRecordDate(),
-            request.getRecordTime()
+            recordDate,
+            recordTime
         );
         
         RecordResponse response = recordApplicationService.createRecord(command);
@@ -136,10 +261,35 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
+                    "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
                     "emotion": "😍",
-                    "content": "수정된 하루 내용입니다",
-                    "imageUrls": ["https://example.com/image2.jpg"],
-                    "recordTime": "11:15"
+                    "recordTime": "18:45",
+                    "imageUrls": ["https://example.com/updated-image.jpg"]
+                }
+                """)
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "하루 기록 수정 성공",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "code": "S200",
+                    "statusCode": 200,
+                    "message": "하루 기록이 성공적으로 수정되었습니다",
+                    "data": {
+                        "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
+                        "type": "DAILY",
+                        "emotion": "😍",
+                        "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
+                        "imageUrls": ["https://example.com/updated-image.jpg"],
+                        "recordDate": [2025, 1, 7],
+                        "recordTime": [18, 45],
+                        "createdAt": [2025, 9, 18, 15, 30, 0, 0],
+                        "updatedAt": [2025, 9, 18, 18, 45, 0, 0]
+                    }
                 }
                 """)
         )
@@ -192,7 +342,13 @@ public class RecordController {
         log.info("{}수정 요청: recordId=[{}], content=[{}], recordTime=[{}]", 
                 recordType.getDescription(), recordId, request.getContent(), request.getRecordTime());
         
-        String userIdValue = authentication.getName();
+        // 인증이 없는 경우 테스트용 사용자 ID 사용
+        String userIdValue;
+        if (authentication != null && authentication.getName() != null) {
+            userIdValue = authentication.getName();
+        } else {
+            userIdValue = "test-user-001";
+        }
         UserId userId = UserId.of(userIdValue);
         
         UpdateRecordCommand command = new UpdateRecordCommand(

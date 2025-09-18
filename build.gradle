@@ -65,6 +65,10 @@ dependencies {
     
     // AWS S3 for file upload
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    
+    // Jackson JSR310 for LocalDate/LocalTime
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 
 tasks.named('test') {
