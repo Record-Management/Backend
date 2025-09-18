@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HabitLog API Documentation</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="redoc-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@2.1.3/bundles/redoc.standalone.js"></script>
+    <script>
+        // API 스펙을 직접 가져와서 처리
+        fetch('/v3/api-docs', {
+            headers: {
+                'Accept': 'application/json; charset=utf-8'
+            }
+        })
+        .then(response => response.text())
+        .then(data => {
+            console.log('Raw response:', data.substring(0, 100) + '...');
+            
+            let apiSpec;
+            
+            // 따옴표로 둘러싸인 base64 문자열인지 확인
+            if (data.startsWith('"') && data.endsWith('"')) {
+                try {
+                    // 따옴표 제거 후 base64 디코딩
+                    const base64Data = data.slice(1, -1);
+                    const decoded = atob(base64Data);
+                    // UTF-8 디코딩을 위해 TextDecoder 사용
+                    const uint8Array = new Uint8Array(decoded.split('').map(char => char.charCodeAt(0)));
+                    const utf8Decoded = new TextDecoder('utf-8').decode(uint8Array);
+                    apiSpec = JSON.parse(utf8Decoded);
+                    console.log('Successfully decoded base64 data with UTF-8');
+                } catch (e) {
+                    console.error('Failed to decode base64:', e);
+                    document.getElementById('redoc-container').innerHTML = 
+                        '<h2>API 문서 파싱 오류</h2><p>Base64 디코딩에 실패했습니다.</p>';
+                    return;
+                }
+            } else {
+                try {
+                    // 직접 JSON 파싱 시도
+                    apiSpec = JSON.parse(data);
+                    console.log('Successfully parsed JSON directly');
+                } catch (e) {
+                    console.error('Failed to parse JSON:', e);
+                    document.getElementById('redoc-container').innerHTML = 
+                        '<h2>API 문서 파싱 오류</h2><p>JSON 파싱에 실패했습니다.</p>';
+                    return;
+                }
+            }
+            
+            // Redoc 초기화
+            Redoc.init(apiSpec, {
+                scrollYOffset: 50,
+                theme: {
+                    colors: {
+                        primary: {
+                            main: '#32329f'
+                        }
+                    },
+                    typography: {
+                        fontSize: '14px',
+                        lineHeight: '1.5em',
+                        code: {
+                            fontSize: '13px',
+                            fontFamily: 'Courier, monospace'
+                        },
+                        headings: {
+                            fontFamily: 'Montserrat, sans-serif',
+                            fontWeight: '400'
+                        }
+                    },
+                    sidebar: {
+                        width: '260px'
+                    }
+                }
+            }, document.getElementById('redoc-container'));
+        })
+        .catch(error => {
+            console.error('Error loading API docs:', error);
+            document.getElementById('redoc-container').innerHTML = 
+                '<h2>API 문서를 로딩할 수 없습니다</h2><p>네트워크 오류가 발생했습니다.</p>';
+        });
+    </script>
+</body>
+</html>

@@ -47,6 +47,7 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI()
+                .openapi("3.0.1")
                 .info(apiInfo())
                 .servers(serverList())
                 .components(securityComponents())

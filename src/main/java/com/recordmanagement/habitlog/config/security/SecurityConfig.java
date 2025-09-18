@@ -46,7 +46,7 @@ import java.util.Arrays;
  * 4. 컨트롤러로 요청 전달
  *
  * URL 접근 권한 매트릭스:
- * - /swagger-ui/** : 모든 사용자 (API 문서 UI)
+ * - /redoc.html : 모든 사용자 (Redoc API 문서 UI)
  * - /v3/api-docs/** : 모든 사용자 (OpenAPI 스펙)
  * - /api/auth/** : 모든 사용자 (로그인, 회원가입, 토큰 갱신)
  * - /api/files/** : 인증된 사용자 (파일 업로드 - 보안상 인증 필요)
@@ -56,6 +56,7 @@ import java.util.Arrays;
  * - CSRF: SPA/모바일 앱에서 불필요
  * - 세션: JWT 토큰 기반 인증 사용
  * - 폼 로그인: 소셜 로그인만 지원
+ * - Swagger UI: Redoc으로 대체
  *
  * @author 전우선
  * @since 2025.07.30
@@ -98,10 +99,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // API 문서 및 개발/테스트용 경로 - 인증 불필요
                         .requestMatchers(
-                                "/swagger-ui/**",
                                 "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
+                                "/redoc.html",
                                 "/favicon.ico",
                                 "/error"
                         ).permitAll()
