@@ -114,6 +114,7 @@ public class SecurityConfig {
                                 "/api/auth/apple-transfer-sub"
                         ).permitAll()
                         
+                        
                         // S3 연결 테스트 - 개발용이므로 인증 불필요 (현재 비활성화)
                         // .requestMatchers("/api/files/test-connection").permitAll()
                         
