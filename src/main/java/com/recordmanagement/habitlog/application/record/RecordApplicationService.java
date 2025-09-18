@@ -36,6 +36,19 @@ public class RecordApplicationService {
     
     @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
+        // 일상 기록인 경우 하루 최대 2개 제한 검증
+        if (command.type() == RecordType.DAILY) {
+            int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
+                command.userId(), 
+                command.recordDate(), 
+                RecordType.DAILY
+            );
+            
+            if (dailyRecordCount >= 2) {
+                throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
+            }
+        }
+        
         Record record = Record.create(
             command.userId(),
             command.type(),

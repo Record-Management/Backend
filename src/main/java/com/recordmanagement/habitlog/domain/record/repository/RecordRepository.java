@@ -21,6 +21,8 @@ public interface RecordRepository {
     
     List<Record> findByUserIdAndRecordDateBetweenAndTypeIn(UserId userId, LocalDate startDate, LocalDate endDate, List<RecordType> types);
     
+    int countByUserIdAndRecordDateAndType(UserId userId, LocalDate recordDate, RecordType type);
+    
     void deleteById(RecordId recordId);
     
     boolean existsById(RecordId recordId);

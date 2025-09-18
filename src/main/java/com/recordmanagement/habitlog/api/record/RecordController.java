@@ -92,6 +92,21 @@ public class RecordController {
                 """)
         )
     )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "400",
+        description = "하루 기록 등록 제한 초과",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "statusCode": 400,
+                    "code": "E40407",
+                    "message": "하루에 등록할 수 있는 일상 기록은 최대 2개입니다.",
+                    "data": null
+                }
+                """)
+        )
+    )
     @PostMapping("/daily")
     public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
             HttpServletRequest httpRequest,
@@ -424,13 +439,11 @@ public class RecordController {
                                 "records": [
                                     {
                                         "id": "550e8400-e29b-41d4-a716-446655440000",
-                                        "type": "DAILY",
-                                        "emotion": "😊"
+                                        "type": "DAILY"
                                     },
                                     {
                                         "id": "550e8400-e29b-41d4-a716-446655440001",
-                                        "type": "EXERCISE",
-                                        "emotion": "💪"
+                                        "type": "EXERCISE"
                                     }
                                 ]
                             }

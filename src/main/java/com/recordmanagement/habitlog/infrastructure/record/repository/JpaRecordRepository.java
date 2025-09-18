@@ -25,4 +25,7 @@ public interface JpaRecordRepository extends JpaRepository<RecordEntity, String>
     
     // 캘린더 타입별 필터링 지원 메서드
     List<RecordEntity> findByUserIdAndRecordDateBetweenAndTypeIn(String userId, LocalDate startDate, LocalDate endDate, List<RecordType> types);
+    
+    // 특정 날짜의 특정 타입 기록 개수 조회
+    int countByUserIdAndRecordDateAndType(String userId, LocalDate recordDate, RecordType type);
 }
