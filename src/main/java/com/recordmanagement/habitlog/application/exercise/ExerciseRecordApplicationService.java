@@ -7,6 +7,7 @@ import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
+import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,12 @@ public class ExerciseRecordApplicationService {
     private static final Logger log = LoggerFactory.getLogger(ExerciseRecordApplicationService.class);
     
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final S3FileService s3FileService;
     
-    public ExerciseRecordApplicationService(ExerciseRecordRepository exerciseRecordRepository) {
+    public ExerciseRecordApplicationService(ExerciseRecordRepository exerciseRecordRepository,
+                                          S3FileService s3FileService) {
         this.exerciseRecordRepository = exerciseRecordRepository;
+        this.s3FileService = s3FileService;
     }
     
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
@@ -82,6 +86,7 @@ public class ExerciseRecordApplicationService {
         
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
+                .map(this::updateImageUrls)
                 .collect(Collectors.toList());
         
         log.info("일일 운동기록 조회 완료: userId=[{}], date=[{}], count=[{}]", 
@@ -101,6 +106,7 @@ public class ExerciseRecordApplicationService {
         
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
+                .map(this::updateImageUrls)
                 .collect(Collectors.toList());
         
         log.info("기간별 운동기록 조회 완료: userId=[{}], startDate=[{}], endDate=[{}], count=[{}]", 
@@ -138,5 +144,17 @@ public class ExerciseRecordApplicationService {
             exerciseRecord.getCreatedAt(),
             exerciseRecord.getUpdatedAt()
         );
+    }
+    
+    /**
+     * ExerciseRecordResponse의 이미지 URL을 새로운 Pre-signed URL로 업데이트
+     */
+    private ExerciseRecordResponse updateImageUrls(ExerciseRecordResponse response) {
+        if (response.imageUrls() == null || response.imageUrls().isEmpty()) {
+            return response;
+        }
+        
+        List<String> updatedUrls = s3FileService.regeneratePresignedUrls(response.imageUrls());
+        return response.withUpdatedImageUrls(updatedUrls);
     }
 }

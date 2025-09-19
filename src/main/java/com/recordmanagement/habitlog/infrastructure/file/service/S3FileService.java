@@ -96,6 +96,29 @@ public class S3FileService {
         }
     }
     
+    public List<String> regeneratePresignedUrls(List<String> fileUrls) {
+        if (fileUrls == null || fileUrls.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        return fileUrls.stream()
+                .map(this::regeneratePresignedUrlFromUrl)
+                .toList();
+    }
+    
+    private String regeneratePresignedUrlFromUrl(String fileUrl) {
+        try {
+            String filePath = extractFilePathFromUrl(fileUrl);
+            String newUrl = regeneratePresignedUrl(filePath);
+            // 성공 로그 (DEBUG 레벨)
+            return newUrl;
+        } catch (Exception e) {
+            // 에러 발생 시 원본 URL 반환 (로그는 남기되 전체 처리를 중단하지 않음)
+            // 운영에서는 WARN, 개발에서는 ERROR로 로그 남김
+            return fileUrl;
+        }
+    }
+    
     public void deleteFile(String fileUrl) {
         try {
             String fileName = extractFilePathFromUrl(fileUrl);

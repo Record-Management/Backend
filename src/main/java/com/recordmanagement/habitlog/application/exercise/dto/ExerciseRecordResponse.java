@@ -18,4 +18,24 @@ public record ExerciseRecordResponse(
     LocalDate recordDate,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
-) {}
+) {
+    
+    /**
+     * 새로운 이미지 URL로 업데이트된 ExerciseRecordResponse 반환
+     */
+    public ExerciseRecordResponse withUpdatedImageUrls(List<String> newImageUrls) {
+        return new ExerciseRecordResponse(
+            this.id,
+            this.exerciseType,
+            this.caloriesBurned,
+            this.exerciseTimeMinutes,
+            this.stepCount,
+            this.weight,
+            this.dailyNote,
+            newImageUrls,
+            this.recordDate,
+            this.createdAt,
+            this.updatedAt
+        );
+    }
+}

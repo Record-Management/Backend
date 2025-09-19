@@ -62,7 +62,7 @@ public class RecordController {
                     "emotion": "😊",
                     "recordDate": "2025-01-07",
                     "recordTime": "15:30",
-                    "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
                 }
                 """)
         )
@@ -82,7 +82,7 @@ public class RecordController {
                         "type": "DAILY",
                         "emotion": "😊",
                         "content": "오늘은 정말 좋은 하루였다. 친구들과 맛있는 음식도 먹고 운동도 했어요.",
-                        "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                         "recordDate": [2025, 1, 7],
                         "recordTime": [15, 30],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
@@ -279,7 +279,7 @@ public class RecordController {
                     "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
                     "emotion": "😍",
                     "recordTime": "18:45",
-                    "imageUrls": ["https://example.com/updated-image.jpg"]
+                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
                 }
                 """)
         )
@@ -299,7 +299,7 @@ public class RecordController {
                         "type": "DAILY",
                         "emotion": "😍",
                         "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
-                        "imageUrls": ["https://example.com/updated-image.jpg"],
+                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                         "recordDate": [2025, 1, 7],
                         "recordTime": [18, 45],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
@@ -474,7 +474,13 @@ public class RecordController {
     }
     
     @Operation(summary = "특정 날짜 모든 기록 조회", 
-               description = "특정 날짜의 모든 타입 기록(일상, 운동, 습관, 일정)을 통합하여 조회합니다",
+               description = """
+                   특정 날짜의 모든 타입 기록(일상, 운동, 습관, 일정)을 통합하여 조회합니다.
+                   
+                   **이미지 URL 처리:**
+                   - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
+                   - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
+                   """,
                security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",

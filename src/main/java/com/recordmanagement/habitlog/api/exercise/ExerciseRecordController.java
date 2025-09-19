@@ -75,8 +75,8 @@ public class ExerciseRecordController {
                             "weight": 70.5,
                             "dailyNote": "오늘 농구 경기 정말 재밌었다! 팀워크가 좋았어요.",
                             "imageUrls": [
-                                "https://example.com/basketball-game1.jpg",
-                                "https://example.com/basketball-game2.jpg"
+                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...",
+                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."
                             ],
                             "recordDate": "2025-01-07"
                         }
@@ -127,7 +127,7 @@ public class ExerciseRecordController {
                         "stepCount": 5000,
                         "weight": 70.5,
                         "dailyNote": "오늘 농구 경기 정말 재밌었다! 팀워크가 좋았어요.",
-                        "imageUrls": ["https://example.com/basketball-game.jpg"],
+                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                         "recordDate": [2025, 1, 7],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                         "updatedAt": [2025, 9, 18, 15, 30, 0, 0]
@@ -199,7 +199,7 @@ public class ExerciseRecordController {
                             "stepCount": 6000,
                             "weight": 69.8,
                             "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
-                            "imageUrls": ["https://example.com/running-track.jpg"]
+                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/running-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
                         }
                         """
                 ),
@@ -314,6 +314,10 @@ public class ExerciseRecordController {
                    특정 날짜의 모든 운동기록을 조회합니다.
                    
                    **날짜 형식:** YYYY-MM-DD (예: 2025-01-07)
+                   
+                   **이미지 URL 처리:**
+                   - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
+                   - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
                    """,
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -337,7 +341,7 @@ public class ExerciseRecordController {
                                 "stepCount": 5000,
                                 "weight": 70.5,
                                 "dailyNote": "오늘 농구 경기 정말 재밌었다!",
-                                "imageUrls": ["https://example.com/basketball.jpg"],
+                                "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                                 "recordDate": [2025, 1, 7],
                                 "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                                 "updatedAt": [2025, 9, 18, 15, 30, 0, 0]
@@ -389,6 +393,10 @@ public class ExerciseRecordController {
                    **주의사항:**
                    - 시작 날짜는 종료 날짜보다 이전이어야 합니다
                    - 최대 조회 가능 기간: 1년
+                   
+                   **이미지 URL 처리:**
+                   - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
+                   - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
                    """,
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -410,7 +418,7 @@ public class ExerciseRecordController {
                             "stepCount": 5000,
                             "weight": 70.5,
                             "dailyNote": "오늘 농구 경기 정말 재밌었다!",
-                            "imageUrls": ["https://example.com/basketball.jpg"],
+                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                             "recordDate": [2025, 1, 7],
                             "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                             "updatedAt": [2025, 9, 18, 15, 30, 0, 0]

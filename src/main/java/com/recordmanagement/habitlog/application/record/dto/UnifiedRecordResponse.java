@@ -76,4 +76,26 @@ public record UnifiedRecordResponse(
             exerciseRecord.getDailyNote()
         );
     }
+    
+    /**
+     * 새로운 이미지 URL로 업데이트된 UnifiedRecordResponse 반환
+     */
+    public UnifiedRecordResponse withUpdatedImageUrls(List<String> newImageUrls) {
+        return new UnifiedRecordResponse(
+            this.id,
+            this.type,
+            this.recordDate,
+            this.recordTime,
+            this.createdAt,
+            this.updatedAt,
+            newImageUrls,
+            this.emotion,
+            this.content,
+            this.exerciseType,
+            this.exerciseTimeMinutes,
+            this.stepCount,
+            this.weight,
+            this.dailyNote
+        );
+    }
 }

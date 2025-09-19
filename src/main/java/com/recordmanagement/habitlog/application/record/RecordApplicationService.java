@@ -17,6 +17,7 @@ import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
 import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
+import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -35,11 +36,14 @@ public class RecordApplicationService {
     
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final S3FileService s3FileService;
     
     public RecordApplicationService(RecordRepository recordRepository, 
-                                   ExerciseRecordRepository exerciseRecordRepository) {
+                                   ExerciseRecordRepository exerciseRecordRepository,
+                                   S3FileService s3FileService) {
         this.recordRepository = recordRepository;
         this.exerciseRecordRepository = exerciseRecordRepository;
+        this.s3FileService = s3FileService;
     }
     
     @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
@@ -183,7 +187,12 @@ public class RecordApplicationService {
         // TODO: 3. 습관 기록 조회
         // TODO: 4. 일정 기록 조회
         
-        return DailyRecordResponse.of(date, allRecords);
+        // Pre-signed URL 재생성
+        List<UnifiedRecordResponse> recordsWithUpdatedUrls = allRecords.stream()
+            .map(this::updateImageUrls)
+            .toList();
+        
+        return DailyRecordResponse.of(date, recordsWithUpdatedUrls);
     }
     
     /**
@@ -193,5 +202,17 @@ public class RecordApplicationService {
         if (!record.getUserId().equals(userId)) {
             throw new CustomException(ErrorCode.RECORD_ACCESS_DENIED);
         }
+    }
+    
+    /**
+     * UnifiedRecordResponse의 이미지 URL을 새로운 Pre-signed URL로 업데이트
+     */
+    private UnifiedRecordResponse updateImageUrls(UnifiedRecordResponse record) {
+        if (record.imageUrls() == null || record.imageUrls().isEmpty()) {
+            return record;
+        }
+        
+        List<String> updatedUrls = s3FileService.regeneratePresignedUrls(record.imageUrls());
+        return record.withUpdatedImageUrls(updatedUrls);
     }
 }
