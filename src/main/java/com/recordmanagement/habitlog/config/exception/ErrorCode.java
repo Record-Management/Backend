@@ -214,11 +214,7 @@ public enum ErrorCode {
     @Schema(description = "사용자 정보 없음")
     USER_NOT_FOUND(404, "E40402", "존재하지 않는 사용자입니다."),
 
-    @Schema(description = "습관 정보 없음")
-    HABIT_NOT_FOUND(404, "E40403", "존재하지 않는 습관입니다."),
 
-    @Schema(description = "습관 기록 없음")
-    HABIT_RECORD_NOT_FOUND(404, "E40404", "습관 기록을 찾을 수 없습니다."),
 
     @Schema(description = "API 엔드포인트 없음")
     API_ENDPOINT_NOT_FOUND(404, "E40405", "존재하지 않는 API 엔드포인트입니다."),

@@ -3,9 +3,7 @@ package com.recordmanagement.habitlog.api.record;
 import com.recordmanagement.habitlog.api.record.dto.CreateRecordRequest;
 import com.recordmanagement.habitlog.api.record.dto.UpdateRecordRequest;
 import com.recordmanagement.habitlog.application.record.RecordApplicationService;
-import com.recordmanagement.habitlog.application.record.dto.CalendarResponse;
 import com.recordmanagement.habitlog.application.record.dto.CreateRecordCommand;
-import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.RecordResponse;
 import com.recordmanagement.habitlog.application.record.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.model.RecordId;
@@ -14,11 +12,8 @@ import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,8 +31,8 @@ import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/records")
-@Tag(name = "Record", description = "기록 관련 API")
+@RequestMapping("/api/daily-records")
+@Tag(name = "Daily Record", description = "하루 기록 관련 API")
 public class RecordController {
     
     private static final Logger log = LoggerFactory.getLogger(RecordController.class);
@@ -107,7 +102,7 @@ public class RecordController {
                 """)
         )
     )
-    @PostMapping("/daily")
+    @PostMapping
     public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
             HttpServletRequest httpRequest,
             Authentication authentication) {
@@ -139,92 +134,8 @@ public class RecordController {
         }
     }
     
-    @Operation(summary = "운동 기록 작성", description = "새로운 운동 기록을 작성합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PostMapping("/exercise")
-    public ResponseEntity<ApiResponse<RecordResponse>> createExerciseRecord(
-            HttpServletRequest httpRequest,
-            Authentication authentication) {
-        
-        try {
-            // HTTP Body 직접 읽기
-            StringBuilder body = new StringBuilder();
-            String line;
-            try (BufferedReader reader = httpRequest.getReader()) {
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
-                }
-            }
-            
-            // ObjectMapper로 파싱
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
-            
-            return createRecordByType(request, authentication, RecordType.EXERCISE);
-            
-        } catch (Exception e) {
-            log.error("운동 기록 요청 처리 실패: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
-        }
-    }
     
-    @Operation(summary = "습관 기록 작성", description = "새로운 습관 기록을 작성합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PostMapping("/habit")
-    public ResponseEntity<ApiResponse<RecordResponse>> createHabitRecord(
-            HttpServletRequest httpRequest,
-            Authentication authentication) {
-        
-        try {
-            // HTTP Body 직접 읽기
-            StringBuilder body = new StringBuilder();
-            String line;
-            try (BufferedReader reader = httpRequest.getReader()) {
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
-                }
-            }
-            
-            // ObjectMapper로 파싱
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
-            
-            return createRecordByType(request, authentication, RecordType.HABIT);
-            
-        } catch (Exception e) {
-            log.error("습관 기록 요청 처리 실패: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
-        }
-    }
     
-    @Operation(summary = "일정 기록 작성", description = "새로운 일정 기록을 작성합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PostMapping("/schedule")
-    public ResponseEntity<ApiResponse<RecordResponse>> createScheduleRecord(
-            HttpServletRequest httpRequest,
-            Authentication authentication) {
-        
-        try {
-            // HTTP Body 직접 읽기
-            StringBuilder body = new StringBuilder();
-            String line;
-            try (BufferedReader reader = httpRequest.getReader()) {
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
-                }
-            }
-            
-            // ObjectMapper로 파싱
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
-            
-            return createRecordByType(request, authentication, RecordType.SCHEDULE);
-            
-        } catch (Exception e) {
-            log.error("일정 기록 요청 처리 실패: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
-        }
-    }
     
     // 공통 생성 로직
     private ResponseEntity<ApiResponse<RecordResponse>> createRecordByType(
@@ -309,7 +220,7 @@ public class RecordController {
                 """)
         )
     )
-    @PutMapping("/daily/{recordId}")
+    @PutMapping("/{recordId}")
     public ResponseEntity<ApiResponse<RecordResponse>> updateDailyRecord(
             @PathVariable String recordId,
             @Valid @RequestBody UpdateRecordRequest request,
@@ -317,35 +228,8 @@ public class RecordController {
         return updateRecordByType(recordId, request, authentication, RecordType.DAILY);
     }
     
-    @Operation(summary = "운동 기록 수정", description = "기존 운동 기록을 수정합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PutMapping("/exercise/{recordId}")
-    public ResponseEntity<ApiResponse<RecordResponse>> updateExerciseRecord(
-            @PathVariable String recordId,
-            @Valid @RequestBody UpdateRecordRequest request,
-            Authentication authentication) {
-        return updateRecordByType(recordId, request, authentication, RecordType.EXERCISE);
-    }
     
-    @Operation(summary = "습관 기록 수정", description = "기존 습관 기록을 수정합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PutMapping("/habit/{recordId}")
-    public ResponseEntity<ApiResponse<RecordResponse>> updateHabitRecord(
-            @PathVariable String recordId,
-            @Valid @RequestBody UpdateRecordRequest request,
-            Authentication authentication) {
-        return updateRecordByType(recordId, request, authentication, RecordType.HABIT);
-    }
     
-    @Operation(summary = "일정 기록 수정", description = "기존 일정 기록을 수정합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @PutMapping("/schedule/{recordId}")
-    public ResponseEntity<ApiResponse<RecordResponse>> updateScheduleRecord(
-            @PathVariable String recordId,
-            @Valid @RequestBody UpdateRecordRequest request,
-            Authentication authentication) {
-        return updateRecordByType(recordId, request, authentication, RecordType.SCHEDULE);
-    }
     
     // 공통 수정 로직
     private ResponseEntity<ApiResponse<RecordResponse>> updateRecordByType(
@@ -385,18 +269,18 @@ public class RecordController {
     
     // ==================== 통합 API (삭제/조회) ====================
     
-    @Operation(summary = "기록 삭제", description = "기록을 삭제합니다 (모든 타입 공통)",
+    @Operation(summary = "하루 기록 삭제", description = "하루 기록을 삭제합니다",
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
-        description = "기록 삭제 성공",
+        description = "하루 기록 삭제 성공",
         content = @Content(
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
                     "statusCode": 200,
                     "code": "S200",
-                    "message": "기록이 성공적으로 삭제되었습니다",
+                    "message": "하루 기록이 성공적으로 삭제되었습니다",
                     "data": null
                 }
                 """)
@@ -407,140 +291,15 @@ public class RecordController {
             @PathVariable String recordId,
             Authentication authentication) {
         
-        log.info("기록 삭제 요청: recordId=[{}]", recordId);
+        log.info("하루 기록 삭제 요청: recordId=[{}]", recordId);
         
         String userIdValue = authentication.getName();
         
         recordApplicationService.deleteRecord(recordId, userIdValue);
         
-        log.info("기록 삭제 완료: recordId=[{}]", recordId);
+        log.info("하루 기록 삭제 완료: recordId=[{}]", recordId);
         
-        return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 삭제되었습니다", null));
-    }
-    
-    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "캘린더 조회 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "캘린더가 성공적으로 조회되었습니다",
-                    "data": {
-                        "year": 2025,
-                        "month": 1,
-                        "monthlyRecords": [
-                            {
-                                "date": "2025-01-07",
-                                "records": [
-                                    {
-                                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                                        "type": "DAILY"
-                                    },
-                                    {
-                                        "id": "550e8400-e29b-41d4-a716-446655440001",
-                                        "type": "EXERCISE"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                }
-                """)
-        )
-    )
-    @GetMapping("/calendar/{year}/{month}")
-    public ResponseEntity<ApiResponse<CalendarResponse>> getCalendar(
-            @PathVariable int year,
-            @PathVariable int month,
-            @Parameter(description = "필터링할 기록 타입 목록. 미지정시 모든 타입 조회", example = "DAILY,EXERCISE") 
-            @RequestParam(required = false) List<RecordType> types,
-            Authentication authentication) {
-        
-        log.info("캘린더 조회 요청: year=[{}], month=[{}], types=[{}]", year, month, types);
-        
-        String userIdValue = authentication.getName();
-        
-        CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month, types);
-        
-        log.info("캘린더 조회 완료: year=[{}], month=[{}], types=[{}], records count=[{}]", 
-                year, month, types, response.monthlyRecords().size());
-        
-        return ResponseEntity.ok(ApiResponse.success("캘린더가 성공적으로 조회되었습니다", response));
-    }
-    
-    @Operation(summary = "특정 날짜 모든 기록 조회", 
-               description = """
-                   특정 날짜의 모든 타입 기록(일상, 운동, 습관, 일정)을 통합하여 조회합니다.
-                   
-                   **이미지 URL 처리:**
-                   - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
-                   - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
-                   """,
-               security = @SecurityRequirement(name = "Bearer Authentication"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "날짜별 기록 조회 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "날짜별 기록이 성공적으로 조회되었습니다",
-                    "data": {
-                        "date": "2025-01-07",
-                        "records": [
-                            {
-                                "id": "550e8400-e29b-41d4-a716-446655440000",
-                                "type": "DAILY",
-                                "recordDate": "2025-01-07",
-                                "recordTime": "15:21",
-                                "createdAt": "2025-01-07T15:21:00",
-                                "updatedAt": "2025-01-07T15:21:00",
-                                "imageUrls": ["https://example.com/image1.jpg"],
-                                "emotion": "😊",
-                                "content": "오늘은 정말 좋은 하루였습니다."
-                            },
-                            {
-                                "id": "660e8400-e29b-41d4-a716-446655440001",
-                                "type": "EXERCISE",
-                                "recordDate": "2025-01-07",
-                                "recordTime": null,
-                                "createdAt": "2025-01-07T16:30:00",
-                                "updatedAt": "2025-01-07T16:30:00",
-                                "imageUrls": [],
-                                "exerciseType": "CARDIO",
-                                "exerciseTimeMinutes": 30,
-                                "stepCount": 5000,
-                                "weight": 70.5,
-                                "dailyNote": "오늘 운동 너무 힘들었지만 뿌듯해요!"
-                            }
-                        ]
-                    }
-                }
-                """)
-        )
-    )
-    @GetMapping("/date/{date}")
-    public ResponseEntity<ApiResponse<DailyRecordResponse>> getRecordsByDate(
-            @PathVariable LocalDate date,
-            Authentication authentication) {
-        
-        log.info("날짜별 기록 조회 요청: date=[{}]", date);
-        
-        String userIdValue = authentication.getName();
-        
-        DailyRecordResponse response = recordApplicationService.getRecordsByDate(userIdValue, date);
-        
-        log.info("날짜별 기록 조회 완료: date=[{}], records count=[{}]", 
-                date, response.records().size());
-        
-        return ResponseEntity.ok(ApiResponse.success("날짜별 기록이 성공적으로 조회되었습니다", response));
+        return ResponseEntity.ok(ApiResponse.success("하루 기록이 성공적으로 삭제되었습니다", null));
     }
     
 }

@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * 모든 타입의 기록을 통합해서 표현하는 응답 DTO
- * DAILY, EXERCISE, HABIT, SCHEDULE 기록을 하나의 모델로 처리
+ * DAILY, EXERCISE 기록을 하나의 모델로 처리
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UnifiedRecordResponse(
