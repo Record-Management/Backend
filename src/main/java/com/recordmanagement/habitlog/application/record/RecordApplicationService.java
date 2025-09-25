@@ -108,9 +108,9 @@ public class RecordApplicationService {
         recordRepository.deleteById(RecordId.from(recordId));
     }
     
-    @Cacheable(value = "calendar", key = "#userId + '_' + #year + '_' + #month + '_' + (#types != null ? #types.toString() : 'ALL')")
+    @Cacheable(value = "calendar", key = "#userId + '_' + #year + '_' + #month + '_' + (#type != null ? #type.toString() : 'ALL')")
     @Transactional(readOnly = true)
-    public CalendarResponse getCalendar(String userId, int year, int month, List<RecordType> types) {
+    public CalendarResponse getCalendar(String userId, int year, int month, RecordType type) {
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startDate = yearMonth.atDay(1);
         LocalDate endDate = yearMonth.atEndOfMonth();
@@ -119,32 +119,28 @@ public class RecordApplicationService {
         // 모든 타입의 기록을 통합하여 조회
         List<UnifiedRecordResponse> allRecords = new ArrayList<>();
         
-        // 타입 필터링 처리
-        List<RecordType> targetTypes = (types != null && !types.isEmpty()) ? types : 
-            List.of(RecordType.DAILY, RecordType.EXERCISE); // 현재 구현된 타입들
-        
-        // 각 타입별로 조회
-        for (RecordType type : targetTypes) {
-            switch (type) {
-                case DAILY -> {
-                    List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
-                        userIdObj, startDate, endDate, List.of(RecordType.DAILY)
-                    );
-                    allRecords.addAll(dailyRecords.stream()
-                        .map(UnifiedRecordResponse::fromRecord)
-                        .toList());
-                }
-                case EXERCISE -> {
-                    List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(
-                        userIdObj, startDate, endDate
-                    );
-                    allRecords.addAll(exerciseRecords.stream()
-                        .map(UnifiedRecordResponse::fromExerciseRecord)
-                        .toList());
-                }
-                // TODO: HABIT, SCHEDULE 타입 추가
-            }
+        // 1. 일상 기록 조회 (type이 null이거나 DAILY인 경우)
+        if (type == null || type == RecordType.DAILY) {
+            List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
+                userIdObj, startDate, endDate, List.of(RecordType.DAILY)
+            );
+            allRecords.addAll(dailyRecords.stream()
+                .map(UnifiedRecordResponse::fromRecord)
+                .toList());
         }
+        
+        // 2. 운동 기록 조회 (type이 null이거나 EXERCISE인 경우)
+        if (type == null || type == RecordType.EXERCISE) {
+            List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(
+                userIdObj, startDate, endDate
+            );
+            allRecords.addAll(exerciseRecords.stream()
+                .map(UnifiedRecordResponse::fromExerciseRecord)
+                .toList());
+        }
+        
+        // TODO: 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
+        // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
         
         // 날짜별로 그룹핑 (UnifiedRecordResponse 기준)
         Map<LocalDate, List<UnifiedRecordResponse>> recordsByDate = allRecords.stream()

@@ -70,18 +70,18 @@ public class CalendarController {
     public ResponseEntity<ApiResponse<CalendarResponse>> getCalendar(
             @PathVariable int year,
             @PathVariable int month,
-            @Parameter(description = "필터링할 기록 타입 목록. 미지정시 모든 타입 조회", example = "DAILY,EXERCISE") 
-            @RequestParam(required = false) List<RecordType> types,
+            @Parameter(description = "필터링할 기록 타입. 미지정시 모든 타입 조회", example = "DAILY") 
+            @RequestParam(required = false) RecordType type,
             Authentication authentication) {
         
-        log.info("캘린더 조회 요청: year=[{}], month=[{}], types=[{}]", year, month, types);
+        log.info("캘린더 조회 요청: year=[{}], month=[{}], type=[{}]", year, month, type);
         
         String userIdValue = authentication.getName();
         
-        CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month, types);
+        CalendarResponse response = recordApplicationService.getCalendar(userIdValue, year, month, type);
         
-        log.info("캘린더 조회 완료: year=[{}], month=[{}], types=[{}], records count=[{}]", 
-                year, month, types, response.monthlyRecords().size());
+        log.info("캘린더 조회 완료: year=[{}], month=[{}], type=[{}], records count=[{}]", 
+                year, month, type, response.monthlyRecords().size());
         
         return ResponseEntity.ok(ApiResponse.success("캘린더가 성공적으로 조회되었습니다", response));
     }
