@@ -189,7 +189,6 @@ public class RecordController {
                 {
                     "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
                     "emotion": "😍",
-                    "recordTime": "18:45",
                     "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
                 }
                 """)
@@ -212,9 +211,9 @@ public class RecordController {
                         "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
                         "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
                         "recordDate": [2025, 1, 7],
-                        "recordTime": [18, 45],
+                        "recordTime": [15, 30],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
-                        "updatedAt": [2025, 9, 18, 18, 45, 0, 0]
+                        "updatedAt": [2025, 9, 18, 15, 30, 0, 0]
                     }
                 }
                 """)
@@ -238,8 +237,8 @@ public class RecordController {
             Authentication authentication, 
             RecordType recordType) {
         
-        log.info("{}수정 요청: recordId=[{}], content=[{}], recordTime=[{}]", 
-                recordType.getDescription(), recordId, request.getContent(), request.getRecordTime());
+        log.info("{}수정 요청: recordId=[{}], content=[{}]", 
+                recordType.getDescription(), recordId, request.getContent());
         
         // 인증이 없는 경우 테스트용 사용자 ID 사용
         String userIdValue;
@@ -256,8 +255,7 @@ public class RecordController {
             recordType, // 파라미터에서 받은 타입 사용
             request.getEmotion(),
             request.getContent(),
-            request.getImageUrls(),
-            request.getRecordTime()
+            request.getImageUrls()
         );
         
         RecordResponse response = recordApplicationService.updateRecord(command);

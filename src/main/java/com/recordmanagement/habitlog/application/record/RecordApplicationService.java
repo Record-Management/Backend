@@ -82,17 +82,12 @@ public class RecordApplicationService {
         // 작성자 확인
         validateRecordOwnership(existingRecord, command.userId());
         
-        // 기록 수정
+        // 기록 수정 (날짜와 시간은 불변)
         Record updatedRecord = existingRecord
             .updateType(command.type())
             .updateEmotion(command.emotion())
             .updateContent(command.content())
             .updateImages(command.imageUrls());
-            
-        // recordTime이 제공되면 업데이트
-        if (command.recordTime() != null) {
-            updatedRecord = updatedRecord.updateTime(command.recordTime());
-        }
         
         Record savedRecord = recordRepository.save(updatedRecord);
         return RecordResponse.from(savedRecord);

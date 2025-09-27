@@ -113,20 +113,6 @@ public class Record {
         );
     }
     
-    public Record updateTime(LocalTime newRecordTime) {
-        return new Record(
-            this.id,
-            this.userId,
-            this.type,
-            this.emotion,
-            this.content,
-            this.imageUrls,
-            this.recordDate,
-            newRecordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
-    }
     
     // Getters
     public RecordId getId() { return id; }

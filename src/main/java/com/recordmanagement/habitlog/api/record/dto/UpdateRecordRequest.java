@@ -3,7 +3,6 @@ package com.recordmanagement.habitlog.api.record.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-import java.time.LocalTime;
 import java.util.List;
 
 public class UpdateRecordRequest {
@@ -19,8 +18,6 @@ public class UpdateRecordRequest {
     @Size(max = 3, message = "이미지는 최대 3개까지만 첨부할 수 있습니다")
     private List<String> imageUrls;
     
-    private LocalTime recordTime;
-    
     // Getters and Setters
     // getType() 메서드 제거됨
     
@@ -32,7 +29,4 @@ public class UpdateRecordRequest {
     
     public List<String> getImageUrls() { return imageUrls; }
     public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
-    
-    public LocalTime getRecordTime() { return recordTime; }
-    public void setRecordTime(LocalTime recordTime) { this.recordTime = recordTime; }
 }
