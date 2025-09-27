@@ -7,6 +7,7 @@ import com.recordmanagement.habitlog.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -109,31 +110,78 @@ public class UnifiedRecordController {
                    - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
                    """,
                security = @SecurityRequirement(name = "Bearer Authentication"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "기록 조회 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "기록이 성공적으로 조회되었습니다",
-                    "data": {
-                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                        "type": "DAILY",
-                        "recordDate": "2025-01-07",
-                        "recordTime": "15:21",
-                        "createdAt": "2025-01-07T15:21:00",
-                        "updatedAt": "2025-01-07T15:21:00",
-                        "imageUrls": ["https://example.com/image1.jpg"],
-                        "emotion": "😊",
-                        "content": "오늘은 정말 좋은 하루였습니다."
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "기록 조회 성공",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "기록이 성공적으로 조회되었습니다",
+                        "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "type": "DAILY",
+                            "recordDate": "2025-01-07",
+                            "recordTime": "15:21",
+                            "createdAt": "2025-01-07T15:21:00",
+                            "updatedAt": "2025-01-07T15:21:00",
+                            "imageUrls": ["https://example.com/image1.jpg"],
+                            "emotion": "😊",
+                            "content": "오늘은 정말 좋은 하루였습니다."
+                        }
                     }
-                }
-                """)
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "statusCode": 401,
+                        "code": "E40101",
+                        "message": "인증이 필요합니다",
+                        "data": null
+                    }
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "접근 권한 없음",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "statusCode": 403,
+                        "code": "E40305",
+                        "message": "해당 기록에 접근할 권한이 없습니다",
+                        "data": null
+                    }
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "404",
+            description = "기록을 찾을 수 없음",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "statusCode": 404,
+                        "code": "E40406",
+                        "message": "존재하지 않는 기록입니다",
+                        "data": null
+                    }
+                    """)
+            )
         )
-    )
+    })
     @GetMapping("/{recordId}")
     public ResponseEntity<ApiResponse<UnifiedRecordResponse>> getRecordById(
             @PathVariable String recordId,
