@@ -2,6 +2,7 @@ package com.recordmanagement.habitlog.api.unified;
 
 import com.recordmanagement.habitlog.application.record.RecordApplicationService;
 import com.recordmanagement.habitlog.application.record.dto.DailyRecordResponse;
+import com.recordmanagement.habitlog.application.record.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -97,6 +98,56 @@ public class UnifiedRecordController {
                 date, response.records().size());
         
         return ResponseEntity.ok(ApiResponse.success("일일 기록이 성공적으로 조회되었습니다", response));
+    }
+    
+    @Operation(summary = "개별 기록 조회", 
+               description = """
+                   기록 ID로 개별 기록의 상세 정보를 조회합니다.
+                   일상 기록과 운동 기록을 모두 지원합니다.
+                   
+                   **이미지 URL 처리:**
+                   - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
+                   """,
+               security = @SecurityRequirement(name = "Bearer Authentication"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "기록 조회 성공",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "statusCode": 200,
+                    "code": "S200",
+                    "message": "기록이 성공적으로 조회되었습니다",
+                    "data": {
+                        "id": "550e8400-e29b-41d4-a716-446655440000",
+                        "type": "DAILY",
+                        "recordDate": "2025-01-07",
+                        "recordTime": "15:21",
+                        "createdAt": "2025-01-07T15:21:00",
+                        "updatedAt": "2025-01-07T15:21:00",
+                        "imageUrls": ["https://example.com/image1.jpg"],
+                        "emotion": "😊",
+                        "content": "오늘은 정말 좋은 하루였습니다."
+                    }
+                }
+                """)
+        )
+    )
+    @GetMapping("/{recordId}")
+    public ResponseEntity<ApiResponse<UnifiedRecordResponse>> getRecordById(
+            @PathVariable String recordId,
+            Authentication authentication) {
+        
+        log.info("개별 기록 조회 요청: recordId=[{}]", recordId);
+        
+        String userIdValue = authentication.getName();
+        
+        UnifiedRecordResponse response = recordApplicationService.getRecordById(userIdValue, recordId);
+        
+        log.info("개별 기록 조회 완료: recordId=[{}], type=[{}]", recordId, response.type());
+        
+        return ResponseEntity.ok(ApiResponse.success("기록이 성공적으로 조회되었습니다", response));
     }
     
 }

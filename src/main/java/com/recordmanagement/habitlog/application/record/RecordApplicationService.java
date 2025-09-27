@@ -14,6 +14,7 @@ import com.recordmanagement.habitlog.domain.record.model.RecordId;
 import com.recordmanagement.habitlog.domain.record.repository.RecordRepository;
 import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
+import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
@@ -28,6 +29,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -184,6 +186,44 @@ public class RecordApplicationService {
             .toList();
         
         return DailyRecordResponse.of(date, recordsWithUpdatedUrls);
+    }
+    
+    @Transactional(readOnly = true)
+    public UnifiedRecordResponse getRecordById(String userId, String recordId) {
+        UserId userIdObj = UserId.of(userId);
+        
+        // 먼저 일상 기록에서 조회 시도
+        try {
+            RecordId recordIdObj = RecordId.from(recordId);
+            Optional<Record> dailyRecord = recordRepository.findById(recordIdObj);
+            
+            if (dailyRecord.isPresent()) {
+                Record record = dailyRecord.get();
+                // 작성자 확인
+                validateRecordOwnership(record, userIdObj);
+                
+                UnifiedRecordResponse response = UnifiedRecordResponse.fromRecord(record);
+                return updateImageUrls(response);
+            }
+        } catch (Exception e) {
+            // RecordId 파싱 실패 시 운동 기록 조회 시도
+        }
+        
+        // 운동 기록에서 조회 시도
+        try {
+            ExerciseRecordId exerciseRecordId = ExerciseRecordId.from(recordId);
+            Optional<ExerciseRecord> exerciseRecord = exerciseRecordRepository.findByIdAndUserId(exerciseRecordId, userIdObj);
+            
+            if (exerciseRecord.isPresent()) {
+                UnifiedRecordResponse response = UnifiedRecordResponse.fromExerciseRecord(exerciseRecord.get());
+                return updateImageUrls(response);
+            }
+        } catch (Exception e) {
+            // ExerciseRecordId 파싱 실패
+        }
+        
+        // 모든 조회 시도가 실패한 경우
+        throw new CustomException(ErrorCode.RECORD_NOT_FOUND);
     }
     
     /**
