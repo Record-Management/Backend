@@ -57,7 +57,7 @@ public class ExerciseRecordController {
                    RUNNING(러닝), GOLF(골프), BASKETBALL(농구), SWIMMING(수영), BASEBALL(야구),
                    YOGA(요가), WEIGHT_TRAINING(웨이트 트레이닝), CYCLING(자전거), SOCCER(축구), TENNIS(테니스)
                    """,
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "운동기록 작성 요청",
         content = @Content(
@@ -182,7 +182,7 @@ public class ExerciseRecordController {
                    - weight: 몸무게
                    - imageUrls: 사진 (최대 3장)
                    """,
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "운동기록 수정 요청",
         content = @Content(
@@ -277,7 +277,7 @@ public class ExerciseRecordController {
     
     @Operation(summary = "운동기록 삭제", 
                description = "운동기록을 삭제합니다. 삭제된 운동기록은 복구할 수 없습니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "운동기록 삭제 성공",

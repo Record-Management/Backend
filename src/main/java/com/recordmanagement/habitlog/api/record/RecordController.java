@@ -46,7 +46,7 @@ public class RecordController {
     // ==================== 타입별 생성 API ====================
     
     @Operation(summary = "하루 기록 작성", description = "새로운 하루 기록을 작성합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "하루 기록 작성 요청",
         content = @Content(
@@ -180,7 +180,7 @@ public class RecordController {
     // ==================== 타입별 수정 API ====================
     
     @Operation(summary = "하루 기록 수정", description = "기존 하루 기록을 수정합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "하루 기록 수정 요청",
         content = @Content(
@@ -268,7 +268,7 @@ public class RecordController {
     // ==================== 통합 API (삭제/조회) ====================
     
     @Operation(summary = "하루 기록 삭제", description = "하루 기록을 삭제합니다",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "하루 기록 삭제 성공",

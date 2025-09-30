@@ -39,7 +39,7 @@ public class UnifiedRecordController {
                    - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
                    - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
                    """,
-               security = @SecurityRequirement(name = "Bearer Authentication"))
+               security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "일일 기록 통합 조회 성공",
@@ -109,7 +109,7 @@ public class UnifiedRecordController {
                    **이미지 URL 처리:**
                    - 조회 시 자동으로 새로운 Pre-signed URL이 생성됩니다 (1시간 유효)
                    """,
-               security = @SecurityRequirement(name = "Bearer Authentication"))
+               security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",

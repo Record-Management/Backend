@@ -32,7 +32,7 @@ public class CalendarController {
     }
     
     @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "캘린더 조회 성공",

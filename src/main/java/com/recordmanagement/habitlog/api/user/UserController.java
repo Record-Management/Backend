@@ -82,7 +82,7 @@ public class UserController {
     @Operation(
         summary = "회원탈퇴", 
         description = "소셜 플랫폼 연결해제와 함께 계정을 완전히 삭제합니다.",
-        security = @SecurityRequirement(name = "Bearer Authentication"),
+        security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "204",
@@ -134,7 +134,7 @@ public class UserController {
             - 설정 화면 초기값 설정
             - 메인 기록 타입 확인
             """,
-        security = @SecurityRequirement(name = "Bearer Authentication"),
+        security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
@@ -192,7 +192,7 @@ public class UserController {
     @Operation(
         summary = "온보딩 완료", 
         description = "사용자의 온보딩 과정 완료를 처리합니다.",
-        security = @SecurityRequirement(name = "Bearer Authentication"),
+        security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",

@@ -32,7 +32,7 @@ public class FileController {
     }
     
     @Operation(summary = "파일 업로드", description = "이미지 파일을 S3에 업로드합니다 (1~3개)",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+            security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
         description = "파일 업로드 성공",
