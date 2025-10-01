@@ -229,4 +229,5 @@ public class AppleJwtUtils {
         private final boolean clientSecretCached;
         private final int privateKeyCacheSize;
     }
+
 }
