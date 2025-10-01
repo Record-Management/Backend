@@ -89,8 +89,11 @@ public class GlobalExceptionHandler {
                 .map(fieldError -> fieldError.getDefaultMessage())
                 .orElse("입력값 검증에 실패했습니다.");
         log.warn("[유효성 검사 실패] {}", msg);
-        return ResponseEntity.badRequest()
-                .body(ApiResponse.failure(ErrorCode.VALIDATION_FAIL.getCode(), 400, msg));
+        
+        ApiResponse<Void> response = ApiResponse.failure(ErrorCode.VALIDATION_FAIL.getCode(), 400, msg);
+        log.warn("[유효성 검사 실패 응답] {}", response);
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
@@ -113,8 +116,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleJsonParseError(HttpMessageNotReadableException ex) {
         log.warn("[JSON 파싱 오류] {}", ex.getMessage());
-        return ResponseEntity.badRequest()
-                .body(ApiResponse.from(ErrorCode.JSON_PARSE_ERROR, 400));
+        log.warn("[JSON 파싱 오류 상세] 원인: {}", ex.getCause() != null ? ex.getCause().getMessage() : "알 수 없음");
+        
+        String message = "잘못된 JSON 형식입니다.";
+        if (ex.getMessage().contains("Required request body is missing")) {
+            message = "요청 본문이 필요합니다.";
+        }
+        
+        ApiResponse<Void> response = ApiResponse.failure(ErrorCode.JSON_PARSE_ERROR.getCode(), 400, message);
+        log.warn("[JSON 파싱 오류 응답] {}", response);
+        
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(JsonProcessingException.class)
