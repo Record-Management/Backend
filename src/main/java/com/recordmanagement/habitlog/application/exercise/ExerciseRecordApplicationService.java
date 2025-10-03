@@ -137,20 +137,34 @@ public class ExerciseRecordApplicationService {
     
     private ExerciseRecordResponse toResponse(ExerciseRecord exerciseRecord) {
         return new ExerciseRecordResponse(
+            // 공통 필드
             exerciseRecord.getId().getValue(),
             RecordType.EXERCISE,
             exerciseRecord.getRecordDate(),
             null, // 운동 기록은 recordTime이 없음
             exerciseRecord.getCreatedAt(),
-            exerciseRecord.getUpdatedAt()
+            exerciseRecord.getUpdatedAt(),
+            
+            // 운동기록 전용 필드
+            exerciseRecord.getExerciseType(),
+            exerciseRecord.getCaloriesBurned(),
+            exerciseRecord.getExerciseTimeMinutes(),
+            exerciseRecord.getStepCount(),
+            exerciseRecord.getWeight(),
+            exerciseRecord.getDailyNote(),
+            exerciseRecord.getImageUrls()
         );
     }
     
     /**
-     * ExerciseRecordResponse 반환 (이미지 URL 처리 없음 - 공통 구조)
+     * ExerciseRecordResponse의 이미지 URL을 새로운 Pre-signed URL로 업데이트
      */
     private ExerciseRecordResponse updateImageUrls(ExerciseRecordResponse response) {
-        // 공통 구조에서는 이미지 URL 처리하지 않음
-        return response;
+        if (response.imageUrls() == null || response.imageUrls().isEmpty()) {
+            return response;
+        }
+        
+        List<String> updatedUrls = s3FileService.regeneratePresignedUrls(response.imageUrls());
+        return response.withUpdatedImageUrls(updatedUrls);
     }
 }
