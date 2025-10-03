@@ -1,6 +1,5 @@
 package com.recordmanagement.habitlog.api.exercise.dto;
 
-import com.recordmanagement.habitlog.common.validation.ValidExerciseData;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,7 +8,6 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-@ValidExerciseData
 public class CreateExerciseRecordRequest {
     
     @NotNull(message = "운동 종목은 필수입니다")
