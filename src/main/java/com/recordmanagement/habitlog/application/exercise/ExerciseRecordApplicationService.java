@@ -6,6 +6,7 @@ import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import org.slf4j.Logger;
@@ -137,28 +138,19 @@ public class ExerciseRecordApplicationService {
     private ExerciseRecordResponse toResponse(ExerciseRecord exerciseRecord) {
         return new ExerciseRecordResponse(
             exerciseRecord.getId().getValue(),
-            exerciseRecord.getExerciseType(),
-            exerciseRecord.getCaloriesBurned(),
-            exerciseRecord.getExerciseTimeMinutes(),
-            exerciseRecord.getStepCount(),
-            exerciseRecord.getWeight(),
-            exerciseRecord.getDailyNote(),
-            exerciseRecord.getImageUrls(),
+            RecordType.EXERCISE,
             exerciseRecord.getRecordDate(),
+            null, // 운동 기록은 recordTime이 없음
             exerciseRecord.getCreatedAt(),
             exerciseRecord.getUpdatedAt()
         );
     }
     
     /**
-     * ExerciseRecordResponse의 이미지 URL을 새로운 Pre-signed URL로 업데이트
+     * ExerciseRecordResponse 반환 (이미지 URL 처리 없음 - 공통 구조)
      */
     private ExerciseRecordResponse updateImageUrls(ExerciseRecordResponse response) {
-        if (response.imageUrls() == null || response.imageUrls().isEmpty()) {
-            return response;
-        }
-        
-        List<String> updatedUrls = s3FileService.regeneratePresignedUrls(response.imageUrls());
-        return response.withUpdatedImageUrls(updatedUrls);
+        // 공통 구조에서는 이미지 URL 처리하지 않음
+        return response;
     }
 }

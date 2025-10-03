@@ -121,14 +121,9 @@ public class ExerciseRecordController {
                     "message": "운동기록이 성공적으로 작성되었습니다",
                     "data": {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
-                        "exerciseType": "BASKETBALL",
-                        "caloriesBurned": 300,
-                        "exerciseTimeMinutes": 60,
-                        "stepCount": 5000,
-                        "weight": 70.5,
-                        "dailyNote": "오늘 농구 경기 정말 재밌었다! 팀워크가 좋았어요.",
-                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
+                        "type": "EXERCISE",
                         "recordDate": [2025, 1, 7],
+                        "recordTime": null,
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                         "updatedAt": [2025, 9, 18, 15, 30, 0, 0]
                     }
@@ -229,14 +224,9 @@ public class ExerciseRecordController {
                     "message": "운동기록이 성공적으로 수정되었습니다",
                     "data": {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
-                        "exerciseType": "RUNNING",
-                        "caloriesBurned": 400,
-                        "exerciseTimeMinutes": 45,
-                        "stepCount": 6000,
-                        "weight": 69.8,
-                        "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
-                        "imageUrls": ["https://example.com/running-track.jpg"],
+                        "type": "EXERCISE",
                         "recordDate": [2025, 1, 7],
+                        "recordTime": null,
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                         "updatedAt": [2025, 9, 18, 16, 15, 0, 0]
                     }
