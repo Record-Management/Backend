@@ -10,6 +10,7 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class ExerciseRecordApplicationService {
         this.s3FileService = s3FileService;
     }
     
+    @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
         log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
@@ -55,6 +57,7 @@ public class ExerciseRecordApplicationService {
         return toResponse(savedRecord);
     }
     
+    @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
     public ExerciseRecordResponse updateExerciseRecord(UpdateExerciseRecordCommand command) {
         log.info("운동기록 수정 시작: exerciseRecordId=[{}], userId=[{}]", 
                 command.exerciseRecordId().getValue(), command.userId().getValue());
@@ -115,6 +118,7 @@ public class ExerciseRecordApplicationService {
         return responseList;
     }
     
+    @CacheEvict(value = "calendar", allEntries = true)
     public void deleteExerciseRecord(String exerciseRecordId, String userIdValue) {
         log.info("운동기록 삭제 시작: exerciseRecordId=[{}], userId=[{}]", exerciseRecordId, userIdValue);
         
