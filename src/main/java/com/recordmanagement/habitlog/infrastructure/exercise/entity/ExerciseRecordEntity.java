@@ -42,7 +42,7 @@ public class ExerciseRecordEntity {
         name = "exercise_record_images",
         joinColumns = @JoinColumn(name = "exercise_record_id", referencedColumnName = "exercise_record_id")
     )
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private List<String> imageUrls;
     
     @Column(name = "record_date", nullable = false)
