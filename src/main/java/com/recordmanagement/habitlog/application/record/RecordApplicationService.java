@@ -48,7 +48,7 @@ public class RecordApplicationService {
         this.s3FileService = s3FileService;
     }
     
-    @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
+    @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
         // 일상 기록인 경우 하루 최대 2개 제한 검증
         if (command.type() == RecordType.DAILY) {

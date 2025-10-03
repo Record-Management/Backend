@@ -33,7 +33,7 @@ public class ExerciseRecordApplicationService {
         this.s3FileService = s3FileService;
     }
     
-    @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
+    @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
         log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
@@ -57,7 +57,7 @@ public class ExerciseRecordApplicationService {
         return toResponse(savedRecord);
     }
     
-    @CacheEvict(value = "calendar", key = "#command.userId().getValue() + '_*'", allEntries = true)
+    @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse updateExerciseRecord(UpdateExerciseRecordCommand command) {
         log.info("운동기록 수정 시작: exerciseRecordId=[{}], userId=[{}]", 
                 command.exerciseRecordId().getValue(), command.userId().getValue());
