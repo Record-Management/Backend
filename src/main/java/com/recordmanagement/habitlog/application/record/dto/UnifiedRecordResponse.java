@@ -2,6 +2,7 @@ package com.recordmanagement.habitlog.application.record.dto;
 
 import com.recordmanagement.habitlog.domain.record.model.Record;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
+import com.recordmanagement.habitlog.domain.habit.model.HabitRecord;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -12,7 +13,7 @@ import java.util.List;
 
 /**
  * 모든 타입의 기록을 통합해서 표현하는 응답 DTO
- * DAILY, EXERCISE 기록을 하나의 모델로 처리
+ * DAILY, EXERCISE, HABIT 기록을 하나의 모델로 처리
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record UnifiedRecordResponse(
@@ -35,7 +36,13 @@ public record UnifiedRecordResponse(
     Integer exerciseTimeMinutes,
     Integer stepCount,
     Double weight,
-    String dailyNote
+    String dailyNote,
+    
+    // HABIT 기록 필드
+    String habitType,
+    Boolean notificationEnabled,
+    LocalTime notificationTime,
+    String memo
 ) {
     
     /**
@@ -52,7 +59,8 @@ public record UnifiedRecordResponse(
             record.getImageUrls(),
             record.getEmotion(),
             record.getContent(),
-            null, null, null, null, null
+            null, null, null, null, null,
+            null, null, null, null
         );
     }
     
@@ -73,7 +81,29 @@ public record UnifiedRecordResponse(
             exerciseRecord.getExerciseTimeMinutes(),
             exerciseRecord.getStepCount(),
             exerciseRecord.getWeight(),
-            exerciseRecord.getDailyNote()
+            exerciseRecord.getDailyNote(),
+            null, null, null, null // 운동 기록은 habit 필드가 없음
+        );
+    }
+    
+    /**
+     * 습관 기록을 통합 응답으로 변환
+     */
+    public static UnifiedRecordResponse fromHabitRecord(HabitRecord habitRecord) {
+        return new UnifiedRecordResponse(
+            habitRecord.getId().getValue(),
+            RecordType.HABIT,
+            habitRecord.getRecordDate(),
+            null, // 습관 기록은 recordTime이 없음 (운동기록과 동일한 패턴)
+            habitRecord.getCreatedAt(),
+            habitRecord.getUpdatedAt(),
+            null, // 습관 기록은 imageUrls가 없음
+            null, null, // 습관 기록은 emotion, content가 없음
+            null, null, null, null, null, // 습관 기록은 exercise 필드가 없음
+            habitRecord.getHabitType() != null ? habitRecord.getHabitType().name() : null,
+            habitRecord.isNotificationEnabled(),
+            habitRecord.getNotificationTime(),
+            habitRecord.getMemo()
         );
     }
     
@@ -95,7 +125,11 @@ public record UnifiedRecordResponse(
             this.exerciseTimeMinutes,
             this.stepCount,
             this.weight,
-            this.dailyNote
+            this.dailyNote,
+            this.habitType,
+            this.notificationEnabled,
+            this.notificationTime,
+            this.memo
         );
     }
 }

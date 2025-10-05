@@ -16,6 +16,8 @@ import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRe
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
+import com.recordmanagement.habitlog.domain.habit.repository.HabitRecordRepository;
+import com.recordmanagement.habitlog.domain.habit.model.HabitRecord;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
@@ -38,13 +40,16 @@ public class RecordApplicationService {
     
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
     
     public RecordApplicationService(RecordRepository recordRepository, 
                                    ExerciseRecordRepository exerciseRecordRepository,
+                                   HabitRecordRepository habitRecordRepository,
                                    S3FileService s3FileService) {
         this.recordRepository = recordRepository;
         this.exerciseRecordRepository = exerciseRecordRepository;
+        this.habitRecordRepository = habitRecordRepository;
         this.s3FileService = s3FileService;
     }
     
@@ -136,7 +141,16 @@ public class RecordApplicationService {
                 .toList());
         }
         
-        // TODO: 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
+        // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
+        if (type == null || type == RecordType.HABIT) {
+            List<HabitRecord> habitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+                userIdObj, startDate, endDate
+            );
+            allRecords.addAll(habitRecords.stream()
+                .map(UnifiedRecordResponse::fromHabitRecord)
+                .toList());
+        }
+        
         // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
         
         // 날짜별로 그룹핑 (UnifiedRecordResponse 기준)
@@ -177,7 +191,12 @@ public class RecordApplicationService {
             .map(UnifiedRecordResponse::fromExerciseRecord)
             .toList());
         
-        // TODO: 3. 습관 기록 조회
+        // 3. 습관 기록 조회
+        List<HabitRecord> habitRecords = habitRecordRepository.findByUserIdAndRecordDate(userIdObj, date);
+        allRecords.addAll(habitRecords.stream()
+            .map(UnifiedRecordResponse::fromHabitRecord)
+            .toList());
+        
         // TODO: 4. 일정 기록 조회
         
         // Pre-signed URL 재생성
