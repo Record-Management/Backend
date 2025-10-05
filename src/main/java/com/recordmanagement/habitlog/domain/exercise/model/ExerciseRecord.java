@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 public class ExerciseRecord {
@@ -18,13 +19,14 @@ public class ExerciseRecord {
     private final String dailyNote;
     private final List<String> imageUrls;
     private final LocalDate recordDate;
+    private final LocalTime recordTime;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     public ExerciseRecord(ExerciseRecordId id, UserId userId, ExerciseType exerciseType,
                          Integer caloriesBurned, Integer exerciseTimeMinutes, Integer stepCount,
                          Double weight, String dailyNote, List<String> imageUrls,
-                         LocalDate recordDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                         LocalDate recordDate, LocalTime recordTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.exerciseType = exerciseType;
@@ -35,6 +37,7 @@ public class ExerciseRecord {
         this.dailyNote = dailyNote;
         this.imageUrls = imageUrls != null ? List.copyOf(imageUrls) : List.of();
         this.recordDate = recordDate;
+        this.recordTime = recordTime;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -42,7 +45,7 @@ public class ExerciseRecord {
     public static ExerciseRecord create(UserId userId, ExerciseType exerciseType,
                                       Integer caloriesBurned, Integer exerciseTimeMinutes,
                                       Integer stepCount, Double weight, String dailyNote,
-                                      List<String> imageUrls, LocalDate recordDate) {
+                                      List<String> imageUrls, LocalDate recordDate, LocalTime recordTime) {
         LocalDateTime now = LocalDateTime.now();
         return new ExerciseRecord(
             ExerciseRecordId.generate(),
@@ -55,6 +58,7 @@ public class ExerciseRecord {
             dailyNote,
             imageUrls,
             recordDate,
+            recordTime,
             now,
             now
         );
@@ -73,6 +77,7 @@ public class ExerciseRecord {
             this.dailyNote,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -90,6 +95,7 @@ public class ExerciseRecord {
             this.dailyNote,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -107,6 +113,7 @@ public class ExerciseRecord {
             dailyNote,
             this.imageUrls,
             this.recordDate,
+            this.recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -124,6 +131,25 @@ public class ExerciseRecord {
             this.dailyNote,
             imageUrls,
             this.recordDate,
+            this.recordTime,
+            this.createdAt,
+            LocalDateTime.now()
+        );
+    }
+    
+    public ExerciseRecord updateRecordTime(LocalTime recordTime) {
+        return new ExerciseRecord(
+            this.id,
+            this.userId,
+            this.exerciseType,
+            this.caloriesBurned,
+            this.exerciseTimeMinutes,
+            this.stepCount,
+            this.weight,
+            this.dailyNote,
+            this.imageUrls,
+            this.recordDate,
+            recordTime,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -140,6 +166,7 @@ public class ExerciseRecord {
     public String getDailyNote() { return dailyNote; }
     public List<String> getImageUrls() { return List.copyOf(imageUrls); }
     public LocalDate getRecordDate() { return recordDate; }
+    public LocalTime getRecordTime() { return recordTime; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

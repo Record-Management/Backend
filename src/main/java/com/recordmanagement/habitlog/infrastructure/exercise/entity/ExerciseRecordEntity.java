@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Entity
@@ -48,6 +49,9 @@ public class ExerciseRecordEntity {
     @Column(name = "record_date", nullable = false)
     private LocalDate recordDate;
     
+    @Column(name = "record_time", nullable = false)
+    private LocalTime recordTime;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -59,7 +63,7 @@ public class ExerciseRecordEntity {
     public ExerciseRecordEntity(String exerciseRecordId, String userId, ExerciseType exerciseType,
                                Integer caloriesBurned, Integer exerciseTimeMinutes, Integer stepCount,
                                Double weight, String dailyNote, List<String> imageUrls,
-                               LocalDate recordDate) {
+                               LocalDate recordDate, LocalTime recordTime) {
         this.exerciseRecordId = exerciseRecordId;
         this.userId = userId;
         this.exerciseType = exerciseType;
@@ -70,6 +74,7 @@ public class ExerciseRecordEntity {
         this.dailyNote = dailyNote;
         this.imageUrls = imageUrls;
         this.recordDate = recordDate;
+        this.recordTime = recordTime;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -104,6 +109,9 @@ public class ExerciseRecordEntity {
     
     public LocalDate getRecordDate() { return recordDate; }
     public void setRecordDate(LocalDate recordDate) { this.recordDate = recordDate; }
+    
+    public LocalTime getRecordTime() { return recordTime; }
+    public void setRecordTime(LocalTime recordTime) { this.recordTime = recordTime; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -48,7 +48,8 @@ public class ExerciseRecordApplicationService {
             command.weight(),
             command.dailyNote(),
             command.imageUrls(),
-            command.recordDate()
+            command.recordDate(),
+            command.recordTime()
         );
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(exerciseRecord);
@@ -72,7 +73,8 @@ public class ExerciseRecordApplicationService {
                                      command.exerciseTimeMinutes(), command.stepCount())
                 .updateWeight(command.weight())
                 .updateDailyNote(command.dailyNote())
-                .updateImages(command.imageUrls());
+                .updateImages(command.imageUrls())
+                .updateRecordTime(command.recordTime());
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(updatedRecord);
         
@@ -141,7 +143,7 @@ public class ExerciseRecordApplicationService {
             exerciseRecord.getId().getValue(),
             RecordType.EXERCISE,
             exerciseRecord.getRecordDate(),
-            null, // 운동 기록은 recordTime이 없음
+            exerciseRecord.getRecordTime(), // 운동 기록 시간 추가
             exerciseRecord.getCreatedAt(),
             exerciseRecord.getUpdatedAt(),
             

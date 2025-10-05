@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -48,6 +49,7 @@ public class ExerciseRecordController {
                    - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수)
                    - dailyNote: 나의 기록 (필수)
                    - recordDate: 기록 날짜 (필수)
+                   - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
                    - weight: 몸무게
@@ -78,7 +80,8 @@ public class ExerciseRecordController {
                                 "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...",
                                 "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."
                             ],
-                            "recordDate": "2025-01-07"
+                            "recordDate": "2025-01-07",
+                            "recordTime": "13:30"
                         }
                         """
                 ),
@@ -90,7 +93,8 @@ public class ExerciseRecordController {
                             "exerciseType": "RUNNING",
                             "caloriesBurned": 250,
                             "dailyNote": "30분 달리기 완주했어요!",
-                            "recordDate": "2025-01-07"
+                            "recordDate": "2025-01-07",
+                            "recordTime": "07:00"
                         }
                         """
                 ),
@@ -102,7 +106,8 @@ public class ExerciseRecordController {
                             "exerciseType": "YOGA",
                             "exerciseTimeMinutes": 45,
                             "dailyNote": "요가로 몸과 마음을 정화했어요.",
-                            "recordDate": "2025-01-07"
+                            "recordDate": "2025-01-07",
+                            "recordTime": "18:00"
                         }
                         """
                 )
@@ -123,7 +128,7 @@ public class ExerciseRecordController {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
                         "type": "EXERCISE",
                         "recordDate": [2025, 1, 7],
-                        "recordTime": null,
+                        "recordTime": [13, 30],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                         "updatedAt": [2025, 9, 18, 15, 30, 0, 0],
                         "exerciseType": "BASKETBALL",
@@ -150,6 +155,7 @@ public class ExerciseRecordController {
         UserId userId = UserId.of(userIdValue);
         
         LocalDate recordDate = LocalDate.parse(request.getRecordDate());
+        LocalTime recordTime = LocalTime.parse(request.getRecordTime());
         
         CreateExerciseRecordCommand command = new CreateExerciseRecordCommand(
             userId,
@@ -160,7 +166,8 @@ public class ExerciseRecordController {
             request.getWeight(),
             request.getDailyNote(),
             request.getImageUrls(),
-            recordDate
+            recordDate,
+            recordTime
         );
         
         ExerciseRecordResponse response = exerciseRecordApplicationService.createExerciseRecord(command);
@@ -179,6 +186,7 @@ public class ExerciseRecordController {
                    - exerciseType: 운동 종목 (필수)
                    - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수)
                    - dailyNote: 나의 기록 (필수)
+                   - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
                    - weight: 몸무게
@@ -201,7 +209,8 @@ public class ExerciseRecordController {
                             "stepCount": 6000,
                             "weight": 69.8,
                             "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
-                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/running-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
+                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/running-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
+                            "recordTime": "07:30"
                         }
                         """
                 ),
@@ -212,7 +221,8 @@ public class ExerciseRecordController {
                         {
                             "exerciseType": "YOGA",
                             "exerciseTimeMinutes": 60,
-                            "dailyNote": "요가 시간을 늘려서 더 깊은 명상을 했습니다."
+                            "dailyNote": "요가 시간을 늘려서 더 깊은 명상을 했습니다.",
+                            "recordTime": "18:30"
                         }
                         """
                 )
@@ -233,7 +243,7 @@ public class ExerciseRecordController {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
                         "type": "EXERCISE",
                         "recordDate": [2025, 1, 7],
-                        "recordTime": null,
+                        "recordTime": [13, 30],
                         "createdAt": [2025, 9, 18, 15, 30, 0, 0],
                         "updatedAt": [2025, 9, 18, 16, 15, 0, 0],
                         "exerciseType": "RUNNING",
@@ -260,6 +270,8 @@ public class ExerciseRecordController {
         String userIdValue = getUserIdValue(authentication);
         UserId userId = UserId.of(userIdValue);
         
+        LocalTime recordTime = LocalTime.parse(request.getRecordTime());
+        
         UpdateExerciseRecordCommand command = new UpdateExerciseRecordCommand(
             ExerciseRecordId.from(exerciseRecordId),
             userId,
@@ -269,7 +281,8 @@ public class ExerciseRecordController {
             request.getStepCount(),
             request.getWeight(),
             request.getDailyNote(),
-            request.getImageUrls()
+            request.getImageUrls(),
+            recordTime
         );
         
         ExerciseRecordResponse response = exerciseRecordApplicationService.updateExerciseRecord(command);

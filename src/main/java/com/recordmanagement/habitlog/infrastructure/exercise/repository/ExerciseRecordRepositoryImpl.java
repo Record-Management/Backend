@@ -84,7 +84,8 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository {
             exerciseRecord.getWeight(),
             exerciseRecord.getDailyNote(),
             exerciseRecord.getImageUrls(),
-            exerciseRecord.getRecordDate()
+            exerciseRecord.getRecordDate(),
+            exerciseRecord.getRecordTime()
         );
         
         return entity;
@@ -102,6 +103,7 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository {
             entity.getDailyNote(),
             entity.getImageUrls(),
             entity.getRecordDate(),
+            entity.getRecordTime(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

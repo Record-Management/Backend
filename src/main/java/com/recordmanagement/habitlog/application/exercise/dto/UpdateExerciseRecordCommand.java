@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 
+import java.time.LocalTime;
 import java.util.List;
 
 public record UpdateExerciseRecordCommand(
@@ -15,5 +16,6 @@ public record UpdateExerciseRecordCommand(
     Integer stepCount,
     Double weight,
     String dailyNote,
-    List<String> imageUrls
+    List<String> imageUrls,
+    LocalTime recordTime
 ) {}

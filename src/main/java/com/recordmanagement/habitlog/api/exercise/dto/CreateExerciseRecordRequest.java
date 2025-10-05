@@ -34,11 +34,14 @@ public class CreateExerciseRecordRequest {
     @NotNull(message = "기록 날짜는 필수입니다")
     private String recordDate;
     
+    @NotNull(message = "기록 시간은 필수입니다")
+    private String recordTime;
+    
     public CreateExerciseRecordRequest() {}
     
     public CreateExerciseRecordRequest(ExerciseType exerciseType, Integer caloriesBurned, 
                                      Integer exerciseTimeMinutes, Integer stepCount, Double weight,
-                                     String dailyNote, List<String> imageUrls, String recordDate) {
+                                     String dailyNote, List<String> imageUrls, String recordDate, String recordTime) {
         this.exerciseType = exerciseType;
         this.caloriesBurned = caloriesBurned;
         this.exerciseTimeMinutes = exerciseTimeMinutes;
@@ -47,6 +50,7 @@ public class CreateExerciseRecordRequest {
         this.dailyNote = dailyNote;
         this.imageUrls = imageUrls;
         this.recordDate = recordDate;
+        this.recordTime = recordTime;
     }
     
     // Getters and Setters
@@ -73,4 +77,7 @@ public class CreateExerciseRecordRequest {
     
     public String getRecordDate() { return recordDate; }
     public void setRecordDate(String recordDate) { this.recordDate = recordDate; }
+    
+    public String getRecordTime() { return recordTime; }
+    public void setRecordTime(String recordTime) { this.recordTime = recordTime; }
 }

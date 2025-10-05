@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.exercise.model.ExerciseType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public record CreateExerciseRecordCommand(
@@ -15,5 +16,6 @@ public record CreateExerciseRecordCommand(
     Double weight,
     String dailyNote,
     List<String> imageUrls,
-    LocalDate recordDate
+    LocalDate recordDate,
+    LocalTime recordTime
 ) {}
