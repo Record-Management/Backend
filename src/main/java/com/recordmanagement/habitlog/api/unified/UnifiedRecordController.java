@@ -73,6 +73,7 @@ public class UnifiedRecordController {
                                 "updatedAt": "2025-01-07T16:30:00",
                                 "imageUrls": [],
                                 "exerciseType": "CARDIO",
+                                "caloriesBurned": 300,
                                 "exerciseTimeMinutes": 30,
                                 "stepCount": 5000,
                                 "weight": 70.5,

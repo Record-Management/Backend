@@ -100,4 +100,9 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             entity.getUpdatedAt()
         );
     }
+    
+    @Override
+    public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
+        return jpaHabitRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
+    }
 }

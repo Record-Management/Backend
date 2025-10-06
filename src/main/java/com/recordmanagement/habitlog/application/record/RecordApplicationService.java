@@ -55,7 +55,7 @@ public class RecordApplicationService {
     
     @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
-        // 일상 기록인 경우 하루 최대 2개 제한 검증
+        // 일상 기록인 경우 하루 최대 1개 제한 검증
         if (command.type() == RecordType.DAILY) {
             int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
                 command.userId(), 
@@ -63,10 +63,13 @@ public class RecordApplicationService {
                 RecordType.DAILY
             );
             
-            if (dailyRecordCount >= 2) {
+            if (dailyRecordCount >= 1) {
                 throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
             }
         }
+        
+        // 전체 기록 종류 최대 2가지 제한 검증
+        validateRecordTypeLimit(command.userId(), command.recordDate(), RecordType.DAILY);
         
         Record record = Record.create(
             command.userId(),
@@ -264,5 +267,37 @@ public class RecordApplicationService {
         
         List<String> updatedUrls = s3FileService.regeneratePresignedUrls(record.imageUrls());
         return record.withUpdatedImageUrls(updatedUrls);
+    }
+    
+    /**
+     * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
+     */
+    public void validateRecordTypeLimit(UserId userId, LocalDate recordDate, RecordType newRecordType) {
+        // 현재 등록된 기록 종류 수를 확인
+        int recordTypeCount = 0;
+        
+        // 일상 기록 확인
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        if (dailyCount > 0) recordTypeCount++;
+        
+        // 운동 기록 확인  
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        if (exerciseCount > 0) recordTypeCount++;
+        
+        // 습관 기록 확인
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        if (habitCount > 0) recordTypeCount++;
+        
+        // 새로 추가하려는 기록 종류가 기존에 없다면 +1
+        boolean hasNewType = false;
+        switch (newRecordType) {
+            case DAILY -> hasNewType = dailyCount == 0;
+            case EXERCISE -> hasNewType = exerciseCount == 0;
+            case HABIT -> hasNewType = habitCount == 0;
+        }
+        
+        if (hasNewType && recordTypeCount >= 2) {
+            throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
+        }
     }
 }

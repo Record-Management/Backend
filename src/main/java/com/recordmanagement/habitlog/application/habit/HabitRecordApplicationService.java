@@ -6,6 +6,8 @@ import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.habit.model.HabitRecord;
 import com.recordmanagement.habitlog.domain.habit.model.HabitRecordId;
 import com.recordmanagement.habitlog.domain.habit.repository.HabitRecordRepository;
+import com.recordmanagement.habitlog.domain.record.repository.RecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import org.slf4j.Logger;
@@ -25,15 +27,36 @@ public class HabitRecordApplicationService {
     private static final Logger log = LoggerFactory.getLogger(HabitRecordApplicationService.class);
     
     private final HabitRecordRepository habitRecordRepository;
+    private final RecordRepository recordRepository;
+    private final ExerciseRecordRepository exerciseRecordRepository;
     
-    public HabitRecordApplicationService(HabitRecordRepository habitRecordRepository) {
+    public HabitRecordApplicationService(HabitRecordRepository habitRecordRepository,
+                                       RecordRepository recordRepository,
+                                       ExerciseRecordRepository exerciseRecordRepository) {
         this.habitRecordRepository = habitRecordRepository;
+        this.recordRepository = recordRepository;
+        this.exerciseRecordRepository = exerciseRecordRepository;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
     public HabitRecordResponse createHabitRecord(CreateHabitRecordCommand command) {
         log.info("습관기록 생성 시작: userId=[{}], habitType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.habitType(), command.recordDate());
+        
+        // 하루 최대 1개 습관기록 제한 검증
+        int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
+            command.userId(), 
+            command.recordDate()
+        );
+        
+        if (habitRecordCount >= 1) {
+            throw new CustomException(ErrorCode.HABIT_RECORD_LIMIT_EXCEEDED);
+        }
+        
+        // 전체 기록 종류 최대 2가지 제한 검증 (습관기록이 없는 경우에만)
+        if (habitRecordCount == 0) {
+            validateRecordTypeLimit(command.userId(), command.recordDate());
+        }
         
         HabitRecord habitRecord = HabitRecord.create(
             command.userId(),
@@ -124,5 +147,26 @@ public class HabitRecordApplicationService {
             habitRecord.getNotificationTime(),
             habitRecord.getMemo()
         );
+    }
+    
+    /**
+     * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
+     */
+    private void validateRecordTypeLimit(UserId userId, LocalDate recordDate) {
+        // 현재 등록된 기록 종류 수를 확인
+        int recordTypeCount = 0;
+        
+        // 일상 기록 확인
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        if (dailyCount > 0) recordTypeCount++;
+        
+        // 운동 기록 확인
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        if (exerciseCount > 0) recordTypeCount++;
+        
+        // 이미 2가지 기록 종류가 있다면 습관기록을 추가할 수 없음
+        if (recordTypeCount >= 2) {
+            throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
+        }
     }
 }

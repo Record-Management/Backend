@@ -143,6 +143,41 @@ public class ExerciseRecordController {
                 """)
         )
     )
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "운동기록 등록 제한 초과",
+            content = @Content(
+                mediaType = "application/json",
+                examples = {
+                    @ExampleObject(
+                        name = "하루 1개 제한 초과",
+                        summary = "운동기록 하루 1개 제한 초과",
+                        value = """
+                            {
+                                "statusCode": 400,
+                                "code": "E40408",
+                                "message": "하루에 등록할 수 있는 운동 기록은 최대 1개입니다.",
+                                "data": null
+                            }
+                            """
+                    ),
+                    @ExampleObject(
+                        name = "기록 종류 2가지 제한 초과",
+                        summary = "하루 최대 2가지 기록 종류 제한 초과",
+                        value = """
+                            {
+                                "statusCode": 400,
+                                "code": "E40410",
+                                "message": "하루에 등록할 수 있는 기록 종류는 최대 2가지입니다.",
+                                "data": null
+                            }
+                            """
+                    )
+                }
+            )
+        )
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<ExerciseRecordResponse>> createExerciseRecord(
             @Valid @RequestBody CreateExerciseRecordRequest request,

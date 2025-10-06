@@ -18,4 +18,6 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
     void deleteByHabitRecordIdAndUserId(String habitRecordId, String userId);
     
     boolean existsByHabitRecordIdAndUserId(String habitRecordId, String userId);
+    
+    int countByUserIdAndRecordDate(String userId, LocalDate recordDate);
 }

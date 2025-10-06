@@ -223,7 +223,16 @@ public enum ErrorCode {
     RECORD_NOT_FOUND(404, "E40406", "존재하지 않는 기록입니다."),
 
     @Schema(description = "일일 기록 등록 제한 초과")
-    DAILY_RECORD_LIMIT_EXCEEDED(400, "E40407", "하루에 등록할 수 있는 일상 기록은 최대 2개입니다."),
+    DAILY_RECORD_LIMIT_EXCEEDED(400, "E40407", "하루에 등록할 수 있는 일상 기록은 최대 1개입니다."),
+    
+    @Schema(description = "운동 기록 등록 제한 초과")
+    EXERCISE_RECORD_LIMIT_EXCEEDED(400, "E40408", "하루에 등록할 수 있는 운동 기록은 최대 1개입니다."),
+    
+    @Schema(description = "습관 기록 등록 제한 초과") 
+    HABIT_RECORD_LIMIT_EXCEEDED(400, "E40409", "하루에 등록할 수 있는 습관 기록은 최대 1개입니다."),
+    
+    @Schema(description = "기록 종류 등록 제한 초과")
+    RECORD_TYPE_LIMIT_EXCEEDED(400, "E40410", "하루에 등록할 수 있는 기록 종류는 최대 2가지입니다."),
 
     // ============================================================================
     // 405 METHOD NOT ALLOWED - HTTP 메서드 오류

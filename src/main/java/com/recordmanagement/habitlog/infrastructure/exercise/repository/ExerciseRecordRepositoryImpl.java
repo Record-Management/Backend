@@ -108,4 +108,9 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository {
             entity.getUpdatedAt()
         );
     }
+    
+    @Override
+    public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
+        return jpaExerciseRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
+    }
 }

@@ -25,4 +25,6 @@ public interface HabitRecordRepository {
     void deleteByIdAndUserId(HabitRecordId id, UserId userId);
     
     boolean existsByIdAndUserId(HabitRecordId id, UserId userId);
+    
+    int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
 }

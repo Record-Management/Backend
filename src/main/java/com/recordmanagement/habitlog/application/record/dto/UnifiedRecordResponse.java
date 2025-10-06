@@ -33,6 +33,7 @@ public record UnifiedRecordResponse(
     
     // EXERCISE 기록 필드
     String exerciseType,
+    Integer caloriesBurned,
     Integer exerciseTimeMinutes,
     Integer stepCount,
     Double weight,
@@ -59,7 +60,7 @@ public record UnifiedRecordResponse(
             record.getImageUrls(),
             record.getEmotion(),
             record.getContent(),
-            null, null, null, null, null,
+            null, null, null, null, null, null,
             null, null, null, null
         );
     }
@@ -78,6 +79,7 @@ public record UnifiedRecordResponse(
             exerciseRecord.getImageUrls(),
             null, null, // 운동 기록은 emotion, content가 없음
             exerciseRecord.getExerciseType() != null ? exerciseRecord.getExerciseType().name() : null,
+            exerciseRecord.getCaloriesBurned(),
             exerciseRecord.getExerciseTimeMinutes(),
             exerciseRecord.getStepCount(),
             exerciseRecord.getWeight(),
@@ -99,7 +101,7 @@ public record UnifiedRecordResponse(
             habitRecord.getUpdatedAt(),
             null, // 습관 기록은 imageUrls가 없음
             null, null, // 습관 기록은 emotion, content가 없음
-            null, null, null, null, null, // 습관 기록은 exercise 필드가 없음
+            null, null, null, null, null, null, // 습관 기록은 exercise 필드가 없음
             habitRecord.getHabitType() != null ? habitRecord.getHabitType().name() : null,
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
@@ -122,6 +124,7 @@ public record UnifiedRecordResponse(
             this.emotion,
             this.content,
             this.exerciseType,
+            this.caloriesBurned,
             this.exerciseTimeMinutes,
             this.stepCount,
             this.weight,

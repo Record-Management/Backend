@@ -25,4 +25,6 @@ public interface ExerciseRecordRepository {
     void deleteByIdAndUserId(ExerciseRecordId id, UserId userId);
     
     boolean existsByIdAndUserId(ExerciseRecordId id, UserId userId);
+    
+    int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
 }

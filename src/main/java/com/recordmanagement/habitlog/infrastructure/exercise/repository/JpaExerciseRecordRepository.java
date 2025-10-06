@@ -18,4 +18,6 @@ public interface JpaExerciseRecordRepository extends JpaRepository<ExerciseRecor
     void deleteByExerciseRecordIdAndUserId(String exerciseRecordId, String userId);
     
     boolean existsByExerciseRecordIdAndUserId(String exerciseRecordId, String userId);
+    
+    int countByUserIdAndRecordDate(String userId, LocalDate recordDate);
 }

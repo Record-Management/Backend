@@ -6,6 +6,8 @@ import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.record.repository.RecordRepository;
+import com.recordmanagement.habitlog.domain.habit.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
@@ -26,11 +28,17 @@ public class ExerciseRecordApplicationService {
     private static final Logger log = LoggerFactory.getLogger(ExerciseRecordApplicationService.class);
     
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final RecordRepository recordRepository;
+    private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
     
     public ExerciseRecordApplicationService(ExerciseRecordRepository exerciseRecordRepository,
+                                          RecordRepository recordRepository,
+                                          HabitRecordRepository habitRecordRepository,
                                           S3FileService s3FileService) {
         this.exerciseRecordRepository = exerciseRecordRepository;
+        this.recordRepository = recordRepository;
+        this.habitRecordRepository = habitRecordRepository;
         this.s3FileService = s3FileService;
     }
     
@@ -38,6 +46,21 @@ public class ExerciseRecordApplicationService {
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
         log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
+        
+        // 하루 최대 1개 운동기록 제한 검증
+        int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
+            command.userId(), 
+            command.recordDate()
+        );
+        
+        if (exerciseRecordCount >= 1) {
+            throw new CustomException(ErrorCode.EXERCISE_RECORD_LIMIT_EXCEEDED);
+        }
+        
+        // 전체 기록 종류 최대 2가지 제한 검증 (운동기록이 없는 경우에만)
+        if (exerciseRecordCount == 0) {
+            validateRecordTypeLimit(command.userId(), command.recordDate());
+        }
         
         ExerciseRecord exerciseRecord = ExerciseRecord.create(
             command.userId(),
@@ -168,5 +191,26 @@ public class ExerciseRecordApplicationService {
         
         List<String> updatedUrls = s3FileService.regeneratePresignedUrls(response.imageUrls());
         return response.withUpdatedImageUrls(updatedUrls);
+    }
+    
+    /**
+     * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
+     */
+    private void validateRecordTypeLimit(UserId userId, LocalDate recordDate) {
+        // 현재 등록된 기록 종류 수를 확인
+        int recordTypeCount = 0;
+        
+        // 일상 기록 확인
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        if (dailyCount > 0) recordTypeCount++;
+        
+        // 습관 기록 확인
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        if (habitCount > 0) recordTypeCount++;
+        
+        // 이미 2가지 기록 종류가 있다면 운동기록을 추가할 수 없음
+        if (recordTypeCount >= 2) {
+            throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
+        }
     }
 }
