@@ -72,7 +72,7 @@ public record UnifiedRecordResponse(
             exerciseRecord.getId().getValue(),
             RecordType.EXERCISE,
             exerciseRecord.getRecordDate(),
-            null, // 운동 기록은 recordTime이 없음
+            exerciseRecord.getRecordTime(), // 운동 기록의 recordTime 포함
             exerciseRecord.getCreatedAt(),
             exerciseRecord.getUpdatedAt(),
             exerciseRecord.getImageUrls(),
