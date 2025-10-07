@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.api.exercise.dto;
 
 import com.recordmanagement.habitlog.domain.exercise.model.ExerciseType;
+import com.recordmanagement.habitlog.common.validation.ValidExerciseData;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+@ValidExerciseData
 public class UpdateExerciseRecordRequest {
     
     private ExerciseType exerciseType;

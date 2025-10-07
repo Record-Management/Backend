@@ -4,7 +4,6 @@ import com.recordmanagement.habitlog.api.exercise.dto.CreateExerciseRecordReques
 import com.recordmanagement.habitlog.api.exercise.dto.UpdateExerciseRecordRequest;
 import com.recordmanagement.habitlog.application.exercise.ExerciseRecordApplicationService;
 import com.recordmanagement.habitlog.application.exercise.dto.CreateExerciseRecordCommand;
-import com.recordmanagement.habitlog.application.exercise.dto.DailyExerciseRecordResponse;
 import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
 import com.recordmanagement.habitlog.application.exercise.dto.UpdateExerciseRecordCommand;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
@@ -13,7 +12,6 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/exercise-records")
@@ -46,15 +43,12 @@ public class ExerciseRecordController {
                    
                    **필수 항목:**
                    - exerciseType: 운동 종목 (필수)
+                   - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수) OR weight(몸무게)
                    - dailyNote: 나의 기록 (필수)
                    - recordDate: 기록 날짜 (필수)
                    - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
-                   - caloriesBurned: 칼로리
-                   - exerciseTimeMinutes: 운동시간
-                   - stepCount: 걸음수
-                   - weight: 몸무게
                    - imageUrls: 사진 (최대 3장)
                    
                    **운동 종목:**
@@ -221,14 +215,11 @@ public class ExerciseRecordController {
                    
                    **필수 항목:**
                    - exerciseType: 운동 종목 (필수)
+                   - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수) OR weight(몸무게)
                    - dailyNote: 나의 기록 (필수)
                    - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
-                   - caloriesBurned: 칼로리
-                   - exerciseTimeMinutes: 운동시간
-                   - stepCount: 걸음수
-                   - weight: 몸무게
                    - imageUrls: 사진 (최대 3장)
                    """,
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -338,6 +329,7 @@ public class ExerciseRecordController {
         responseCode = "200",
         description = "운동기록 삭제 성공",
         content = @Content(
+
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
