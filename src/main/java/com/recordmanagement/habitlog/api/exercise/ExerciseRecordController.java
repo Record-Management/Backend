@@ -46,12 +46,14 @@ public class ExerciseRecordController {
                    
                    **필수 항목:**
                    - exerciseType: 운동 종목 (필수)
-                   - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수)
                    - dailyNote: 나의 기록 (필수)
                    - recordDate: 기록 날짜 (필수)
                    - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
+                   - caloriesBurned: 칼로리
+                   - exerciseTimeMinutes: 운동시간
+                   - stepCount: 걸음수
                    - weight: 몸무게
                    - imageUrls: 사진 (최대 3장)
                    
@@ -219,11 +221,13 @@ public class ExerciseRecordController {
                    
                    **필수 항목:**
                    - exerciseType: 운동 종목 (필수)
-                   - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수)
                    - dailyNote: 나의 기록 (필수)
                    - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
+                   - caloriesBurned: 칼로리
+                   - exerciseTimeMinutes: 운동시간
+                   - stepCount: 걸음수
                    - weight: 몸무게
                    - imageUrls: 사진 (최대 3장)
                    """,
