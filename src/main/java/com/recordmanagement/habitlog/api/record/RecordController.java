@@ -122,34 +122,13 @@ public class RecordController {
     )
     @PostMapping
     public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
-            HttpServletRequest httpRequest,
+            @Valid @RequestBody CreateRecordRequest request,
             Authentication authentication) {
         
-        try {
-            // HTTP Body 직접 읽기
-            StringBuilder body = new StringBuilder();
-            String line;
-            try (BufferedReader reader = httpRequest.getReader()) {
-                while ((line = reader.readLine()) != null) {
-                    body.append(line);
-                }
-            }
-            
-            log.info("HTTP Body: [{}]", body.toString());
-            
-            // ObjectMapper로 파싱
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            CreateRecordRequest request = mapper.readValue(body.toString(), CreateRecordRequest.class);
-            
-            log.info("파싱된 데이터: content=[{}], recordDate=[{}], recordTime=[{}], emotion=[{}]", 
-                    request.getContent(), request.getRecordDate(), request.getRecordTime(), request.getEmotion());
-            
-            return createRecordByType(request, authentication, RecordType.DAILY);
-            
-        } catch (Exception e) {
-            log.error("요청 처리 실패: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().build();
-        }
+        log.info("일상기록 작성 요청: content=[{}], recordDate=[{}]", 
+                request.getContent(), request.getRecordDate());
+        
+        return createRecordByType(request, authentication, RecordType.DAILY);
     }
     
     
