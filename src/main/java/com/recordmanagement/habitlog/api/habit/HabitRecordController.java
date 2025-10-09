@@ -18,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/habit-records")
@@ -94,43 +92,6 @@ public class HabitRecordController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
     
-    @GetMapping("/{habitRecordId}")
-    @Operation(summary = "습관기록 조회", 
-               description = "특정 습관기록을 조회합니다.",
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<ApiResponse<HabitRecordResponse>> getHabitRecord(
-            @PathVariable String habitRecordId,
-            Authentication authentication) {
-        
-        log.info("습관기록 조회 요청: habitRecordId=[{}], userId=[{}]", 
-                habitRecordId, authentication.getName());
-        
-        HabitRecordResponse response = habitRecordApplicationService.getHabitRecord(
-                habitRecordId, 
-                UserId.of(authentication.getName())
-        );
-        
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-    
-    @GetMapping("/daily")
-    @Operation(summary = "특정 날짜 습관기록 조회", 
-               description = "특정 날짜의 모든 습관기록을 조회합니다.",
-               security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<ApiResponse<List<HabitRecordResponse>>> getDailyHabitRecords(
-            @RequestParam LocalDate recordDate,
-            Authentication authentication) {
-        
-        log.info("특정 날짜 습관기록 조회 요청: recordDate=[{}], userId=[{}]", 
-                recordDate, authentication.getName());
-        
-        List<HabitRecordResponse> responses = habitRecordApplicationService.getDailyHabitRecords(
-                UserId.of(authentication.getName()), 
-                recordDate
-        );
-        
-        return ResponseEntity.ok(ApiResponse.success(responses));
-    }
     
     @PutMapping("/{habitRecordId}")
     @Operation(summary = "습관기록 수정", 
