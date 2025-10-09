@@ -18,6 +18,7 @@ import com.recordmanagement.habitlog.domain.exercise.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.application.exercise.dto.ExerciseRecordResponse;
 import com.recordmanagement.habitlog.domain.habit.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.habit.model.HabitRecord;
+import com.recordmanagement.habitlog.domain.habit.model.HabitRecordId;
 import com.recordmanagement.habitlog.domain.user.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.infrastructure.file.service.S3FileService;
@@ -242,6 +243,19 @@ public class RecordApplicationService {
             }
         } catch (Exception e) {
             // ExerciseRecordId 파싱 실패
+        }
+        
+        // 습관 기록에서 조회 시도
+        try {
+            HabitRecordId habitRecordId = HabitRecordId.from(recordId);
+            Optional<HabitRecord> habitRecord = habitRecordRepository.findByIdAndUserId(habitRecordId, userIdObj);
+            
+            if (habitRecord.isPresent()) {
+                UnifiedRecordResponse response = UnifiedRecordResponse.fromHabitRecord(habitRecord.get());
+                return updateImageUrls(response);
+            }
+        } catch (Exception e) {
+            // HabitRecordId 파싱 실패
         }
         
         // 모든 조회 시도가 실패한 경우
