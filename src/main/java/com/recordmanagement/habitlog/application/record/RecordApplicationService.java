@@ -86,6 +86,7 @@ public class RecordApplicationService {
         return RecordResponse.from(savedRecord);
     }
     
+    @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse updateRecord(UpdateRecordCommand command) {
         Record existingRecord = recordRepository.findById(command.recordId())
             .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
@@ -104,6 +105,7 @@ public class RecordApplicationService {
         return RecordResponse.from(savedRecord);
     }
     
+    @CacheEvict(value = "calendar", allEntries = true)
     public void deleteRecord(String recordId, String userId) {
         Record existingRecord = recordRepository.findById(RecordId.from(recordId))
             .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
