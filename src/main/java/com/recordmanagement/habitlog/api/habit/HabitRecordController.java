@@ -38,6 +38,36 @@ public class HabitRecordController {
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "습관기록 작성 성공",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    name = "성공 응답",
+                    summary = "습관기록 작성 성공",
+                    value = """
+                        {
+                            "statusCode": 200,
+                            "code": "S20000",
+                            "message": "정상적으로 처리되었습니다.",
+                            "data": {
+                                "id": "habit_record_123",
+                                "type": "HABIT",
+                                "recordDate": "2025-10-16",
+                                "recordTime": "14:30:00",
+                                "createdAt": "2025-10-16T14:30:00",
+                                "updatedAt": "2025-10-16T14:30:00",
+                                "habitType": "EXERCISE",
+                                "notificationEnabled": true,
+                                "notificationTime": "09:00:00",
+                                "memo": "오늘도 운동 완료!"
+                            }
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "400",
             description = "습관기록 등록 제한 초과",
             content = @io.swagger.v3.oas.annotations.media.Content(
@@ -97,6 +127,36 @@ public class HabitRecordController {
     @Operation(summary = "습관기록 수정", 
                description = "기존 습관기록을 수정합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "습관기록 수정 성공",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                name = "성공 응답",
+                summary = "습관기록 수정 성공",
+                value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S20000",
+                        "message": "정상적으로 처리되었습니다.",
+                        "data": {
+                            "id": "habit_record_123",
+                            "type": "HABIT",
+                            "recordDate": "2025-10-16",
+                            "recordTime": "14:30:00",
+                            "createdAt": "2025-10-16T14:30:00",
+                            "updatedAt": "2025-10-16T16:45:00",
+                            "habitType": "READING",
+                            "notificationEnabled": false,
+                            "notificationTime": "21:00:00",
+                            "memo": "수정된 독서 기록입니다!"
+                        }
+                    }
+                    """
+            )
+        )
+    )
     public ResponseEntity<ApiResponse<HabitRecordResponse>> updateHabitRecord(
             @PathVariable String habitRecordId,
             @Valid @RequestBody UpdateHabitRecordRequest request,
@@ -125,6 +185,25 @@ public class HabitRecordController {
     @Operation(summary = "습관기록 삭제", 
                description = "특정 습관기록을 삭제합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "습관기록 삭제 성공",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                name = "성공 응답",
+                summary = "습관기록 삭제 성공",
+                value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S20000",
+                        "message": "정상적으로 처리되었습니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
     public ResponseEntity<ApiResponse<Void>> deleteHabitRecord(
             @PathVariable String habitRecordId,
             Authentication authentication) {
