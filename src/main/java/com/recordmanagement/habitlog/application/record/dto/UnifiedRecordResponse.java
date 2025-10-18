@@ -43,7 +43,8 @@ public record UnifiedRecordResponse(
     String habitType,
     Boolean notificationEnabled,
     LocalTime notificationTime,
-    String memo
+    String memo,
+    Boolean isCompleted
 ) {
     
     /**
@@ -61,7 +62,7 @@ public record UnifiedRecordResponse(
             record.getEmotion(),
             record.getContent(),
             null, null, null, null, null, null,
-            null, null, null, null
+            null, null, null, null, null
         );
     }
     
@@ -84,7 +85,7 @@ public record UnifiedRecordResponse(
             exerciseRecord.getStepCount(),
             exerciseRecord.getWeight(),
             exerciseRecord.getDailyNote(),
-            null, null, null, null // 운동 기록은 habit 필드가 없음
+            null, null, null, null, null // 운동 기록은 habit 필드가 없음
         );
     }
     
@@ -105,7 +106,8 @@ public record UnifiedRecordResponse(
             habitRecord.getHabitType() != null ? habitRecord.getHabitType().name() : null,
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
-            habitRecord.getMemo()
+            habitRecord.getMemo(),
+            habitRecord.isCompleted()
         );
     }
     
@@ -132,7 +134,8 @@ public record UnifiedRecordResponse(
             this.habitType,
             this.notificationEnabled,
             this.notificationTime,
-            this.memo
+            this.memo,
+            this.isCompleted
         );
     }
 }

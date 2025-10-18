@@ -78,6 +78,20 @@ public class UnifiedRecordController {
                                 "stepCount": 5000,
                                 "weight": 70.5,
                                 "dailyNote": "오늘 운동 너무 힘들었지만 뿌듯해요!"
+                            },
+                            {
+                                "id": "770e8400-e29b-41d4-a716-446655440002",
+                                "type": "HABIT",
+                                "recordDate": "2025-01-07",
+                                "recordTime": null,
+                                "createdAt": "2025-01-07T09:00:00",
+                                "updatedAt": "2025-01-07T09:00:00",
+                                "imageUrls": null,
+                                "habitType": "WATER",
+                                "notificationEnabled": true,
+                                "notificationTime": "09:00:00",
+                                "memo": "물 2L 달성!",
+                                "isCompleted": true
                             }
                         ]
                     }
