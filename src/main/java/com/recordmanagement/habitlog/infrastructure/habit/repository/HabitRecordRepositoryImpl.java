@@ -81,7 +81,8 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
             habitRecord.getMemo(),
-            habitRecord.getRecordDate()
+            habitRecord.getRecordDate(),
+            habitRecord.isCompleted()
         );
         
         return entity;
@@ -96,6 +97,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             entity.getNotificationTime(),
             entity.getMemo(),
             entity.getRecordDate(),
+            entity.isCompleted(),
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

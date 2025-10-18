@@ -131,6 +131,25 @@ public class HabitRecordApplicationService {
         log.info("습관기록 삭제 완료: habitRecordId=[{}]", habitRecordId);
     }
     
+    @CacheEvict(value = "calendar", allEntries = true)
+    public HabitRecordResponse updateCompletionStatus(String habitRecordId, UserId userId, boolean isCompleted) {
+        log.info("습관기록 완료 상태 변경 시작: habitRecordId=[{}], userId=[{}], isCompleted=[{}]", 
+                habitRecordId, userId.getValue(), isCompleted);
+        
+        HabitRecord existingRecord = habitRecordRepository.findByIdAndUserId(
+                HabitRecordId.from(habitRecordId), 
+                userId
+        ).orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
+        
+        HabitRecord updatedRecord = existingRecord.updateCompletionStatus(isCompleted);
+        
+        HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);
+        
+        log.info("습관기록 완료 상태 변경 완료: habitRecordId=[{}], isCompleted=[{}]", habitRecordId, isCompleted);
+        
+        return toResponse(savedRecord);
+    }
+    
     private HabitRecordResponse toResponse(HabitRecord habitRecord) {
         return new HabitRecordResponse(
             // 공통 필드
@@ -145,7 +164,8 @@ public class HabitRecordApplicationService {
             habitRecord.getHabitType(),
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
-            habitRecord.getMemo()
+            habitRecord.getMemo(),
+            habitRecord.isCompleted()
         );
     }
     

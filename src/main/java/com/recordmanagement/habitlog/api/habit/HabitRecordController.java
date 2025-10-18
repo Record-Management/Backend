@@ -2,6 +2,7 @@ package com.recordmanagement.habitlog.api.habit;
 
 import com.recordmanagement.habitlog.api.habit.dto.CreateHabitRecordRequest;
 import com.recordmanagement.habitlog.api.habit.dto.UpdateHabitRecordRequest;
+import com.recordmanagement.habitlog.api.habit.dto.UpdateCompletionStatusRequest;
 import com.recordmanagement.habitlog.application.habit.HabitRecordApplicationService;
 import com.recordmanagement.habitlog.application.habit.dto.CreateHabitRecordCommand;
 import com.recordmanagement.habitlog.application.habit.dto.HabitRecordResponse;
@@ -60,7 +61,8 @@ public class HabitRecordController {
                                 "habitType": "EXERCISE",
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
-                                "memo": "오늘도 운동 완료!"
+                                "memo": "오늘도 운동 완료!",
+                                "isCompleted": false
                             }
                         }
                         """
@@ -150,7 +152,8 @@ public class HabitRecordController {
                             "habitType": "READING",
                             "notificationEnabled": false,
                             "notificationTime": "21:00:00",
-                            "memo": "수정된 독서 기록입니다!"
+                            "memo": "수정된 독서 기록입니다!",
+                            "isCompleted": true
                         }
                     }
                     """
@@ -217,5 +220,57 @@ public class HabitRecordController {
         );
         
         return ResponseEntity.ok(ApiResponse.success());
+    }
+    
+    @PatchMapping("/{habitRecordId}/completion")
+    @Operation(summary = "습관기록 완료 상태 변경", 
+               description = "습관기록의 완료 상태를 토글합니다. 홈 화면에서 간단하게 완료/미완료 상태를 변경할 때 사용합니다.",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "완료 상태 변경 성공",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                name = "성공 응답",
+                summary = "완료 상태 변경 성공",
+                value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S20000",
+                        "message": "정상적으로 처리되었습니다.",
+                        "data": {
+                            "id": "habit_record_123",
+                            "type": "HABIT",
+                            "recordDate": "2025-10-16",
+                            "recordTime": null,
+                            "createdAt": "2025-10-16T14:30:00",
+                            "updatedAt": "2025-10-16T16:45:00",
+                            "habitType": "WATER",
+                            "notificationEnabled": true,
+                            "notificationTime": "09:00:00",
+                            "memo": "물 마시기 완료!",
+                            "isCompleted": true
+                        }
+                    }
+                    """
+            )
+        )
+    )
+    public ResponseEntity<ApiResponse<HabitRecordResponse>> updateCompletionStatus(
+            @PathVariable String habitRecordId,
+            @Valid @RequestBody UpdateCompletionStatusRequest request,
+            Authentication authentication) {
+        
+        log.info("습관기록 완료 상태 변경 요청: habitRecordId=[{}], userId=[{}], isCompleted=[{}]", 
+                habitRecordId, authentication.getName(), request.isCompleted());
+        
+        HabitRecordResponse response = habitRecordApplicationService.updateCompletionStatus(
+                habitRecordId,
+                UserId.of(authentication.getName()),
+                request.isCompleted()
+        );
+        
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

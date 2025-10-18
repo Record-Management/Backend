@@ -20,5 +20,6 @@ public record HabitRecordResponse(
     HabitType habitType,
     boolean notificationEnabled,
     LocalTime notificationTime,
-    String memo
+    String memo,
+    boolean isCompleted
 ) {}

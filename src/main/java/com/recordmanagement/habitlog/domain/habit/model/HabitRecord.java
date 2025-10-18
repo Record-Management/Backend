@@ -15,12 +15,13 @@ public class HabitRecord {
     private final LocalTime notificationTime;
     private final String memo;
     private final LocalDate recordDate;
+    private final boolean isCompleted;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     public HabitRecord(HabitRecordId id, UserId userId, HabitType habitType,
                       boolean notificationEnabled, LocalTime notificationTime, String memo,
-                      LocalDate recordDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                      LocalDate recordDate, boolean isCompleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.habitType = habitType;
@@ -28,6 +29,7 @@ public class HabitRecord {
         this.notificationTime = notificationTime;
         this.memo = memo;
         this.recordDate = recordDate;
+        this.isCompleted = isCompleted;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -44,6 +46,7 @@ public class HabitRecord {
             notificationTime,
             memo,
             recordDate,
+            false, // 기본값: 미완료
             now,
             now
         );
@@ -58,6 +61,7 @@ public class HabitRecord {
             this.notificationTime,
             this.memo,
             this.recordDate,
+            this.isCompleted,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -72,6 +76,7 @@ public class HabitRecord {
             notificationTime,
             this.memo,
             this.recordDate,
+            this.isCompleted,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -86,6 +91,22 @@ public class HabitRecord {
             this.notificationTime,
             memo,
             this.recordDate,
+            this.isCompleted,
+            this.createdAt,
+            LocalDateTime.now()
+        );
+    }
+    
+    public HabitRecord updateCompletionStatus(boolean isCompleted) {
+        return new HabitRecord(
+            this.id,
+            this.userId,
+            this.habitType,
+            this.notificationEnabled,
+            this.notificationTime,
+            this.memo,
+            this.recordDate,
+            isCompleted,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -99,6 +120,7 @@ public class HabitRecord {
     public LocalTime getNotificationTime() { return notificationTime; }
     public String getMemo() { return memo; }
     public LocalDate getRecordDate() { return recordDate; }
+    public boolean isCompleted() { return isCompleted; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
