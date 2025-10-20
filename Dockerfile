@@ -1,5 +1,14 @@
 # 1단계: Build stage
-FROM gradle:8.10-jdk17-alpine AS builder
+FROM amazoncorretto:17-alpine AS builder
+
+# Gradle 설치
+RUN apk add --no-cache bash curl unzip && \
+    curl -sL https://services.gradle.org/distributions/gradle-8.10-bin.zip -o gradle.zip && \
+    unzip gradle.zip && \
+    mv gradle-8.10 /opt/gradle && \
+    rm gradle.zip
+
+ENV PATH="/opt/gradle/bin:${PATH}"
 
 WORKDIR /app
 
@@ -20,7 +29,7 @@ COPY src/ src/
 RUN ./gradlew clean build -x test --no-daemon --parallel
 
 # 2단계: Runtime stage  
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:17-alpine
 
 # 보안: non-root 사용자 생성
 RUN addgroup -g 1001 -S spring && \
