@@ -7,7 +7,10 @@ import com.recordmanagement.habitlog.domain.user.repository.UserRepository;
 import com.recordmanagement.habitlog.infrastructure.user.entity.UserEntity;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * User Repository 구현체
@@ -56,7 +59,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
-     * 소셜 타입 및 소셜 ID로 사용자 조회
+     * 소셜 타입 및 소셜 ID로 사용자 조회 (탈퇴 사용자 포함)
      *
      * @param socialType 소셜 로그인 플랫폼 타입
      * @param socialId 소셜 플랫폼 내 사용자 고유 ID
@@ -69,7 +72,7 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     /**
-     * 이메일과 소셜 타입으로 사용자 조회
+     * 이메일과 소셜 타입으로 사용자 조회 (탈퇴 사용자 포함)
      * Apple 재로그인 시 기존 사용자 찾기용
      *
      * @param email 사용자 이메일
@@ -114,5 +117,19 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public boolean existsByName(String name) {
         return userJpaRepository.existsByName(name);
+    }
+
+    /**
+     * 7일이 경과한 탈퇴 사용자 조회
+     * 
+     * @param currentTime 현재 시간
+     * @return 영구 삭제 대상 탈퇴 사용자 목록
+     */
+    @Override
+    public List<User> findExpiredWithdrawnUsers(LocalDateTime currentTime) {
+        return userJpaRepository.findByDeletionScheduledAtBeforeAndDeletedAtIsNotNull(currentTime)
+                .stream()
+                .map(UserEntity::toDomain)
+                .collect(Collectors.toList());
     }
 }

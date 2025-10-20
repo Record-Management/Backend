@@ -174,20 +174,69 @@ public class UserApplicationService {
     }
 
     /**
-     * 회원탈퇴 처리
-     * 소셜 연결 해제 + 관련 데이터 삭제 + 계정 삭제를 순차적으로 처리
+     * 탈퇴 사용자 상태 확인
+     * 
+     * @param userId 사용자 ID
+     * @return true 탈퇴한 사용자, false 활성 사용자
+     */
+    @Transactional(readOnly = true)
+    public boolean isUserWithdrawn(String userId) {
+        User user = userRepository.findById(UserId.of(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        return user.isWithdrawn();
+    }
+
+    /**
+     * 탈퇴 사용자 복구 가능 여부 확인
+     * 
+     * @param userId 사용자 ID
+     * @return true 복구 가능, false 복구 불가능
+     */
+    @Transactional(readOnly = true)
+    public boolean canRestoreUser(String userId) {
+        User user = userRepository.findById(UserId.of(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        return user.canBeRestored();
+    }
+
+    /**
+     * 탈퇴 사용자 복구 처리
+     * 
+     * @param userId 사용자 ID
+     * @return 복구된 사용자 정보
+     */
+    @Transactional
+    public UserResponse restoreWithdrawnUser(String userId) {
+        User user = userRepository.findById(UserId.of(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        user.restoreFromWithdrawal();
+        User restoredUser = userRepository.save(user);
+        
+        log.info("사용자 탈퇴 복구 완료: userId={}", userId);
+        return UserResponse.from(restoredUser);
+    }
+
+    /**
+     * 회원탈퇴 처리 (soft delete)
+     * 즉시 삭제하지 않고 7일 후 자동 삭제 예약
      * 
      * @param command 회원탈퇴 커맨드
      */
     public void withdrawUser(UserWithdrawalCommand command) {
-        log.info("회원탈퇴 처리 시작");
+        log.info("회원탈퇴 처리 시작 (soft delete)");
         
         // 1. 사용자 조회
         User user = userRepository.findById(UserId.of(command.getUserId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
+        // 2. 이미 탈퇴한 사용자인지 확인
+        if (user.isWithdrawn()) {
+            throw new CustomException(ErrorCode.USER_NOT_WITHDRAWN);
+        }
+        
         try {
-            // 2. 소셜 플랫폼 연결 해제 (실패해도 계속 진행)
+            // 3. 소셜 플랫폼 연결 해제 (실패해도 계속 진행)
             socialUnlinkService.unlinkSocialConnection(
                     user.getSocialType(), 
                     user.getSocialId()
@@ -197,13 +246,15 @@ public class UserApplicationService {
         }
         
         try {
-            // 3. 관련 데이터 삭제
-            deleteUserRelatedData(user);
+            // 4. soft delete 처리 (7일 후 자동 삭제 예약)
+            user.markAsWithdrawn(command.getReason());
+            userRepository.save(user);
             
-            // 4. 사용자 계정 삭제
-            userRepository.delete(user);
+            // 5. 관련 토큰 삭제 (즉시 로그아웃 처리)
+            refreshTokenRepository.deleteByUserId(user.getId().getValue());
             
-            log.info("회원탈퇴 완료: reason={}", command.getReason());
+            log.info("회원탈퇴 완료 (soft delete): reason={}, deletionScheduledAt={}", 
+                    command.getReason(), user.getDeletionScheduledAt());
                     
         } catch (Exception e) {
             log.error("회원탈퇴 실패: error={}", e.getMessage());

@@ -168,6 +168,15 @@ public class UserResponse {
     @Schema(description = "알림 허용 여부", example = "true")
     private final Boolean notificationEnabled;
 
+    @Schema(description = "회원 탈퇴 요청 시간", example = "2025-10-20T15:30:00", nullable = true)
+    private final LocalDateTime deletedAt;
+
+    @Schema(description = "실제 삭제 예정 시간 (탈퇴일 + 7일)", example = "2025-10-27T15:30:00", nullable = true)
+    private final LocalDateTime deletionScheduledAt;
+
+    @Schema(description = "회원 탈퇴 사유", example = "서비스 불만족", nullable = true)
+    private final String withdrawalReason;
+
     /**
      * 도메인 User 객체를 UserResponse DTO로 변환
      * VO 타입들을 기본 타입으로 변환 후 안전하게 매핑
@@ -189,6 +198,9 @@ public class UserResponse {
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
                 .notificationEnabled(user.getNotificationEnabled())
+                .deletedAt(user.getDeletedAt())
+                .deletionScheduledAt(user.getDeletionScheduledAt())
+                .withdrawalReason(user.getWithdrawalReason())
                 .build();
     }
 

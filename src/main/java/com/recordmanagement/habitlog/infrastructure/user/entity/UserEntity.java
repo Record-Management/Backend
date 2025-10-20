@@ -87,6 +87,15 @@ public class UserEntity {
     @Column(name = "fcm_token", length = 1000)
     private String fcmToken;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deletion_scheduled_at")
+    private LocalDateTime deletionScheduledAt;
+
+    @Column(name = "withdrawal_reason", length = 500)
+    private String withdrawalReason;
+
     /**
      * 도메인 모델(User)을 엔터티로 변환
      *
@@ -109,6 +118,9 @@ public class UserEntity {
                 .goalDays(user.getGoalDays())
                 .notificationEnabled(user.getNotificationEnabled())
                 .fcmToken(null)  // TODO: Firebase 설정 후 user.getFcmToken()으로 변경
+                .deletedAt(user.getDeletedAt())
+                .deletionScheduledAt(user.getDeletionScheduledAt())
+                .withdrawalReason(user.getWithdrawalReason())
                 .build();
     }
 
@@ -173,6 +185,18 @@ public class UserEntity {
             // var fcmTokenField = User.class.getDeclaredField("fcmToken");
             // fcmTokenField.setAccessible(true);
             // fcmTokenField.set(user, this.fcmToken);
+
+            var deletedAtField = User.class.getDeclaredField("deletedAt");
+            deletedAtField.setAccessible(true);
+            deletedAtField.set(user, this.deletedAt);
+
+            var deletionScheduledAtField = User.class.getDeclaredField("deletionScheduledAt");
+            deletionScheduledAtField.setAccessible(true);
+            deletionScheduledAtField.set(user, this.deletionScheduledAt);
+
+            var withdrawalReasonField = User.class.getDeclaredField("withdrawalReason");
+            withdrawalReasonField.setAccessible(true);
+            withdrawalReasonField.set(user, this.withdrawalReason);
 
         } catch (Exception e) {
             throw new RuntimeException("도메인 필드 설정 실패", e);

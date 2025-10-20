@@ -108,6 +108,11 @@ public class AuthController {
             
             ### 카카오 로그인
             - accessToken으로 카카오 사용자 ID 추출하여 처리
+            
+            ### 탈퇴 사용자 자동 복구
+            - 7일 이내 탈퇴한 사용자가 재로그인 시 자동으로 계정 복구
+            - 기존 데이터 모두 유지
+            - 7일 경과한 탈퇴 사용자는 복구 불가능
             """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -141,6 +146,14 @@ public class AuthController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "영구 삭제된 사용자 (7일 경과)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패"
             )
         }
     )

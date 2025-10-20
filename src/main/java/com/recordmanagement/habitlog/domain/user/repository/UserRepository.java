@@ -5,6 +5,8 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -87,4 +89,12 @@ public interface UserRepository {
      * @return true: 존재함, false: 존재하지 않음
      */
     boolean existsByName(String name);
+
+    /**
+     * 7일이 경과한 탈퇴 사용자 조회
+     * 
+     * @param currentTime 현재 시간
+     * @return 영구 삭제 대상 탈퇴 사용자 목록
+     */
+    List<User> findExpiredWithdrawnUsers(LocalDateTime currentTime);
 }

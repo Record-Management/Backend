@@ -72,21 +72,46 @@ public class UserController {
     }
 
     /**
-     * 회원탈퇴 API
-     * 소셜 연결 해제 + 사용자 데이터 삭제를 자동으로 처리
+     * 회원탈퇴 API (Soft Delete)
+     * 7일 보관 정책에 따라 즉시 삭제하지 않고 탈퇴 표시 후 7일 후 자동 삭제
      *
      * @param request 회원탈퇴 요청 DTO
-     * @param userDetails 인증된 사용자 정보
+     * @param authentication 인증된 사용자 정보
      * @return 성공 응답
      */
     @Operation(
         summary = "회원탈퇴", 
-        description = "소셜 플랫폼 연결해제와 함께 계정을 완전히 삭제합니다.",
+        description = """
+            회원탈퇴를 처리합니다. (Soft Delete 방식)
+            
+            ### 탈퇴 정책
+            - 즉시 삭제되지 않고 7일간 보관됩니다
+            - 7일 이내 재가입 시 자동으로 복구됩니다
+            - 7일 경과 후 자동으로 영구 삭제됩니다
+            
+            ### 처리 과정
+            1. 소셜 플랫폼 연결 해제 시도
+            2. 사용자 계정 탈퇴 표시 (deletedAt 설정)
+            3. 7일 후 삭제 예약 (deletionScheduledAt 설정)
+            4. 즉시 로그아웃 처리 (토큰 무효화)
+            
+            ### 재가입 복구
+            - 7일 이내 동일 소셜 계정으로 로그인 시 자동 복구
+            - 기존 데이터 모두 유지
+            """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "204",
                 description = "탈퇴 성공 (응답 본문 없음)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "이미 탈퇴한 사용자"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음"
             )
         }
     )

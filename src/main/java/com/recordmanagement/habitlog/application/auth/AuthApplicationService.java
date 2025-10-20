@@ -78,9 +78,22 @@ public class AuthApplicationService {
         boolean isNewUser = false;
 
         if (existingUser.isPresent()) {
-            // 기존 사용자 로그인
             user = existingUser.get();
-            log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
+            
+            // 탈퇴한 사용자인지 확인하고 복구 처리
+            if (userApplicationService.isUserWithdrawn(user.getId())) {
+                if (userApplicationService.canRestoreUser(user.getId())) {
+                    // 7일 이내 탈퇴 사용자 복구
+                    user = userApplicationService.restoreWithdrawnUser(user.getId());
+                    log.info("탈퇴 사용자 복구: userId={}, socialType={}", user.getId(), command.getSocialType());
+                } else {
+                    // 7일 경과로 복구 불가능
+                    throw new CustomException(ErrorCode.USER_PERMANENTLY_DELETED);
+                }
+            } else {
+                // 일반 기존 사용자 로그인
+                log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
+            }
         } else {
             // 신규 사용자 가입
             user = createNewUser(socialUserInfo, command.getSocialType());

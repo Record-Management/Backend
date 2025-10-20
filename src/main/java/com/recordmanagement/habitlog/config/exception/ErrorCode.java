@@ -214,6 +214,12 @@ public enum ErrorCode {
     @Schema(description = "사용자 정보 없음")
     USER_NOT_FOUND(404, "E40402", "존재하지 않는 사용자입니다."),
 
+    @Schema(description = "이미 탈퇴하지 않은 사용자")
+    USER_NOT_WITHDRAWN(400, "E40403", "탈퇴하지 않은 사용자입니다."),
+
+    @Schema(description = "영구 삭제된 사용자")
+    USER_PERMANENTLY_DELETED(400, "E40404", "영구 삭제된 사용자로 복구할 수 없습니다."),
+
 
 
     @Schema(description = "API 엔드포인트 없음")

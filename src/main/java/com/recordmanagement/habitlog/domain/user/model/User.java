@@ -80,6 +80,28 @@ public class User {
     @Schema(description = "FCM 토큰 (푸시 알림용)", example = "dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuLi4u")
     private String fcmToken;
 
+    @Schema(description = "회원 탈퇴 요청 시간 (soft delete)", example = "2025-07-31T09:00:00")
+    private LocalDateTime deletedAt;
+
+    @Schema(description = "실제 삭제 예정 시간 (탈퇴일 + 7일)", example = "2025-08-07T09:00:00")
+    private LocalDateTime deletionScheduledAt;
+
+    @Schema(description = "회원 탈퇴 사유", example = "서비스 불만족")
+    private String withdrawalReason;
+    
+    // Getter 메서드들
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+    
+    public LocalDateTime getDeletionScheduledAt() {
+        return deletionScheduledAt;
+    }
+    
+    public String getWithdrawalReason() {
+        return withdrawalReason;
+    }
+
     /**
      * 신규 사용자 생성 생성자
      *
@@ -162,6 +184,9 @@ public class User {
             setFieldValue(newUser, "onboardingCompleted", this.onboardingCompleted);
             setFieldValue(newUser, "createdAt", this.createdAt);
             setFieldValue(newUser, "updatedAt", LocalDateTime.now());  // 업데이트 시간 갱신
+            setFieldValue(newUser, "deletedAt", this.deletedAt);
+            setFieldValue(newUser, "deletionScheduledAt", this.deletionScheduledAt);
+            setFieldValue(newUser, "withdrawalReason", this.withdrawalReason);
         } catch (Exception e) {
             throw new RuntimeException("socialId 업데이트 중 필드 복사 실패", e);
         }
@@ -189,6 +214,72 @@ public class User {
     public void updateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 회원 탈퇴 처리 (soft delete)
+     * 
+     * - 즉시 삭제하지 않고 탈퇴 표시만 함
+     * - 7일 후 자동 삭제 예정 시간 설정
+     * - 탈퇴 사유 저장
+     * 
+     * @param reason 탈퇴 사유
+     */
+    public void markAsWithdrawn(String reason) {
+        LocalDateTime now = LocalDateTime.now();
+        this.deletedAt = now;
+        this.deletionScheduledAt = now.plusDays(7);
+        this.withdrawalReason = reason;
+        this.updatedAt = now;
+    }
+
+    /**
+     * 회원 탈퇴 복구 (재가입)
+     * 
+     * - 7일 이내 재가입 시 탈퇴 상태 해제
+     * - 탈퇴 관련 필드 초기화
+     */
+    public void restoreFromWithdrawal() {
+        if (!isWithdrawn()) {
+            throw new CustomException(ErrorCode.USER_NOT_WITHDRAWN);
+        }
+        
+        if (isPermanentlyDeleted()) {
+            throw new CustomException(ErrorCode.USER_PERMANENTLY_DELETED);
+        }
+        
+        this.deletedAt = null;
+        this.deletionScheduledAt = null;
+        this.withdrawalReason = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 탈퇴 상태 확인
+     * 
+     * @return true 탈퇴한 사용자, false 활성 사용자
+     */
+    public boolean isWithdrawn() {
+        return this.deletedAt != null;
+    }
+
+    /**
+     * 영구 삭제 대상 확인
+     * 
+     * @return true 7일 경과로 영구 삭제 대상, false 복구 가능
+     */
+    public boolean isPermanentlyDeleted() {
+        return this.deletionScheduledAt != null && 
+               LocalDateTime.now().isAfter(this.deletionScheduledAt);
+    }
+
+    /**
+     * 복구 가능 여부 확인
+     * 
+     * @return true 복구 가능, false 복구 불가능
+     */
+    public boolean canBeRestored() {
+        return isWithdrawn() && !isPermanentlyDeleted();
     }
 
     /**
