@@ -62,7 +62,8 @@ public class HabitRecordController {
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
                                 "memo": "오늘도 운동 완료!",
-                                "isCompleted": false
+                                "isCompleted": false,
+                                "isMainRecord": true
                             }
                         }
                         """
@@ -116,7 +117,8 @@ public class HabitRecordController {
                 request.notificationEnabled(),
                 request.notificationTime(),
                 request.memo(),
-                request.recordDate()
+                request.recordDate(),
+                request.isMainRecord()
         );
         
         HabitRecordResponse response = habitRecordApplicationService.createHabitRecord(command);
@@ -153,7 +155,8 @@ public class HabitRecordController {
                             "notificationEnabled": false,
                             "notificationTime": "21:00:00",
                             "memo": "수정된 독서 기록입니다!",
-                            "isCompleted": true
+                            "isCompleted": true,
+                            "isMainRecord": true
                         }
                     }
                     """
@@ -173,7 +176,8 @@ public class HabitRecordController {
                 request.habitType(),
                 request.notificationEnabled(),
                 request.notificationTime(),
-                request.memo()
+                request.memo(),
+                request.isMainRecord()
         );
         
         HabitRecordResponse response = habitRecordApplicationService.updateHabitRecord(
@@ -250,7 +254,8 @@ public class HabitRecordController {
                             "notificationEnabled": true,
                             "notificationTime": "09:00:00",
                             "memo": "물 마시기 완료!",
-                            "isCompleted": true
+                            "isCompleted": true,
+                            "isMainRecord": true
                         }
                     }
                     """

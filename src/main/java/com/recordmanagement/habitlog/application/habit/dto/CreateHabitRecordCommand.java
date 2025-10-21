@@ -12,5 +12,6 @@ public record CreateHabitRecordCommand(
     boolean notificationEnabled,
     LocalTime notificationTime,
     String memo,
-    LocalDate recordDate
+    LocalDate recordDate,
+    Boolean isMainRecord
 ) {}

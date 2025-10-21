@@ -67,6 +67,11 @@ public class HabitRecordApplicationService {
             command.recordDate()
         );
         
+        // isMainRecord가 명시적으로 설정된 경우 적용
+        if (command.isMainRecord() != null && !command.isMainRecord()) {
+            habitRecord = habitRecord.updateMainRecordStatus(command.isMainRecord());
+        }
+        
         HabitRecord savedHabitRecord = habitRecordRepository.save(habitRecord);
         
         log.info("습관기록 생성 완료: habitRecordId=[{}]", savedHabitRecord.getId().getValue());
@@ -110,6 +115,11 @@ public class HabitRecordApplicationService {
                 .updateHabitType(command.habitType())
                 .updateNotificationSettings(command.notificationEnabled(), command.notificationTime())
                 .updateMemo(command.memo());
+        
+        // isMainRecord가 명시적으로 설정된 경우 적용
+        if (command.isMainRecord() != null) {
+            updatedRecord = updatedRecord.updateMainRecordStatus(command.isMainRecord());
+        }
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);
         
@@ -165,7 +175,8 @@ public class HabitRecordApplicationService {
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
             habitRecord.getMemo(),
-            habitRecord.isCompleted()
+            habitRecord.isCompleted(),
+            habitRecord.isMainRecord()
         );
     }
     

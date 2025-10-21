@@ -37,6 +37,9 @@ public class HabitRecordEntity {
     @Column(name = "is_completed", nullable = false)
     private boolean isCompleted;
     
+    @Column(name = "is_main_record", nullable = false)
+    private boolean isMainRecord;
+    
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
@@ -47,7 +50,7 @@ public class HabitRecordEntity {
     
     public HabitRecordEntity(String habitRecordId, String userId, HabitType habitType,
                             boolean notificationEnabled, LocalTime notificationTime, String memo,
-                            LocalDate recordDate, boolean isCompleted) {
+                            LocalDate recordDate, boolean isCompleted, boolean isMainRecord) {
         this.habitRecordId = habitRecordId;
         this.userId = userId;
         this.habitType = habitType;
@@ -56,6 +59,7 @@ public class HabitRecordEntity {
         this.memo = memo;
         this.recordDate = recordDate;
         this.isCompleted = isCompleted;
+        this.isMainRecord = isMainRecord;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -87,6 +91,9 @@ public class HabitRecordEntity {
     
     public boolean isCompleted() { return isCompleted; }
     public void setCompleted(boolean completed) { this.isCompleted = completed; }
+    
+    public boolean isMainRecord() { return isMainRecord; }
+    public void setMainRecord(boolean mainRecord) { this.isMainRecord = mainRecord; }
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }

@@ -21,5 +21,8 @@ public record UpdateHabitRecordRequest(
     LocalTime notificationTime,
     
     @Schema(description = "글쓰기/메모", example = "오늘도 물 2L 마시기 성공!")
-    String memo
+    String memo,
+    
+    @Schema(description = "메인 기록 여부", example = "true")
+    Boolean isMainRecord
 ) {}

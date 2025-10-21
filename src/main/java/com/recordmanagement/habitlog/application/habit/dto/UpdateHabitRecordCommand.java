@@ -10,5 +10,6 @@ public record UpdateHabitRecordCommand(
     HabitType habitType,
     boolean notificationEnabled,
     LocalTime notificationTime,
-    String memo
+    String memo,
+    Boolean isMainRecord
 ) {}

@@ -26,5 +26,8 @@ public record CreateHabitRecordRequest(
     
     @Schema(description = "기록 날짜", example = "2024-01-15")
     @NotNull(message = "기록 날짜는 필수입니다")
-    LocalDate recordDate
+    LocalDate recordDate,
+    
+    @Schema(description = "메인 기록 여부", example = "true")
+    Boolean isMainRecord
 ) {}

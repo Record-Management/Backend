@@ -16,12 +16,14 @@ public class HabitRecord {
     private final String memo;
     private final LocalDate recordDate;
     private final boolean isCompleted;
+    private final boolean isMainRecord;
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
     public HabitRecord(HabitRecordId id, UserId userId, HabitType habitType,
                       boolean notificationEnabled, LocalTime notificationTime, String memo,
-                      LocalDate recordDate, boolean isCompleted, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                      LocalDate recordDate, boolean isCompleted, boolean isMainRecord, 
+                      LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.habitType = habitType;
@@ -30,6 +32,7 @@ public class HabitRecord {
         this.memo = memo;
         this.recordDate = recordDate;
         this.isCompleted = isCompleted;
+        this.isMainRecord = isMainRecord;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -47,6 +50,7 @@ public class HabitRecord {
             memo,
             recordDate,
             false, // 기본값: 미완료
+            true,  // 기본값: 메인 기록
             now,
             now
         );
@@ -62,6 +66,7 @@ public class HabitRecord {
             this.memo,
             this.recordDate,
             this.isCompleted,
+            this.isMainRecord,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -77,6 +82,7 @@ public class HabitRecord {
             this.memo,
             this.recordDate,
             this.isCompleted,
+            this.isMainRecord,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -92,6 +98,7 @@ public class HabitRecord {
             memo,
             this.recordDate,
             this.isCompleted,
+            this.isMainRecord,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -107,6 +114,23 @@ public class HabitRecord {
             this.memo,
             this.recordDate,
             isCompleted,
+            this.isMainRecord,
+            this.createdAt,
+            LocalDateTime.now()
+        );
+    }
+    
+    public HabitRecord updateMainRecordStatus(boolean isMainRecord) {
+        return new HabitRecord(
+            this.id,
+            this.userId,
+            this.habitType,
+            this.notificationEnabled,
+            this.notificationTime,
+            this.memo,
+            this.recordDate,
+            this.isCompleted,
+            isMainRecord,
             this.createdAt,
             LocalDateTime.now()
         );
@@ -121,6 +145,7 @@ public class HabitRecord {
     public String getMemo() { return memo; }
     public LocalDate getRecordDate() { return recordDate; }
     public boolean isCompleted() { return isCompleted; }
+    public boolean isMainRecord() { return isMainRecord; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }
