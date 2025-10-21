@@ -7,7 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.recordmanagement.habitlog.common.serializer.LocalDateArraySerializer;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
@@ -160,8 +161,8 @@ public class UserResponse {
     @Schema(description = "메인 기록 타입", example = "EXERCISE")
     private final RecordType mainRecordType;
 
-    @Schema(description = "생년월일", example = "1998-06-02")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Schema(description = "생년월일", example = "[1998, 6, 2]")
+    @JsonSerialize(using = LocalDateArraySerializer.class)
     private final LocalDate birthDate;
 
     @Schema(description = "목표 일수", example = "20")

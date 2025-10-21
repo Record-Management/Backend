@@ -382,7 +382,7 @@ public class UserController {
                             "email": "user@example.com",
                             "socialType": "KAKAO",
                             "mainRecordType": "EXERCISE",
-                            "birthDate": "1990-01-01",
+                            "birthDate": [1990, 1, 1],
                             "goalDays": 20,
                             "notificationEnabled": true,
                             "onboardingCompleted": true,
