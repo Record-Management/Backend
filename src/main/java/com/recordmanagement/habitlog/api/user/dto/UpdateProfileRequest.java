@@ -17,8 +17,7 @@ public record UpdateProfileRequest(
     )
     String nickname,
 
-    @Schema(description = "생년월일 (선택적, YY/MM/DD 형식)", example = "90/01/01")
-    @JsonFormat(pattern = "yy/MM/dd")
+    @Schema(description = "생년월일 (선택적, YYYY-MM-DD 형식)", example = "1990-01-01")
     LocalDate birthDate
 ) {
 }

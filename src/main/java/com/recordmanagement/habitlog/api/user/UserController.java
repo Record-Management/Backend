@@ -350,12 +350,12 @@ public class UserController {
             
             ### 수정 가능한 정보
             - 닉네임 (선택적, 1-6글자, 한글/영문/숫자만)
-            - 생년월일 (선택적, yy/MM/dd 형식)
+            - 생년월일 (선택적, YYYY-MM-DD 형식)
             
             ### 요청 예시
             - 닉네임만 수정: {"nickname": "홍길동"}
-            - 생년월일만 수정: {"birthDate": "90/01/01"}
-            - 둘 다 수정: {"nickname": "홍길동", "birthDate": "90/01/01"}
+            - 생년월일만 수정: {"birthDate": "1990-01-01"}
+            - 둘 다 수정: {"nickname": "홍길동", "birthDate": "1990-01-01"}
             
             ### 사용 시나리오
             - 설정 화면에서 개별 프로필 정보 수정
@@ -382,7 +382,7 @@ public class UserController {
                             "email": "user@example.com",
                             "socialType": "KAKAO",
                             "mainRecordType": "EXERCISE",
-                            "birthDate": "90/01/01",
+                            "birthDate": "1990-01-01",
                             "goalDays": 20,
                             "notificationEnabled": true,
                             "onboardingCompleted": true,
