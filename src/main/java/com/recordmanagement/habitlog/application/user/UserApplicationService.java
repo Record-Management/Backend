@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
 import com.recordmanagement.habitlog.application.user.dto.FcmTokenUpdateCommand;
+import com.recordmanagement.habitlog.application.user.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.auth.repository.RefreshTokenRepository;
@@ -334,6 +335,28 @@ public class UserApplicationService {
         userRepository.save(user);
         
         log.info("FCM 토큰 업데이트 완료 - 사용자 ID: {}", command.getUserId().getValue());
+    }
+
+    /**
+     * 사용자 프로필 업데이트
+     * 닉네임과 생년월일을 선택적으로 수정합니다.
+     *
+     * @param command 프로필 업데이트 커맨드
+     * @return 업데이트된 사용자 정보
+     */
+    public UserResponse updateProfile(UpdateProfileCommand command) {
+        log.info("프로필 업데이트 시작 - 사용자 ID: {}", command.userId());
+        
+        User user = userRepository.findById(UserId.of(command.userId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        user.updateUserProfile(command.nickname(), command.birthDate());
+        
+        User savedUser = userRepository.save(user);
+        
+        log.info("프로필 업데이트 완료 - 사용자 ID: {}", command.userId());
+        
+        return UserResponse.from(savedUser);
     }
 
 }

@@ -4,11 +4,13 @@ import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
 import com.recordmanagement.habitlog.application.user.dto.FcmTokenUpdateCommand;
+import com.recordmanagement.habitlog.application.user.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.application.user.dto.UserResponse;
 import com.recordmanagement.habitlog.common.response.ApiResponse;
 import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
 import com.recordmanagement.habitlog.api.user.dto.FcmTokenUpdateRequest;
+import com.recordmanagement.habitlog.api.user.dto.UpdateProfileRequest;
 import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
@@ -331,6 +333,100 @@ public class UserController {
         log.info("FCM 토큰 업데이트 완료");
 
         return ResponseEntity.ok(ApiResponse.success("FCM 토큰이 성공적으로 업데이트되었습니다", null));
+    }
+
+    /**
+     * 프로필 업데이트 API
+     * 사용자의 닉네임과 생년월일을 수정합니다.
+     *
+     * @param request 프로필 업데이트 요청 DTO
+     * @param authentication 인증된 사용자 정보
+     * @return 업데이트된 사용자 정보
+     */
+    @Operation(
+        summary = "프로필 업데이트",
+        description = """
+            사용자의 닉네임과 생년월일을 선택적으로 수정합니다.
+            
+            ### 수정 가능한 정보
+            - 닉네임 (선택적, 1-6글자, 한글/영문/숫자만)
+            - 생년월일 (선택적, yy/MM/dd 형식)
+            
+            ### 요청 예시
+            - 닉네임만 수정: {"nickname": "홍길동"}
+            - 생년월일만 수정: {"birthDate": "90/01/01"}
+            - 둘 다 수정: {"nickname": "홍길동", "birthDate": "90/01/01"}
+            
+            ### 사용 시나리오
+            - 설정 화면에서 개별 프로필 정보 수정
+            - 닉네임만 변경하기
+            - 생년월일만 수정하기
+            """,
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "프로필 업데이트 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "name": "카카오닉네임",
+                            "nickname": "홍길동",
+                            "email": "user@example.com",
+                            "socialType": "KAKAO",
+                            "mainRecordType": "EXERCISE",
+                            "birthDate": "90/01/01",
+                            "goalDays": 20,
+                            "notificationEnabled": true,
+                            "onboardingCompleted": true,
+                            "createdAt": "2025-09-02T02:46:41.454753"
+                          }
+                        }
+                        """
+                    )
+                )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "잘못된 요청 데이터"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음"
+            )
+        }
+    )
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @Valid @RequestBody UpdateProfileRequest request,
+            Authentication authentication) {
+
+        log.info("프로필 업데이트 요청 수신");
+
+        String userId = authentication.getName();
+        
+        UpdateProfileCommand command = new UpdateProfileCommand(
+                userId,
+                request.nickname(),
+                request.birthDate()
+        );
+
+        UserResponse updatedUser = userApplicationService.updateProfile(command);
+
+        log.info("프로필 업데이트 완료");
+
+        return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
 
 }

@@ -217,6 +217,26 @@ public class User {
     }
 
     /**
+     * 사용자 프로필 업데이트 (닉네임, 생년월일)
+     *
+     * - 닉네임과 생년월일 선택적 변경 가능
+     * - null이 아닌 값만 업데이트
+     * - 변경 시 updatedAt 자동 갱신
+     *
+     * @param nickname 변경할 닉네임 (null이면 변경하지 않음)
+     * @param birthDate 변경할 생년월일 (null이면 변경하지 않음)
+     */
+    public void updateUserProfile(String nickname, LocalDate birthDate) {
+        if (nickname != null) {
+            this.nickname = nickname;
+        }
+        if (birthDate != null) {
+            this.birthDate = birthDate;
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
      * 회원 탈퇴 처리 (soft delete)
      * 
      * - 즉시 삭제하지 않고 탈퇴 표시만 함
