@@ -6,6 +6,7 @@ import com.recordmanagement.habitlog.application.user.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.application.user.dto.OnboardingCompletionCommand;
 import com.recordmanagement.habitlog.application.user.dto.FcmTokenUpdateCommand;
 import com.recordmanagement.habitlog.application.user.dto.UpdateProfileCommand;
+import com.recordmanagement.habitlog.domain.user.event.UserWithdrawnEvent;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.auth.repository.RefreshTokenRepository;
@@ -15,7 +16,9 @@ import com.recordmanagement.habitlog.domain.user.model.UserId;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
 import com.recordmanagement.habitlog.domain.user.repository.UserRepository;
 import com.recordmanagement.habitlog.domain.user.service.UserDomainService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,7 @@ import java.util.Optional;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class UserApplicationService {
 
@@ -40,16 +44,7 @@ public class UserApplicationService {
     private final UserDomainService userDomainService;
     private final SocialUnlinkService socialUnlinkService;
     private final RefreshTokenRepository refreshTokenRepository;
-
-    public UserApplicationService(UserRepository userRepository, 
-                                UserDomainService userDomainService,
-                                SocialUnlinkService socialUnlinkService,
-                                RefreshTokenRepository refreshTokenRepository) {
-        this.userRepository = userRepository;
-        this.userDomainService = userDomainService;
-        this.socialUnlinkService = socialUnlinkService;
-        this.refreshTokenRepository = refreshTokenRepository;
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 신규 사용자 등록 처리
@@ -254,6 +249,10 @@ public class UserApplicationService {
             // 5. 관련 토큰 삭제 (즉시 로그아웃 처리)
             refreshTokenRepository.deleteByUserId(user.getId().getValue());
             
+            // 6. 사용자 탈퇴 이벤트 발행 (알림 관련 데이터 정리는 이벤트 핸들러에서 처리)
+            eventPublisher.publishEvent(new UserWithdrawnEvent(user.getId(), command.getReason()));
+            log.info("사용자 탈퇴 이벤트 발행 완료: userId={}", user.getId().getValue());
+            
             log.info("회원탈퇴 완료 (soft delete): reason={}, deletionScheduledAt={}", 
                     command.getReason(), user.getDeletionScheduledAt());
                     
@@ -335,6 +334,25 @@ public class UserApplicationService {
         userRepository.save(user);
         
         log.info("FCM 토큰 업데이트 완료 - 사용자 ID: {}", command.getUserId().getValue());
+    }
+
+    /**
+     * FCM 토큰 삭제
+     * 로그아웃 시 FCM 토큰을 제거하여 더이상 푸시 알림을 받지 않도록 처리
+     * 
+     * @param userId 사용자 ID (문자열)
+     */
+    public void deleteFcmToken(String userId) {
+        log.info("FCM 토큰 삭제 시작 - 사용자 ID: {}", userId);
+        
+        User user = userRepository.findById(UserId.from(userId))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        user.updateFcmToken(null);  // FCM 토큰을 null로 설정하여 삭제
+        
+        userRepository.save(user);
+        
+        log.info("FCM 토큰 삭제 완료 - 사용자 ID: {}", userId);
     }
 
     /**

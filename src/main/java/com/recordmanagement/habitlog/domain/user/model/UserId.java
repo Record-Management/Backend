@@ -77,6 +77,20 @@ public class UserId {
     }
 
     /**
+     * 기존 문자열 값으로부터 UserId 객체 생성 (of 메서드와 동일)
+     *
+     * - 코드 일관성을 위한 alias 메서드
+     * - DB 조회 결과 등으로 복원 시 사용
+     *
+     * @param value 기존 사용자 ID 문자열
+     * @return 검증된 UserId 객체
+     * @throws CustomException 유효하지 않은 값일 경우
+     */
+    public static UserId from(String value) {
+        return new UserId(value);
+    }
+
+    /**
      * 사용자 ID 문자열 반환
      *
      * @return 내부 UUID 문자열 값

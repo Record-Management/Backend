@@ -159,14 +159,27 @@ public class AuthApplicationService {
      * 전체 로그아웃 시 JWT 토큰에서 사용자 ID 추출해 모든 토큰 무효화
      * 단일 로그아웃 시 해당 토큰만 무효화
      * 토큰 파싱 실패 시에도 무조건 해당 토큰 삭제 시도
+     * 로그아웃 시 FCM 토큰도 함께 삭제하여 더이상 푸시 알림을 받지 않도록 처리
      *
      * @param command 로그아웃 요청 정보 (리프레시 토큰, 전체 로그아웃 여부)
      */
     public void logout(LogoutCommand command) {
+        String userId = null;
+        
+        try {
+            userId = jwtTokenProvider.getUserIdAsStringFromToken(command.refreshToken());
+        } catch (Exception e) {
+            log.warn("로그아웃 시 토큰에서 사용자 ID 추출 실패: {}", e.getMessage());
+        }
+        
+        // 리프레시 토큰 무효화
         if (command.allDevices()) {
             try {
-                String userId = jwtTokenProvider.getUserIdAsStringFromToken(command.refreshToken());
-                refreshTokenService.invalidateAllRefreshTokens(userId);
+                if (userId != null) {
+                    refreshTokenService.invalidateAllRefreshTokens(userId);
+                } else {
+                    refreshTokenService.invalidateRefreshToken(command.refreshToken());
+                }
             } catch (Exception e) {
                 if (command.refreshToken() != null && !command.refreshToken().trim().isEmpty()) {
                     refreshTokenService.invalidateRefreshToken(command.refreshToken());
@@ -175,6 +188,16 @@ public class AuthApplicationService {
         } else {
             if (command.refreshToken() != null && !command.refreshToken().trim().isEmpty()) {
                 refreshTokenService.invalidateRefreshToken(command.refreshToken());
+            }
+        }
+        
+        // FCM 토큰 삭제 (로그아웃 시 더이상 푸시 알림을 받지 않도록)
+        if (userId != null) {
+            try {
+                userApplicationService.deleteFcmToken(userId);
+                log.info("로그아웃 시 FCM 토큰 삭제 완료: userId={}", userId);
+            } catch (Exception e) {
+                log.warn("로그아웃 시 FCM 토큰 삭제 실패: userId={}, error={}", userId, e.getMessage());
             }
         }
     }

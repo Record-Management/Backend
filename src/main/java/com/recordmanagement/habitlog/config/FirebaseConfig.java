@@ -25,7 +25,7 @@ import java.io.InputStream;
  * @since 1.0.0
  */
 @Slf4j
-// @Configuration  // TODO: Firebase 설정 완료 후 주석 해제
+@Configuration
 public class FirebaseConfig {
 
     /**

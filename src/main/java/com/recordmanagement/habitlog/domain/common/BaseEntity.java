@@ -83,4 +83,26 @@ public abstract class BaseEntity {
     protected void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * 생성 시간 설정
+     * 
+     * 도메인 모델에서 엔터티로 변환할 때 사용합니다.
+     * 
+     * @param createdAt 생성 시간
+     */
+    protected void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    /**
+     * 수정 시간 설정
+     * 
+     * 도메인 모델에서 엔터티로 변환할 때 사용합니다.
+     * 
+     * @param updatedAt 수정 시간
+     */
+    protected void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

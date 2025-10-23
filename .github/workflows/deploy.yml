@@ -35,10 +35,13 @@ jobs:
           git fetch origin
           git reset --hard origin/main
           
-          echo "2. 기존 컨테이너 중지 중..."
+          echo "2. Firebase 설정 파일 생성 중..."
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > src/main/resources/firebase-service-account.json
+          
+          echo "3. 기존 컨테이너 중지 중..."
           docker-compose down || true
           
-          echo "3. Docker 이미지 빌드 중..."
+          echo "4. Docker 이미지 빌드 중..."
           nohup docker-compose build --no-cache --progress=plain > build.log 2>&1 &
           BUILD_PID=$!
           
@@ -52,14 +55,14 @@ jobs:
           echo "빌드 완료. 로그 확인:"
           tail -20 build.log
           
-          echo "4. 컨테이너 시작 중..."
+          echo "5. 컨테이너 시작 중..."
           docker-compose up -d
           
-          echo "5. 배포 상태 확인 중..."
+          echo "6. 배포 상태 확인 중..."
           sleep 10
           docker-compose ps
           
-          echo "6. Docker 정리 중..."
+          echo "7. Docker 정리 중..."
           chmod +x scripts/docker-cleanup.sh
           ./scripts/docker-cleanup.sh
           

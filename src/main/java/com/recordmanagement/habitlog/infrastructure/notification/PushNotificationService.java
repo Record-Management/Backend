@@ -18,7 +18,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Slf4j
-// @Service  // TODO: Firebase 설정 완료 후 주석 해제
+@Service
 @RequiredArgsConstructor
 public class PushNotificationService {
 

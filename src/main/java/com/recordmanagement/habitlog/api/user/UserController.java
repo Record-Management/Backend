@@ -313,8 +313,7 @@ public class UserController {
             )
         }
     )
-    // TODO: Firebase 설정 완료 후 주석 해제
-    // @PutMapping("/fcm-token")
+    @PutMapping("/fcm-token")
     public ResponseEntity<ApiResponse<Void>> updateFcmToken(
             @Valid @RequestBody FcmTokenUpdateRequest request,
             Authentication authentication) {
@@ -427,6 +426,62 @@ public class UserController {
         log.info("프로필 업데이트 완료");
 
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
+    }
+
+    /**
+     * FCM 토큰 삭제 API
+     * 로그아웃 또는 알림 비활성화 시 FCM 토큰을 삭제합니다.
+     *
+     * @param authentication 인증된 사용자 정보
+     * @return 성공 응답
+     */
+    @Operation(
+        summary = "FCM 토큰 삭제",
+        description = """
+            사용자의 FCM 토큰을 삭제합니다.
+            
+            ### 사용 시나리오
+            - 사용자가 로그아웃할 때
+            - 알림을 완전히 비활성화할 때
+            - 회원탈퇴 시 (자동 호출)
+            
+            ### 처리 과정
+            1. 사용자의 FCM 토큰을 null로 설정
+            2. 더이상 푸시 알림을 받지 않음
+            """,
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "204",
+                description = "FCM 토큰 삭제 성공 (응답 본문 없음)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "404",
+                description = "사용자를 찾을 수 없음"
+            )
+        }
+    )
+    @DeleteMapping("/fcm-token")
+    public ResponseEntity<ApiResponse<Void>> deleteFcmToken(Authentication authentication) {
+
+        log.info("FCM 토큰 삭제 요청 수신");
+
+        String userId = authentication.getName();
+        
+        FcmTokenUpdateCommand command = new FcmTokenUpdateCommand(
+                UserId.of(userId),
+                null  // null로 설정하여 토큰 삭제
+        );
+
+        userApplicationService.updateFcmToken(command);
+
+        log.info("FCM 토큰 삭제 완료");
+
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -3,6 +3,7 @@ package com.recordmanagement.habitlog.common.response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -31,12 +32,29 @@ public class PagingResponse<T> {
      * 페이징 관련 메타 정보 포함 클래스
      * 현재 페이지, 페이지 크기, 전체 데이터 수, 전체 페이지 수 포함
      */
+    /**
+     * Spring Data Page 객체로부터 PagingResponse 생성
+     *
+     * @param page Spring Data Page 객체
+     * @param <T> 데이터 타입
+     * @return PagingResponse 객체
+     */
+    public static <T> PagingResponse<T> from(Page<T> page) {
+        PageInfo pageInfo = new PageInfo(
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+        return new PagingResponse<>(page.getContent(), pageInfo);
+    }
+
     @Getter
     @AllArgsConstructor
     @Schema(description = "페이지 정보")
     public static class PageInfo {
 
-        @Schema(description = "현재 페이지 번호", example = "1")
+        @Schema(description = "현재 페이지 번호", example = "0")
         private final int page;
 
         @Schema(description = "한 페이지당 데이터 수", example = "10")
