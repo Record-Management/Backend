@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.global.config.swagger;
+package com.recordmanagement.habitlog.global.config.openapi;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 
 /**
- * OpenApiConfig - Swagger UI 및 OpenAPI 문서화 설정 클래스
+ * OpenApiConfig - Redoc 및 OpenAPI 문서화 설정 클래스
  *
  * SpringDoc(OpenAPI 3)를 활용하여 API 문서 자동 생성 및 커스터마이징을 담당합니다.
  *
@@ -23,11 +23,11 @@ import java.util.List;
  * - API 기본 정보(제목, 설명, 버전, 연락처) 설정
  * - JWT 인증 스키마 정의
  * - 서버 환경별 URL 설정
- * - Swagger UI에서 명확한 API 명세 제공
+ * - Redoc에서 명확한 API 명세 제공
  *
  * 사용법:
  * - 해당 빈을 통해 OpenAPI 스펙을 구성하며,
- *   스프링 부트 실행 시 Swagger UI(http://localhost:포트/swagger-ui.html)에서 확인 가능
+ *   스프링 부트 실행 시 Redoc 문서에서 확인 가능
  *
  * @author 전우선
  * @since 2025.07.30

@@ -132,6 +132,18 @@ public enum ErrorCode {
     @Schema(description = "소셜 ID 이미 존재")
     SOCIAL_ID_ALREADY_EXISTS(400, "E40030", "이미 사용 중인 소셜 ID입니다."),
 
+    @Schema(description = "이미 탈퇴한 사용자")
+    USER_ALREADY_WITHDRAWN(400, "E40031", "이미 탈퇴한 사용자입니다."),
+
+    @Schema(description = "외부 API 연결 실패")
+    EXTERNAL_API_CONNECTION_FAILED(500, "E50009", "외부 API 연결에 실패했습니다."),
+
+    @Schema(description = "외부 API 응답 파싱 실패")
+    EXTERNAL_API_RESPONSE_PARSE_FAILED(500, "E50010", "외부 API 응답 파싱에 실패했습니다."),
+
+    @Schema(description = "외부 API 호출 실패")
+    EXTERNAL_API_CALL_FAILED(500, "E50011", "외부 API 호출에 실패했습니다."),
+
     // ------------------------------------------------------------------------
     // 파일 업로드 관련 에러 (E40070 ~ E40079)
     // ------------------------------------------------------------------------

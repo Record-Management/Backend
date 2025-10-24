@@ -1,7 +1,7 @@
 package com.recordmanagement.habitlog.global.common.validation;
 
 import com.recordmanagement.habitlog.api.exercise.dto.CreateExerciseRecordRequest;
-import com.recordmanagement.habitlog.api.exercise.dto.UpdateExerciseRecordRequest;
+import com.recordmanagement.habitlog.domain.exercise.presentation.dto.UpdateExerciseRecordRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

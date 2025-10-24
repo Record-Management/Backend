@@ -7,12 +7,14 @@ import com.recordmanagement.habitlog.domain.record.application.dto.DailyRecordRe
 import com.recordmanagement.habitlog.domain.record.application.dto.RecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UpdateRecordCommand;
+import com.recordmanagement.habitlog.domain.record.application.strategy.RecordTypeValidationStrategyFactory;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.record.domain.model.Record;
 import com.recordmanagement.habitlog.domain.record.domain.model.RecordId;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
-import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordQueryRepository;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordSecurityRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.application.dto.ExerciseRecordResponse;
@@ -35,23 +37,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * 기록 애플리케이션 서비스
+ * 
+ * OCP 적용: Strategy 패턴을 통한 확장 가능한 설계
+ * ISP 적용: 필요한 기능별로 분리된 Repository 인터페이스 사용
+ * - 새로운 기록 타입 추가 시 기존 코드 수정 없이 확장 가능
+ * - Factory 패턴을 통한 전략 관리로 switch 문 제거
+ * - 조회 전용 기능에는 QueryRepository만 의존하여 불필요한 의존성 제거
+ * 
+ * @author 전우선
+ * @since 2025.10.24
+ * @version 3.0.0 (OCP + ISP 적용)
+ */
 @Service
 @Transactional
 public class RecordApplicationService {
     
     private final RecordRepository recordRepository;
-    private final ExerciseRecordRepository exerciseRecordRepository;
+    private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
+    private final ExerciseRecordSecurityRepository exerciseRecordSecurityRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
+    private final RecordTypeValidationStrategyFactory validationStrategyFactory;
     
     public RecordApplicationService(RecordRepository recordRepository, 
-                                   ExerciseRecordRepository exerciseRecordRepository,
+                                   ExerciseRecordQueryRepository exerciseRecordQueryRepository,
+                                   ExerciseRecordSecurityRepository exerciseRecordSecurityRepository,
                                    HabitRecordRepository habitRecordRepository,
-                                   S3FileService s3FileService) {
+                                   S3FileService s3FileService,
+                                   RecordTypeValidationStrategyFactory validationStrategyFactory) {
         this.recordRepository = recordRepository;
-        this.exerciseRecordRepository = exerciseRecordRepository;
+        this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
+        this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
         this.habitRecordRepository = habitRecordRepository;
         this.s3FileService = s3FileService;
+        this.validationStrategyFactory = validationStrategyFactory;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -139,7 +160,7 @@ public class RecordApplicationService {
         
         // 2. 운동 기록 조회 (type이 null이거나 EXERCISE인 경우)
         if (type == null || type == RecordType.EXERCISE) {
-            List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDateBetween(
+            List<ExerciseRecord> exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDateBetween(
                 userIdObj, startDate, endDate
             );
             allRecords.addAll(exerciseRecords.stream()
@@ -192,7 +213,7 @@ public class RecordApplicationService {
             .toList());
         
         // 2. 운동 기록 조회
-        List<ExerciseRecord> exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDate(userIdObj, date);
+        List<ExerciseRecord> exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDate(userIdObj, date);
         allRecords.addAll(exerciseRecords.stream()
             .map(UnifiedRecordResponse::fromExerciseRecord)
             .toList());
@@ -237,7 +258,7 @@ public class RecordApplicationService {
         // 운동 기록에서 조회 시도
         try {
             ExerciseRecordId exerciseRecordId = ExerciseRecordId.from(recordId);
-            Optional<ExerciseRecord> exerciseRecord = exerciseRecordRepository.findByIdAndUserId(exerciseRecordId, userIdObj);
+            Optional<ExerciseRecord> exerciseRecord = exerciseRecordSecurityRepository.findByIdAndUserId(exerciseRecordId, userIdObj);
             
             if (exerciseRecord.isPresent()) {
                 UnifiedRecordResponse response = UnifiedRecordResponse.fromExerciseRecord(exerciseRecord.get());
@@ -287,30 +308,28 @@ public class RecordApplicationService {
     
     /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
+     * 
+     * OCP 적용: Strategy 패턴으로 switch 문 제거
+     * - 새로운 기록 타입 추가 시 기존 코드 수정 불필요
+     * - 각 기록 타입별 검증 전략이 독립적으로 동작
      */
     public void validateRecordTypeLimit(UserId userId, LocalDate recordDate, RecordType newRecordType) {
-        // 현재 등록된 기록 종류 수를 확인
+        // 현재 등록된 기록 종류 수를 확인 (Strategy 패턴 사용)
         int recordTypeCount = 0;
         
-        // 일상 기록 확인
-        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
-        if (dailyCount > 0) recordTypeCount++;
-        
-        // 운동 기록 확인  
-        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
-        if (exerciseCount > 0) recordTypeCount++;
-        
-        // 습관 기록 확인
-        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
-        if (habitCount > 0) recordTypeCount++;
-        
-        // 새로 추가하려는 기록 종류가 기존에 없다면 +1
-        boolean hasNewType = false;
-        switch (newRecordType) {
-            case DAILY -> hasNewType = dailyCount == 0;
-            case EXERCISE -> hasNewType = exerciseCount == 0;
-            case HABIT -> hasNewType = habitCount == 0;
+        for (RecordType recordType : validationStrategyFactory.getSupportedTypes()) {
+            boolean hasRecord = validationStrategyFactory
+                    .getStrategy(recordType)
+                    .hasExistingRecord(userId, recordDate);
+            if (hasRecord) {
+                recordTypeCount++;
+            }
         }
+        
+        // 새로 추가하려는 기록 종류가 기존에 없는지 확인 (Strategy 패턴 사용)
+        boolean hasNewType = !validationStrategyFactory
+                .getStrategy(newRecordType)
+                .hasExistingRecord(userId, recordDate);
         
         if (hasNewType && recordTypeCount >= 2) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);

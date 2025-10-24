@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.domain.notification.application;
 
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationMessage;
+import com.recordmanagement.habitlog.domain.notification.application.strategy.NotificationMessageStrategyFactory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationHistory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationType;
 import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationSettingsRepository;
@@ -8,7 +9,6 @@ import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
-import com.recordmanagement.habitlog.domain.notification.infrastructure.service.PushNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,13 +21,16 @@ import java.util.Map;
 /**
  * FCM 알림 서비스
  *
+ * OCP 적용: Strategy 패턴을 통한 확장 가능한 설계
+ * DIP 적용: NotificationSender 추상화에 의존
+ * - 새로운 기록 타입 추가 시 기존 코드 수정 없이 확장 가능
+ * - Factory 패턴을 통한 전략 관리로 switch 문 제거
+ * - Infrastructure 구체 클래스 의존성 제거
  * - 비즈니스 로직에 따른 알림 발송 처리
- * - 사용자별 알림 설정 확인 및 메시지 생성
- * - PushNotificationService를 사용하여 실제 FCM 발송
  *
  * @author 전우선
  * @since 2025.10.23
- * @version 1.0.0
+ * @version 3.0.0 (OCP + DIP 적용)
  */
 @Slf4j
 @Service
@@ -35,9 +38,10 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class FcmNotificationService {
 
-    private final PushNotificationService pushNotificationService;
+    private final NotificationSender notificationSender;
     private final UserRepository userRepository;
     private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationMessageStrategyFactory messageStrategyFactory;
     private final com.recordmanagement.habitlog.domain.notification.application.service.NotificationHistoryApplicationService notificationHistoryApplicationService;
 
     /**
@@ -75,8 +79,10 @@ public class FcmNotificationService {
             return;
         }
 
-        // 메시지 생성
-        NotificationMessage message = createDailyRecordReminderMessage(user.getMainRecordType());
+        // 메시지 생성 (OCP 적용: Strategy 패턴 사용)
+        NotificationMessage message = messageStrategyFactory
+                .getStrategy(user.getMainRecordType())
+                .createDailyRecordReminderMessage();
 
         // 추가 데이터 설정
         Map<String, String> data = new HashMap<>();
@@ -92,8 +98,8 @@ public class FcmNotificationService {
         );
         notificationHistoryApplicationService.saveNotificationHistory(history);
 
-        // FCM 발송
-        boolean success = pushNotificationService.sendNotification(
+        // 알림 발송 (DIP 적용: 추상화된 NotificationSender 사용)
+        boolean success = notificationSender.sendNotification(
                 user.getFcmToken(),
                 message.getTitle(),
                 message.getBody(),
@@ -133,34 +139,6 @@ public class FcmNotificationService {
         log.info("메인 기록 미등록 알림 일괄 발송 완료: 성공 {}건, 실패 {}건", successCount, failureCount);
     }
 
-    /**
-     * 메인 기록 타입에 따른 알림 메시지 생성
-     *
-     * @param mainRecordType 메인 기록 타입
-     * @return 알림 메시지
-     */
-    private NotificationMessage createDailyRecordReminderMessage(RecordType mainRecordType) {
-        String title;
-        String body;
-
-        switch (mainRecordType) {
-            case EXERCISE:
-                title = "오늘 운동 기록을 등록하지 않았어요";
-                body = "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!";
-                break;
-            case HABIT:
-                title = "오늘 습관 기록을 확인해보세요";
-                body = "목표 달성을 위해 오늘의 습관을 체크해주세요!";
-                break;
-            case DAILY:
-            default:
-                title = "오늘 하루는 어떠셨나요?";
-                body = "오늘의 소중한 순간을 기록으로 남겨보세요!";
-                break;
-        }
-
-        return new NotificationMessage(title, body);
-    }
 
     /**
      * 테스트용 알림 발송
@@ -192,7 +170,7 @@ public class FcmNotificationService {
         Map<String, String> data = new HashMap<>();
         data.put("notificationType", "TEST");
 
-        return pushNotificationService.sendNotification(
+        return notificationSender.sendNotification(
                 user.getFcmToken(),
                 title,
                 body,

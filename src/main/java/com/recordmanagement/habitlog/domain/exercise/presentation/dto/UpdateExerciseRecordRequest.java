@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.exercise.dto;
+package com.recordmanagement.habitlog.domain.exercise.presentation.dto;
 
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseType;
 import com.recordmanagement.habitlog.global.common.validation.ValidExerciseData;
@@ -9,7 +9,16 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Getter
+@Setter
+@NoArgsConstructor
 @ValidExerciseData
+@Schema(description = "운동 기록 수정 요청")
 public class UpdateExerciseRecordRequest {
     
     private ExerciseType exerciseType;
@@ -34,44 +43,4 @@ public class UpdateExerciseRecordRequest {
     
     @NotNull(message = "기록 시간은 필수입니다")
     private String recordTime;
-    
-    public UpdateExerciseRecordRequest() {}
-    
-    public UpdateExerciseRecordRequest(ExerciseType exerciseType, Integer caloriesBurned,
-                                     Integer exerciseTimeMinutes, Integer stepCount, Double weight,
-                                     String dailyNote, List<String> imageUrls, String recordTime) {
-        this.exerciseType = exerciseType;
-        this.caloriesBurned = caloriesBurned;
-        this.exerciseTimeMinutes = exerciseTimeMinutes;
-        this.stepCount = stepCount;
-        this.weight = weight;
-        this.dailyNote = dailyNote;
-        this.imageUrls = imageUrls;
-        this.recordTime = recordTime;
-    }
-    
-    // Getters and Setters
-    public ExerciseType getExerciseType() { return exerciseType; }
-    public void setExerciseType(ExerciseType exerciseType) { this.exerciseType = exerciseType; }
-    
-    public Integer getCaloriesBurned() { return caloriesBurned; }
-    public void setCaloriesBurned(Integer caloriesBurned) { this.caloriesBurned = caloriesBurned; }
-    
-    public Integer getExerciseTimeMinutes() { return exerciseTimeMinutes; }
-    public void setExerciseTimeMinutes(Integer exerciseTimeMinutes) { this.exerciseTimeMinutes = exerciseTimeMinutes; }
-    
-    public Integer getStepCount() { return stepCount; }
-    public void setStepCount(Integer stepCount) { this.stepCount = stepCount; }
-    
-    public Double getWeight() { return weight; }
-    public void setWeight(Double weight) { this.weight = weight; }
-    
-    public String getDailyNote() { return dailyNote; }
-    public void setDailyNote(String dailyNote) { this.dailyNote = dailyNote; }
-    
-    public List<String> getImageUrls() { return imageUrls; }
-    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
-    
-    public String getRecordTime() { return recordTime; }
-    public void setRecordTime(String recordTime) { this.recordTime = recordTime; }
 }

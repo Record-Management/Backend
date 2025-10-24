@@ -1,7 +1,7 @@
 package com.recordmanagement.habitlog.domain.exercise.presentation.controller;
 
 import com.recordmanagement.habitlog.api.exercise.dto.CreateExerciseRecordRequest;
-import com.recordmanagement.habitlog.api.exercise.dto.UpdateExerciseRecordRequest;
+import com.recordmanagement.habitlog.domain.exercise.presentation.dto.UpdateExerciseRecordRequest;
 import com.recordmanagement.habitlog.domain.exercise.application.service.ExerciseRecordApplicationService;
 import com.recordmanagement.habitlog.domain.exercise.application.dto.CreateExerciseRecordCommand;
 import com.recordmanagement.habitlog.domain.exercise.application.dto.ExerciseRecordResponse;

@@ -37,7 +37,9 @@ import java.util.Map;
 /**
  * Apple 로그인 클라이언트 구현체 (프로덕션 버전)
  *
- * Apple Sign in with Apple 서비스와 연동하여 사용자 정보를 조회합니다.
+ * LSP 적용: SocialLoginClient 계약을 정확히 준수
+ * - 일관된 예외 처리로 대체 가능성 보장
+ * - Apple Sign in with Apple 서비스와 연동하여 사용자 정보를 조회합니다.
  * 
  * 프로덕션 환경을 위한 개선사항:
  * - 강화된 JWT 검증 (서명, 만료, 발급자)
@@ -55,7 +57,7 @@ import java.util.Map;
  * 
  * @author 전우선
  * @since 2025.07.31
- * @version 2.0.0
+ * @version 3.0.0 (LSP 적용)
  */
 @Slf4j
 @Component
@@ -107,7 +109,7 @@ public class AppleLoginClient implements SocialLoginClient {
      * @throws SocialLoginException 토큰이 유효하지 않거나 검증 실패 시
      */
     @Override
-    public SocialUserInfo getUserInfo(String identityToken) {
+    public SocialUserInfo getUserInfo(String identityToken) throws SocialLoginException {
         try {
             log.info("Apple identityToken 처리 시작");
             

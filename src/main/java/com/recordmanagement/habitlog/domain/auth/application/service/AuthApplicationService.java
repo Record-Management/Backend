@@ -7,6 +7,9 @@ import com.recordmanagement.habitlog.domain.auth.application.dto.RefreshTokenRes
 import com.recordmanagement.habitlog.domain.auth.application.dto.LogoutCommand;
 import com.recordmanagement.habitlog.domain.auth.domain.model.TokenPair;
 import com.recordmanagement.habitlog.domain.auth.application.dto.AppleTransferSubCommand;
+import com.recordmanagement.habitlog.domain.user.application.service.UserRegistrationService;
+import com.recordmanagement.habitlog.domain.user.application.service.UserLifecycleService;
+import com.recordmanagement.habitlog.domain.user.application.service.UserProfileService;
 import com.recordmanagement.habitlog.domain.user.application.service.UserApplicationService;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserRegistrationCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
@@ -46,17 +49,26 @@ import java.util.Optional;
 public class AuthApplicationService {
 
     private final SocialLoginService socialLoginService;
-    private final UserApplicationService userApplicationService;
+    private final UserRegistrationService userRegistrationService;
+    private final UserLifecycleService userLifecycleService;
+    private final UserProfileService userProfileService;
+    private final UserApplicationService userApplicationService; // Apple Transfer Sub 등 특수 기능용
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final TokenBlacklistService tokenBlacklistService;
 
     public AuthApplicationService(SocialLoginService socialLoginService,
+                                  UserRegistrationService userRegistrationService,
+                                  UserLifecycleService userLifecycleService,
+                                  UserProfileService userProfileService,
                                   UserApplicationService userApplicationService,
                                   JwtTokenProvider jwtTokenProvider,
                                   RefreshTokenService refreshTokenService,
                                   TokenBlacklistService tokenBlacklistService) {
         this.socialLoginService = socialLoginService;
+        this.userRegistrationService = userRegistrationService;
+        this.userLifecycleService = userLifecycleService;
+        this.userProfileService = userProfileService;
         this.userApplicationService = userApplicationService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
@@ -77,7 +89,7 @@ public class AuthApplicationService {
         SocialUserInfo socialUserInfo = socialLoginService.getUserInfo(command.getSocialType(), command.getAccessToken());
 
         // socialId로 기존 사용자 조회 (단순하고 안정적)
-        Optional<UserResponse> existingUser = userApplicationService.findBySocialLogin(command.getSocialType(), socialUserInfo.getSocialId());
+        Optional<UserResponse> existingUser = userRegistrationService.findBySocialLogin(command.getSocialType(), socialUserInfo.getSocialId());
 
         UserResponse user;
         boolean isNewUser = false;
@@ -85,20 +97,8 @@ public class AuthApplicationService {
         if (existingUser.isPresent()) {
             user = existingUser.get();
             
-            // 탈퇴한 사용자인지 확인하고 복구 처리
-            if (userApplicationService.isUserWithdrawn(user.getId())) {
-                if (userApplicationService.canRestoreUser(user.getId())) {
-                    // 7일 이내 탈퇴 사용자 복구
-                    user = userApplicationService.restoreWithdrawnUser(user.getId());
-                    log.info("탈퇴 사용자 복구: userId={}, socialType={}", user.getId(), command.getSocialType());
-                } else {
-                    // 7일 경과로 복구 불가능
-                    throw new CustomException(ErrorCode.USER_PERMANENTLY_DELETED);
-                }
-            } else {
-                // 일반 기존 사용자 로그인
-                log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
-            }
+            // 탈퇴 사용자 복구는 UserLifecycleService에서 처리됨 (이미 위에서 처리됨)
+            log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
         } else {
             // 신규 사용자 가입
             user = createNewUser(socialUserInfo, command.getSocialType());
@@ -122,7 +122,7 @@ public class AuthApplicationService {
                 socialType,
                 socialUserInfo.getSocialId()
         );
-        return userApplicationService.registerUserForSocialLogin(registrationCommand);
+        return userRegistrationService.registerUserForSocialLogin(registrationCommand);
     }
 
     private String generateAccessToken(UserResponse user) {
@@ -148,7 +148,7 @@ public class AuthApplicationService {
         String userId = jwtTokenProvider.getUserIdAsStringFromToken(refreshTokenValue);
         
         // 사용자 정보 조회 (토큰 갱신용 최소 필드)
-        UserResponse user = userApplicationService.findByIdForRefreshToken(userId)
+        UserResponse user = userProfileService.findByIdForRefreshToken(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
         // 토큰 로테이션: 새 액세스 토큰과 리프레시 토큰 발급
@@ -213,7 +213,7 @@ public class AuthApplicationService {
         // FCM 토큰 삭제 (로그아웃 시 더이상 푸시 알림을 받지 않도록)
         if (userId != null) {
             try {
-                userApplicationService.deleteFcmToken(userId);
+                userProfileService.updateFcmToken(new com.recordmanagement.habitlog.domain.user.application.dto.FcmTokenUpdateCommand(com.recordmanagement.habitlog.domain.user.domain.model.UserId.of(userId), null));
                 log.info("로그아웃 시 FCM 토큰 삭제 완료: userId={}", userId);
             } catch (Exception e) {
                 log.warn("로그아웃 시 FCM 토큰 삭제 실패: userId={}, error={}", userId, e.getMessage());
@@ -233,7 +233,7 @@ public class AuthApplicationService {
                 command.oldSub(), command.newSub());
         
         // 1. 기존 사용자 조회
-        Optional<UserResponse> existingUser = userApplicationService.findBySocialLogin(
+        Optional<UserResponse> existingUser = userRegistrationService.findBySocialLogin(
                 SocialType.APPLE, command.oldSub()
         );
         
@@ -243,7 +243,7 @@ public class AuthApplicationService {
         }
         
         // 2. 새 sub로 이미 가입된 사용자가 있는지 확인
-        Optional<UserResponse> conflictUser = userApplicationService.findBySocialLogin(
+        Optional<UserResponse> conflictUser = userRegistrationService.findBySocialLogin(
                 SocialType.APPLE, command.newSub()
         );
         

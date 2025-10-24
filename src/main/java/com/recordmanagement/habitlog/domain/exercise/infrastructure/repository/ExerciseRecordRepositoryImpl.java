@@ -1,21 +1,32 @@
-package com.recordmanagement.habitlog.domain.auth.infrastructure.exercise.repository;
+package com.recordmanagement.habitlog.domain.exercise.infrastructure.repository;
 
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecordId;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordAdminRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
-import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.exercise.infrastructure.entity.ExerciseRecordEntity;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * 운동 기록 저장소 구현체
+ * 
+ * ISP 적용: 분리된 인터페이스들을 모두 구현
+ * - 기본 비즈니스 인터페이스와 관리자 인터페이스 모두 구현
+ * - 클라이언트는 필요한 인터페이스만 의존 가능
+ * 
+ * @author 전우선
+ * @since 2025.10.24
+ * @version 2.0.0 (ISP 적용)
+ */
 @Repository
 @Transactional
-public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository {
+public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, ExerciseRecordAdminRepository {
     
     private final JpaExerciseRecordRepository jpaExerciseRecordRepository;
     

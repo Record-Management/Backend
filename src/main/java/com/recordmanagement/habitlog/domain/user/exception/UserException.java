@@ -1,13 +1,15 @@
 package com.recordmanagement.habitlog.domain.user.exception;
-import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 
+import com.recordmanagement.habitlog.global.config.exception.DomainException;
+import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * 사용자 관련 예외 클래스
  *
- * 사용자 도메인에서 발생하는 다양한 예외 상황을 표준화하여 처리합니다.
- * DomainException을 상속받아 일관된 예외 처리 체계를 제공합니다.
+ * LSP 적용: DomainException을 상속받아 일관된 예외 계층 구조 유지
+ * - 모든 도메인 예외가 동일한 계층 구조로 대체 가능성 보장
+ * - 사용자 도메인에서 발생하는 다양한 예외 상황을 표준화하여 처리합니다.
  * 
  * 주요 예외 유형:
  * - 사용자 조회 실패 (존재하지 않는 사용자)
@@ -22,10 +24,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * @author 전우선
  * @since 2025.07.30
- * @version 1.0.0
+ * @version 2.0.0 (LSP 적용)
  */
 @Schema(description = "사용자 관련 예외 클래스")
-public class UserException extends RuntimeException {
+public class UserException extends DomainException {
 
     /**
      * UserException 생성자
@@ -34,15 +36,8 @@ public class UserException extends RuntimeException {
      *
      * @param errorCode 사용자 관련 에러 코드
      */
-    private final ErrorCode errorCode;
-
     private UserException(ErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
-    }
-
-    public ErrorCode getErrorCode() {
-        return errorCode;
+        super(errorCode);
     }
 
     // ============ 정적 팩토리 메서드들 ============

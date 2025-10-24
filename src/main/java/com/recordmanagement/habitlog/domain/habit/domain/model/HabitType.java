@@ -1,5 +1,10 @@
 package com.recordmanagement.habitlog.domain.habit.domain.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum HabitType {
     WATER_DRINKING("물 마시기"),
     WALKING("산책"),
@@ -13,12 +18,4 @@ public enum HabitType {
     NO_SMOKING("금연");
     
     private final String description;
-    
-    HabitType(String description) {
-        this.description = description;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
 }

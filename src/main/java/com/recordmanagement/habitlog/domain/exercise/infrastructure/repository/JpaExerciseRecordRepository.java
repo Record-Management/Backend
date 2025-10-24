@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.domain.auth.infrastructure.exercise.repository;
+package com.recordmanagement.habitlog.domain.exercise.infrastructure.repository;
 
 import com.recordmanagement.habitlog.domain.exercise.infrastructure.entity.ExerciseRecordEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

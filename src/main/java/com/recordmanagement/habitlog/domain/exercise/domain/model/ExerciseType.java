@@ -1,5 +1,10 @@
 package com.recordmanagement.habitlog.domain.exercise.domain.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum ExerciseType {
     RUNNING("러닝"),
     GOLF("골프"),
@@ -13,12 +18,4 @@ public enum ExerciseType {
     TENNIS("테니스");
     
     private final String name;
-    
-    ExerciseType(String name) {
-        this.name = name;
-    }
-    
-    public String getName() {
-        return name;
-    }
 }

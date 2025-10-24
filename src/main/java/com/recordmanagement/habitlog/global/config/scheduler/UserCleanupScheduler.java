@@ -4,7 +4,7 @@ import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepositor
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.auth.domain.repository.RefreshTokenRepository;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
-import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordAdminRepository;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationSettingsRepository;
 import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationHistoryRepository;
@@ -33,7 +33,7 @@ public class UserCleanupScheduler {
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final RecordRepository recordRepository;
-    private final ExerciseRecordRepository exerciseRecordRepository;
+    private final ExerciseRecordAdminRepository exerciseRecordAdminRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final NotificationSettingsRepository notificationSettingsRepository;
     private final NotificationHistoryRepository notificationHistoryRepository;
@@ -41,14 +41,14 @@ public class UserCleanupScheduler {
     public UserCleanupScheduler(UserRepository userRepository, 
                                RefreshTokenRepository refreshTokenRepository,
                                RecordRepository recordRepository,
-                               ExerciseRecordRepository exerciseRecordRepository,
+                               ExerciseRecordAdminRepository exerciseRecordAdminRepository,
                                HabitRecordRepository habitRecordRepository,
                                NotificationSettingsRepository notificationSettingsRepository,
                                NotificationHistoryRepository notificationHistoryRepository) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.recordRepository = recordRepository;
-        this.exerciseRecordRepository = exerciseRecordRepository;
+        this.exerciseRecordAdminRepository = exerciseRecordAdminRepository;
         this.habitRecordRepository = habitRecordRepository;
         this.notificationSettingsRepository = notificationSettingsRepository;
         this.notificationHistoryRepository = notificationHistoryRepository;
@@ -130,7 +130,7 @@ public class UserCleanupScheduler {
             log.debug("일상 기록 삭제 완료: userId={}", userId);
             
             // 운동 기록 삭제 (이미지 포함)
-            exerciseRecordRepository.deleteByUserId(userId);
+            exerciseRecordAdminRepository.deleteByUserId(userId);
             log.debug("운동 기록 삭제 완료: userId={}", userId);
             
             // 습관 기록 삭제
