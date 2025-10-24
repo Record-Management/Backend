@@ -34,7 +34,8 @@ import lombok.Getter;
     description = "액세스 토큰 갱신 성공 응답 데이터",
     example = """
         {
-          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_access_token...",
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.new_refresh_token...",
           "expiresIn": 3600,
           "user": {
             "id": "user_id",
@@ -66,6 +67,25 @@ public class RefreshTokenResponse {
         required = true
     )
     private final String accessToken;
+
+    /** 새로 발급된 리프레시 토큰 (토큰 로테이션 적용) */
+    @Schema(
+        description = """
+            새로 발급된 리프레시 토큰 (토큰 로테이션 적용)
+            
+            ### 보안 강화를 위한 토큰 로테이션
+            - 기존 리프레시 토큰은 자동 무효화됨
+            - 새 리프레시 토큰으로 즉시 교체 필요
+            - 안전한 저장소에 보관 (Keychain, EncryptedSharedPreferences 등)
+            
+            ### 주의사항
+            - 기존 리프레시 토큰은 더 이상 사용 불가
+            - 토큰 갱신 시마다 새로운 리프레시 토큰 발급
+            - 탈취 위험 최소화를 위한 보안 정책
+            """,
+        example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMzQ1NiIsImlhdCI6MTYzMjM2MzYwMCwiZXhwIjoxNjMzNTczMjAwfQ.refresh123..."
+    )
+    private final String refreshToken;
     
     
     /** 토큰 만료까지 남은 시간 (초 단위) */
@@ -102,6 +122,7 @@ public class RefreshTokenResponse {
     public static RefreshTokenResponse from(RefreshTokenResult result) {
         return RefreshTokenResponse.builder()
                 .accessToken(result.getAccessToken())
+                .refreshToken(result.getRefreshToken())
                 .expiresIn(result.getExpiresIn())
                 .user(result.getUser())
                 .build();

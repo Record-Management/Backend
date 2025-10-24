@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.domain.auth.service;
 
 import com.recordmanagement.habitlog.domain.auth.model.RefreshToken;
+import com.recordmanagement.habitlog.domain.auth.model.TokenPair;
 import com.recordmanagement.habitlog.domain.auth.repository.RefreshTokenRepository;
 import com.recordmanagement.habitlog.config.jwt.JwtTokenProvider;
 import com.recordmanagement.habitlog.config.exception.JwtAuthenticationException;
@@ -81,15 +82,16 @@ public class RefreshTokenService {
     }
 
     /**
-     * 리프레시 토큰을 사용하여 액세스 토큰 갱신
+     * 리프레시 토큰을 사용하여 액세스 토큰 갱신 (토큰 로테이션 적용)
      *
      * 토큰 존재 여부, 만료 여부, JWT 서명 검증 후 액세스 토큰 재발급
+     * 보안 강화를 위해 새로운 리프레시 토큰도 함께 발급 (토큰 로테이션)
      *
      * @param refreshTokenValue 검증할 리프레시 토큰 문자열
-     * @return 새 액세스 토큰 문자열
+     * @return 새 액세스 토큰과 리프레시 토큰을 포함한 토큰 페어
      * @throws JwtAuthenticationException 토큰이 유효하지 않거나 만료된 경우
      */
-    public String refreshAccessToken(String refreshTokenValue) {
+    public TokenPair refreshTokens(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
                 .orElseThrow(JwtAuthenticationException::refreshTokenInvalid);
 
@@ -103,7 +105,29 @@ public class RefreshTokenService {
             throw JwtAuthenticationException.refreshTokenInvalid();
         }
 
-        return jwtTokenProvider.generateAccessToken(refreshToken.getUserId());
+        String userId = refreshToken.getUserId();
+        
+        // 기존 리프레시 토큰 삭제 (토큰 로테이션)
+        refreshTokenRepository.deleteByToken(refreshTokenValue);
+        
+        // 새로운 토큰 페어 생성
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId);
+        String newRefreshToken = createRefreshToken(userId);
+        
+        return new TokenPair(newAccessToken, newRefreshToken);
+    }
+
+    /**
+     * 리프레시 토큰을 사용하여 액세스 토큰만 갱신 (하위 호환성)
+     *
+     * @deprecated 보안상 refreshTokens() 사용 권장
+     * @param refreshTokenValue 검증할 리프레시 토큰 문자열
+     * @return 새 액세스 토큰 문자열
+     * @throws JwtAuthenticationException 토큰이 유효하지 않거나 만료된 경우
+     */
+    @Deprecated
+    public String refreshAccessToken(String refreshTokenValue) {
+        return refreshTokens(refreshTokenValue).getAccessToken();
     }
 
     /**

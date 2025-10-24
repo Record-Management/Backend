@@ -10,6 +10,7 @@ import com.recordmanagement.habitlog.config.exception.ErrorCode;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * JWT 토큰 생성 및 검증 제공자
@@ -82,8 +83,10 @@ public class JwtTokenProvider {
     public String generateAccessToken(String userId) {
         Date now = new Date();
         Date expireDate = new Date(now.getTime() + accessTokenExpireTime);
+        String jti = UUID.randomUUID().toString(); // 토큰 고유 ID 생성
 
         return Jwts.builder()
+                .setId(jti) // JWT ID 설정 (블랙리스트용)
                 .setSubject(userId)
                 .setIssuedAt(now)
                 .setExpiration(expireDate)
@@ -150,6 +153,23 @@ public class JwtTokenProvider {
                 .getBody();
 
         return claims.getSubject();
+    }
+
+    /**
+     * 토큰에서 JWT ID(jti) 추출
+     *
+     * @param token JWT 토큰 문자열
+     * @return JWT ID (jti claim)
+     * @throws JwtException 토큰이 유효하지 않은 경우 발생
+     */
+    public String getTokenIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.getId();
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.config.jwt;
 
+import com.recordmanagement.habitlog.domain.auth.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 요청마다 호출되는 필터 메서드
@@ -54,16 +56,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
             try {
-                String userId = jwtTokenProvider.getUserIdAsStringFromToken(token);
+                // 블랙리스트 확인
+                if (tokenBlacklistService.isTokenBlacklisted(token)) {
+                    log.debug("블랙리스트된 토큰 접근 시도");
+                    SecurityContextHolder.clearContext();
+                } else {
+                    String userId = jwtTokenProvider.getUserIdAsStringFromToken(token);
 
-                // 인증 객체 생성 (권한 정보는 빈 리스트로 처리)
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+                    // 인증 객체 생성 (권한 정보는 빈 리스트로 처리)
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
 
-                // SecurityContext에 인증 정보 저장
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    // SecurityContext에 인증 정보 저장
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.debug("JWT 토큰 인증 성공 - userId={}", userId);
+                    log.debug("JWT 토큰 인증 성공 - userId={}", userId);
+                }
             } catch (Exception e) {
                 log.error("JWT 토큰 인증 중 오류 발생", e);
                 SecurityContextHolder.clearContext();

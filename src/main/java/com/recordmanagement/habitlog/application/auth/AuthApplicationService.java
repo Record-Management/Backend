@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.application.auth.dto.SocialLoginResult;
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenCommand;
 import com.recordmanagement.habitlog.application.auth.dto.RefreshTokenResult;
 import com.recordmanagement.habitlog.application.auth.dto.LogoutCommand;
+import com.recordmanagement.habitlog.domain.auth.model.TokenPair;
 import com.recordmanagement.habitlog.application.auth.dto.AppleTransferSubCommand;
 import com.recordmanagement.habitlog.application.user.UserApplicationService;
 import com.recordmanagement.habitlog.application.user.dto.UserRegistrationCommand;
@@ -13,6 +14,7 @@ import com.recordmanagement.habitlog.config.jwt.JwtTokenProvider;
 import com.recordmanagement.habitlog.domain.auth.model.SocialUserInfo;
 import com.recordmanagement.habitlog.domain.auth.service.SocialLoginService;
 import com.recordmanagement.habitlog.domain.auth.service.RefreshTokenService;
+import com.recordmanagement.habitlog.domain.auth.service.TokenBlacklistService;
 import com.recordmanagement.habitlog.domain.user.model.SocialType;
 import com.recordmanagement.habitlog.config.exception.CustomException;
 import com.recordmanagement.habitlog.config.exception.ErrorCode;
@@ -47,15 +49,18 @@ public class AuthApplicationService {
     private final UserApplicationService userApplicationService;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     public AuthApplicationService(SocialLoginService socialLoginService,
                                   UserApplicationService userApplicationService,
                                   JwtTokenProvider jwtTokenProvider,
-                                  RefreshTokenService refreshTokenService) {
+                                  RefreshTokenService refreshTokenService,
+                                  TokenBlacklistService tokenBlacklistService) {
         this.socialLoginService = socialLoginService;
         this.userApplicationService = userApplicationService;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     /**
@@ -129,12 +134,12 @@ public class AuthApplicationService {
     }
 
     /**
-     * 액세스 토큰 갱신 처리
-     * 리프레시 토큰 검증 후 새로운 액세스 토큰 발급
-     * 토큰 만료 시간도 함께 반환
+     * 액세스 토큰 갱신 처리 (토큰 로테이션 적용)
+     * 리프레시 토큰 검증 후 새로운 액세스 토큰과 리프레시 토큰 발급
+     * 보안 강화를 위해 기존 리프레시 토큰은 무효화되고 새로운 리프레시 토큰 발급
      *
      * @param command 리프레시 토큰 갱신 요청
-     * @return 갱신 결과 (새 액세스 토큰, 만료 시간 초 단위)
+     * @return 갱신 결과 (새 액세스 토큰, 새 리프레시 토큰, 만료 시간 초 단위)
      */
     public RefreshTokenResult refreshAccessToken(RefreshTokenCommand command) {
         String refreshTokenValue = command.refreshToken();
@@ -146,22 +151,23 @@ public class AuthApplicationService {
         UserResponse user = userApplicationService.findByIdForRefreshToken(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         
-        // 새 액세스 토큰 발급
-        String newAccessToken = refreshTokenService.refreshAccessToken(refreshTokenValue);
+        // 토큰 로테이션: 새 액세스 토큰과 리프레시 토큰 발급
+        TokenPair tokenPair = refreshTokenService.refreshTokens(refreshTokenValue);
         Long expiresIn = 3600L; // 1시간
         
-        return RefreshTokenResult.of(newAccessToken, expiresIn, user);
+        return RefreshTokenResult.ofWithRotation(tokenPair.getAccessToken(), tokenPair.getRefreshToken(), expiresIn, user);
     }
 
     /**
-     * 로그아웃 처리
+     * 로그아웃 처리 (블랙리스트 적용)
      * 단일 디바이스 또는 전체 디바이스 로그아웃 지원
      * 전체 로그아웃 시 JWT 토큰에서 사용자 ID 추출해 모든 토큰 무효화
      * 단일 로그아웃 시 해당 토큰만 무효화
+     * 액세스 토큰을 블랙리스트에 추가하여 즉시 무효화
      * 토큰 파싱 실패 시에도 무조건 해당 토큰 삭제 시도
      * 로그아웃 시 FCM 토큰도 함께 삭제하여 더이상 푸시 알림을 받지 않도록 처리
      *
-     * @param command 로그아웃 요청 정보 (리프레시 토큰, 전체 로그아웃 여부)
+     * @param command 로그아웃 요청 정보 (리프레시 토큰, 전체 로그아웃 여부, 액세스 토큰)
      */
     public void logout(LogoutCommand command) {
         String userId = null;
@@ -172,11 +178,24 @@ public class AuthApplicationService {
             log.warn("로그아웃 시 토큰에서 사용자 ID 추출 실패: {}", e.getMessage());
         }
         
+        // 액세스 토큰 블랙리스트 추가 (토큰 탈취 방어)
+        if (command.accessToken() != null && !command.accessToken().trim().isEmpty()) {
+            try {
+                tokenBlacklistService.blacklistToken(command.accessToken());
+                log.info("로그아웃 시 액세스 토큰 블랙리스트 등록 완료");
+            } catch (Exception e) {
+                log.warn("액세스 토큰 블랙리스트 등록 실패: {}", e.getMessage());
+            }
+        }
+        
         // 리프레시 토큰 무효화
         if (command.allDevices()) {
             try {
                 if (userId != null) {
+                    // 전체 디바이스 로그아웃 시 모든 액세스 토큰도 블랙리스트 추가
+                    tokenBlacklistService.blacklistAllUserTokens(userId);
                     refreshTokenService.invalidateAllRefreshTokens(userId);
+                    log.info("전체 디바이스 로그아웃: 모든 토큰 무효화 완료, userId={}", userId);
                 } else {
                     refreshTokenService.invalidateRefreshToken(command.refreshToken());
                 }

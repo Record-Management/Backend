@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 /**
@@ -189,12 +190,24 @@ public class AuthController {
      * @return 새로운 액세스 토큰 응답 DTO
      */
     @Operation(
-        summary = "액세스 토큰 갱신", 
-        description = "유효한 리프레시 토큰으로 액세스 토큰 재발급",
+        summary = "액세스 토큰 갱신 (토큰 로테이션 적용)", 
+        description = """
+            유효한 리프레시 토큰으로 액세스 토큰 재발급
+            
+            ### 🔐 보안 강화: 토큰 로테이션
+            - 새로운 액세스 토큰과 함께 새로운 리프레시 토큰도 발급됩니다
+            - 기존 리프레시 토큰은 자동으로 무효화됩니다 (재사용 불가)
+            - 토큰 탈취 공격을 방어하기 위한 보안 정책입니다
+            
+            ### ⚠️ 중요 사항
+            - 응답으로 받은 새로운 리프레시 토큰을 반드시 저장해야 합니다
+            - 기존 리프레시 토큰은 더 이상 사용할 수 없습니다
+            - 클라이언트에서 토큰을 안전하게 업데이트 처리해야 합니다
+            """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
-                description = "토큰 갱신 성공",
+                description = "토큰 갱신 성공 (토큰 로테이션 적용)",
                 content = @io.swagger.v3.oas.annotations.media.Content(
                     mediaType = "application/json",
                     examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
@@ -204,7 +217,8 @@ public class AuthController {
                           "code": "S200",
                           "message": "요청이 성공적으로 처리되었습니다.",
                           "data": {
-                            "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9.new_access_token...",
+                            "refreshToken": "eyJhbGciOiJIUzI1NiJ9.new_refresh_token...",
                             "expiresIn": 3600,
                             "user": {
                               "id": "user_id",
@@ -217,6 +231,10 @@ public class AuthController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "리프레시 토큰이 유효하지 않거나 만료됨"
             )
         }
     )
@@ -243,13 +261,18 @@ public class AuthController {
      * @return 빈 성공 응답
      */
     @Operation(
-        summary = "로그아웃", 
+        summary = "로그아웃 (토큰 블랙리스트 적용)", 
         description = """
             리프레시 토큰을 폐기하여 로그아웃 처리합니다.
             
+            ### 🔐 보안 강화: 토큰 블랙리스트
+            - 로그아웃 시 액세스 토큰을 블랙리스트에 추가합니다
+            - 블랙리스트된 토큰은 즉시 사용 불가능합니다
+            - 토큰 탈취 시에도 안전하게 무효화됩니다
+            
             ### 인증 방식
-            - Authorization 헤더 불필요
-            - 요청 본문의 refreshToken으로만 인증 처리
+            - Authorization 헤더의 액세스 토큰 (블랙리스트용)
+            - 요청 본문의 refreshToken (무효화용)
             
             ### 로그아웃 옵션
             - **단일 기기 로그아웃 (allDevices: false)**: 현재 기기만 로그아웃
@@ -258,6 +281,7 @@ public class AuthController {
             ### 특징
             - 만료된 토큰도 로그아웃 처리 가능
             - 토큰 탈취 의심 시 allDevices=true 권장
+            - 즉시 토큰 무효화로 보안 강화
             """,
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -280,13 +304,18 @@ public class AuthController {
     )
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-            @Valid @RequestBody LogoutRequest request) {
+            @Valid @RequestBody LogoutRequest request,
+            HttpServletRequest httpRequest) {
 
         log.info("로그아웃 요청: allDevices={}", request.isAllDevices());
 
+        // Authorization 헤더에서 액세스 토큰 추출 (블랙리스트용)
+        String accessToken = extractAccessTokenFromHeader(httpRequest);
+
         LogoutCommand command = new LogoutCommand(
                 request.getRefreshToken(),
-                request.isAllDevices()
+                request.isAllDevices(),
+                accessToken
         );
 
         authApplicationService.logout(command);
@@ -294,6 +323,17 @@ public class AuthController {
         log.info("로그아웃 성공");
 
         return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    /**
+     * Authorization 헤더에서 액세스 토큰 추출
+     */
+    private String extractAccessTokenFromHeader(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        return null;
     }
 
     /**

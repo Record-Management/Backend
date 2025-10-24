@@ -24,6 +24,9 @@ public class RefreshTokenResult {
     @Schema(description = "새로 발급된 JWT 액세스 토큰", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private final String accessToken;
 
+    @Schema(description = "새로 발급된 리프레시 토큰 (토큰 로테이션 적용)", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+    private final String refreshToken;
+
     @Schema(description = "토큰 만료까지 남은 시간(초)", example = "3600")
     private final Long expiresIn;
 
@@ -31,7 +34,7 @@ public class RefreshTokenResult {
     private final UserResponse user;
 
     /**
-     * 갱신 결과 객체 생성 팩토리 메서드
+     * 갱신 결과 객체 생성 팩토리 메서드 (하위 호환성)
      *
      * @param accessToken 새 액세스 토큰 문자열
      * @param expiresIn 토큰 만료까지 남은 시간(초)
@@ -40,6 +43,25 @@ public class RefreshTokenResult {
     public static RefreshTokenResult of(String accessToken, Long expiresIn, UserResponse user) {
         return RefreshTokenResult.builder()
                 .accessToken(accessToken)
+                .refreshToken(null)
+                .expiresIn(expiresIn)
+                .user(user)
+                .build();
+    }
+
+    /**
+     * 토큰 로테이션 갱신 결과 객체 생성 팩토리 메서드
+     *
+     * @param accessToken 새 액세스 토큰 문자열
+     * @param refreshToken 새 리프레시 토큰 문자열
+     * @param expiresIn 토큰 만료까지 남은 시간(초)
+     * @param user 사용자 정보
+     * @return RefreshTokenResult 객체
+     */
+    public static RefreshTokenResult ofWithRotation(String accessToken, String refreshToken, Long expiresIn, UserResponse user) {
+        return RefreshTokenResult.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .expiresIn(expiresIn)
                 .user(user)
                 .build();
