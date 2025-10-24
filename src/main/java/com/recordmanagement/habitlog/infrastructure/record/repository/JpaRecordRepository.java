@@ -28,4 +28,7 @@ public interface JpaRecordRepository extends JpaRepository<RecordEntity, String>
     
     // 특정 날짜의 특정 타입 기록 개수 조회
     int countByUserIdAndRecordDateAndType(String userId, LocalDate recordDate, RecordType type);
+    
+    // 사용자 ID로 모든 기록 삭제 (회원 탈퇴 시)
+    void deleteByUserId(String userId);
 }

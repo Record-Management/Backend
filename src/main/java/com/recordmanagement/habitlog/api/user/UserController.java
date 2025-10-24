@@ -49,9 +49,9 @@ import jakarta.validation.Valid;
  * - SCHEDULE: 일정 기록 - 추후 구현 예정
  * 
  * 회원 탈퇴 처리:
- * - 사용자 데이터 완전 삭제
- * - 관련 기록 데이터 모두 제거
- * - JWT 토큰 무효화
+ * - Soft delete 방식 (7일 보관 정책)
+ * - 즉시: RefreshToken만 삭제, 계정 비활성화
+ * - 7일 후: 스케줄러가 모든 관련 데이터 완전 삭제
  * 
  * 인증 요구사항:
  * - 모든 API는 JWT Bearer 토큰 인증 필요
@@ -95,7 +95,8 @@ public class UserController {
             1. 소셜 플랫폼 연결 해제 시도
             2. 사용자 계정 탈퇴 표시 (deletedAt 설정)
             3. 7일 후 삭제 예약 (deletionScheduledAt 설정)
-            4. 즉시 로그아웃 처리 (토큰 무효화)
+            4. 즉시 로그아웃 처리 (RefreshToken 삭제)
+            5. 사용자 관련 데이터는 7일 보관 후 스케줄러에서 완전 삭제
             
             ### 재가입 복구
             - 7일 이내 동일 소셜 계정으로 로그인 시 자동 복구

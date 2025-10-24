@@ -60,4 +60,9 @@ public class NotificationSettingsRepositoryImpl implements NotificationSettingsR
     public boolean existsByUserId(UserId userId) {
         return jpaRepository.existsByUserId(userId.getValue());
     }
+    
+    @Override
+    public void deleteByUserId(String userId) {
+        jpaRepository.deleteByUserId(userId);
+    }
 }

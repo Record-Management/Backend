@@ -68,4 +68,9 @@ public class NotificationHistoryRepositoryImpl implements NotificationHistoryRep
     public void deleteByUserId(UserId userId) {
         jpaRepository.deleteByUserId(userId.getValue());
     }
+    
+    @Override
+    public void deleteByUserId(String userId) {
+        jpaRepository.deleteByUserId(userId);
+    }
 }

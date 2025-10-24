@@ -3,6 +3,11 @@ package com.recordmanagement.habitlog.config.scheduler;
 import com.recordmanagement.habitlog.domain.user.repository.UserRepository;
 import com.recordmanagement.habitlog.domain.user.model.User;
 import com.recordmanagement.habitlog.domain.auth.repository.RefreshTokenRepository;
+import com.recordmanagement.habitlog.domain.record.repository.RecordRepository;
+import com.recordmanagement.habitlog.domain.exercise.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.habit.repository.HabitRecordRepository;
+import com.recordmanagement.habitlog.domain.notification.repository.NotificationSettingsRepository;
+import com.recordmanagement.habitlog.domain.notification.repository.NotificationHistoryRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -27,11 +32,26 @@ public class UserCleanupScheduler {
     
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RecordRepository recordRepository;
+    private final ExerciseRecordRepository exerciseRecordRepository;
+    private final HabitRecordRepository habitRecordRepository;
+    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationHistoryRepository notificationHistoryRepository;
     
     public UserCleanupScheduler(UserRepository userRepository, 
-                               RefreshTokenRepository refreshTokenRepository) {
+                               RefreshTokenRepository refreshTokenRepository,
+                               RecordRepository recordRepository,
+                               ExerciseRecordRepository exerciseRecordRepository,
+                               HabitRecordRepository habitRecordRepository,
+                               NotificationSettingsRepository notificationSettingsRepository,
+                               NotificationHistoryRepository notificationHistoryRepository) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.recordRepository = recordRepository;
+        this.exerciseRecordRepository = exerciseRecordRepository;
+        this.habitRecordRepository = habitRecordRepository;
+        this.notificationSettingsRepository = notificationSettingsRepository;
+        this.notificationHistoryRepository = notificationHistoryRepository;
     }
     
     /**
@@ -83,11 +103,8 @@ public class UserCleanupScheduler {
             // 1. RefreshToken 삭제
             refreshTokenRepository.deleteByUserId(userId);
             
-            // 2. TODO: 추후 추가 관련 데이터 삭제
-            // - 일상 기록 삭제 (Record)
-            // - 운동 기록 삭제 (ExerciseRecord) 
-            // - 습관 기록 삭제 (HabitRecord)
-            // - S3 이미지 파일 삭제
+            // 2. 사용자 관련 데이터 완전 삭제
+            deleteRelatedData(userId);
             
             // 3. 사용자 계정 영구 삭제
             userRepository.delete(user);
@@ -98,6 +115,41 @@ public class UserCleanupScheduler {
             log.error("사용자 데이터 삭제 실패: userId={}, error={}", 
                     user.getId().getValue(), e.getMessage(), e);
             // 개별 사용자 삭제 실패 시에도 다른 사용자는 계속 처리
+        }
+    }
+    
+    /**
+     * 사용자와 연관된 모든 데이터 삭제
+     * 
+     * @param userId 사용자 ID
+     */
+    private void deleteRelatedData(String userId) {
+        try {
+            // 일상 기록 삭제
+            recordRepository.deleteByUserId(userId);
+            log.debug("일상 기록 삭제 완료: userId={}", userId);
+            
+            // 운동 기록 삭제 (이미지 포함)
+            exerciseRecordRepository.deleteByUserId(userId);
+            log.debug("운동 기록 삭제 완료: userId={}", userId);
+            
+            // 습관 기록 삭제
+            habitRecordRepository.deleteByUserId(userId);
+            log.debug("습관 기록 삭제 완료: userId={}", userId);
+            
+            // 알림 설정 삭제
+            notificationSettingsRepository.deleteByUserId(userId);
+            log.debug("알림 설정 삭제 완료: userId={}", userId);
+            
+            // 알림 히스토리 삭제
+            notificationHistoryRepository.deleteByUserId(userId);
+            log.debug("알림 히스토리 삭제 완료: userId={}", userId);
+            
+            log.info("사용자 관련 데이터 삭제 완료: userId={}", userId);
+            
+        } catch (Exception e) {
+            log.error("사용자 관련 데이터 삭제 실패: userId={}, error={}", userId, e.getMessage(), e);
+            throw e; // 상위에서 처리하도록 재발생
         }
     }
 }

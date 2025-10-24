@@ -20,4 +20,7 @@ public interface JpaExerciseRecordRepository extends JpaRepository<ExerciseRecor
     boolean existsByExerciseRecordIdAndUserId(String exerciseRecordId, String userId);
     
     int countByUserIdAndRecordDate(String userId, LocalDate recordDate);
+    
+    // 사용자 ID로 모든 운동 기록 삭제 (회원 탈퇴 시)
+    void deleteByUserId(String userId);
 }

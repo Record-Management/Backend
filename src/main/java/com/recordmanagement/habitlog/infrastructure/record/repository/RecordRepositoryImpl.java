@@ -72,4 +72,9 @@ public class RecordRepositoryImpl implements RecordRepository {
     public boolean existsById(RecordId recordId) {
         return jpaRecordRepository.existsById(recordId.value());
     }
+    
+    @Override
+    public void deleteByUserId(String userId) {
+        jpaRecordRepository.deleteByUserId(userId);
+    }
 }

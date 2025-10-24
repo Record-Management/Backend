@@ -67,4 +67,12 @@ public interface NotificationHistoryRepository {
      * @param userId 사용자 ID
      */
     void deleteByUserId(UserId userId);
+    
+    /**
+     * 사용자 ID(String)로 알림 히스토리 삭제
+     * 회원 탈퇴 시 사용
+     *
+     * @param userId 사용자 ID (String)
+     */
+    void deleteByUserId(String userId);
 }

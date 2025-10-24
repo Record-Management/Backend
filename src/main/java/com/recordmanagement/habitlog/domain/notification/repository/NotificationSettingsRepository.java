@@ -48,6 +48,14 @@ public interface NotificationSettingsRepository {
      * @param userId 사용자 ID
      */
     void deleteByUserId(UserId userId);
+    
+    /**
+     * 사용자 ID(String)로 알림 설정 삭제
+     * 회원 탈퇴 시 사용
+     *
+     * @param userId 사용자 ID (String)
+     */
+    void deleteByUserId(String userId);
 
     /**
      * 사용자의 알림 설정 존재 여부 확인

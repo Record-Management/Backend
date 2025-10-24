@@ -113,4 +113,9 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository {
     public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
         return jpaExerciseRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
     }
+    
+    @Override
+    public void deleteByUserId(String userId) {
+        jpaExerciseRecordRepository.deleteByUserId(userId);
+    }
 }

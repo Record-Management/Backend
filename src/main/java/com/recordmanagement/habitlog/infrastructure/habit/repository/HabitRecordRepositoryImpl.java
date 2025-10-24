@@ -109,4 +109,9 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
         return jpaHabitRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
     }
+    
+    @Override
+    public void deleteByUserId(String userId) {
+        jpaHabitRecordRepository.deleteByUserId(userId);
+    }
 }

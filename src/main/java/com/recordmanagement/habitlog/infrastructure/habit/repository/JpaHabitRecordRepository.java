@@ -20,4 +20,7 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
     boolean existsByHabitRecordIdAndUserId(String habitRecordId, String userId);
     
     int countByUserIdAndRecordDate(String userId, LocalDate recordDate);
+    
+    // 사용자 ID로 모든 습관 기록 삭제 (회원 탈퇴 시)
+    void deleteByUserId(String userId);
 }

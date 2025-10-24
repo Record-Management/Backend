@@ -25,5 +25,7 @@ public interface RecordRepository {
     
     void deleteById(RecordId recordId);
     
+    void deleteByUserId(String userId);
+    
     boolean existsById(RecordId recordId);
 }

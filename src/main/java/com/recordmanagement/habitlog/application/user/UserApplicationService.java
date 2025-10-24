@@ -272,10 +272,9 @@ public class UserApplicationService {
         // RefreshToken 삭제
         refreshTokenRepository.deleteByUserId(user.getId().getValue());
         
-        // TODO: 추후 추가 데이터 삭제
-        // - 사용자 습관 데이터
-        // - 사용자 설정 데이터
-        // - 기타 연관 데이터
+        // 회원탈퇴 즉시에는 RefreshToken만 삭제
+        // 사용자 습관, 기록 등은 7일 유예기간 동안 복구 가능하도록 유지
+        // 7일 후 스케줄러에서 모든 연관 데이터 완전 삭제
         
         log.info("사용자 관련 데이터 삭제 완료");
     }
