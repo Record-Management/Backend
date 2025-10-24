@@ -16,11 +16,7 @@ import java.io.InputStream;
  * Firebase 설정 클래스
  * 
  * Firebase Admin SDK를 초기화하고 FirebaseMessaging 빈을 생성합니다.
- * 
- * TODO: Firebase 프로젝트 설정 후 활성화
- * 1. Firebase Console에서 프로젝트 생성
- * 2. 서비스 계정 키 다운로드 → firebase-service-account.json
- * 3. @Configuration 주석 해제
+ * firebase-service-account.json 파일을 사용하여 FCM 푸시 알림 서비스를 제공합니다.
  * 
  * @since 1.0.0
  */

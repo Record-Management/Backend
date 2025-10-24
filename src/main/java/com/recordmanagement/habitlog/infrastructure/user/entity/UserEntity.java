@@ -117,7 +117,7 @@ public class UserEntity {
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
                 .notificationEnabled(user.getNotificationEnabled())
-                .fcmToken(null)  // TODO: Firebase 설정 후 user.getFcmToken()으로 변경
+                .fcmToken(null)  // FCM 토큰은 보안상 응답에 포함하지 않음
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
                 .withdrawalReason(user.getWithdrawalReason())
