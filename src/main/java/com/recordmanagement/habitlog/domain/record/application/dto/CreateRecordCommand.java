@@ -1,0 +1,48 @@
+package com.recordmanagement.habitlog.domain.record.application.dto;
+
+import com.recordmanagement.habitlog.global.config.exception.CustomException;
+import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
+import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
+import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+public record CreateRecordCommand(
+    UserId userId,
+    RecordType type,
+    String emotion,
+    String content,
+    List<String> imageUrls,
+    LocalDate recordDate,
+    LocalTime recordTime
+) {
+    
+    public CreateRecordCommand {
+        if (userId == null) {
+            throw new CustomException(ErrorCode.USER_ID_NULL_OR_EMPTY);
+        }
+        if (type == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (content == null || content.trim().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (content.length() > 1000) {
+            throw new CustomException(ErrorCode.VALIDATION_FAIL);
+        }
+        if (recordDate == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (recordTime == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (imageUrls == null) {
+            imageUrls = List.of();
+        }
+        if (imageUrls.size() > 3) {
+            throw new CustomException(ErrorCode.FILE_COUNT_EXCEEDED);
+        }
+    }
+}
