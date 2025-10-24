@@ -12,8 +12,7 @@ import java.util.Map;
  * 푸시 알림 서비스
  * 
  * Firebase Cloud Messaging을 사용하여 푸시 알림을 발송합니다.
- * 
- * TODO: Firebase 설정 완료 후 @Service 주석 해제
+ * 단건 및 다중 발송을 지원하며, 발송 결과를 로깅합니다.
  * 
  * @since 1.0.0
  */

@@ -31,7 +31,6 @@ public class AppleUnlinkService {
         log.info("애플 계정 연결해제 요청 기록: socialId={}", socialId);
         log.info("애플은 사용자가 직접 설정에서 연결해제해야 합니다.");
         
-        // TODO: 향후 애플 Server-to-Server API가 필요한 경우 여기에 구현
         // 현재는 서버에서 직접 연결해제할 수 있는 공식 API가 제한적임
         
         // 연결해제 실패로 처리하지 않고 정상 처리
