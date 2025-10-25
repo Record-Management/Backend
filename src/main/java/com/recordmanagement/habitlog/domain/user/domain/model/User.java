@@ -2,15 +2,13 @@ package com.recordmanagement.habitlog.domain.user.domain.model;
 
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
-import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
-import java.time.LocalDate;
 
 /**
  * 사용자 도메인 핵심 엔터티 (Aggregate Root)
@@ -88,19 +86,7 @@ public class User {
 
     @Schema(description = "회원 탈퇴 사유", example = "서비스 불만족")
     private String withdrawalReason;
-    
-    // Getter 메서드들
-    public LocalDateTime getDeletedAt() {
-        return deletedAt;
-    }
-    
-    public LocalDateTime getDeletionScheduledAt() {
-        return deletionScheduledAt;
-    }
-    
-    public String getWithdrawalReason() {
-        return withdrawalReason;
-    }
+
 
     /**
      * 신규 사용자 생성 생성자

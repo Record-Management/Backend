@@ -3,9 +3,15 @@ package com.recordmanagement.habitlog.api.record.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class CreateRecordRequest {
     
     @NotBlank(message = "내용은 필수입니다")
@@ -22,24 +28,5 @@ public class CreateRecordRequest {
     
     @NotNull(message = "기록 시간은 필수입니다")
     private String recordTime;
-    
-    // 기본 생성자
-    public CreateRecordRequest() {
-    }
-    
-    // Getters and Setters
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-    
-    public String getEmotion() { return emotion; }
-    public void setEmotion(String emotion) { this.emotion = emotion; }
-    
-    public List<String> getImageUrls() { return imageUrls; }
-    public void setImageUrls(List<String> imageUrls) { this.imageUrls = imageUrls; }
-    
-    public String getRecordDate() { return recordDate; }
-    public void setRecordDate(String recordDate) { this.recordDate = recordDate; }
-    
-    public String getRecordTime() { return recordTime; }
-    public void setRecordTime(String recordTime) { this.recordTime = recordTime; }
+
 }

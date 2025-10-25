@@ -5,6 +5,11 @@ import com.recordmanagement.habitlog.domain.record.domain.model.RecordId;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,6 +23,10 @@ import java.util.List;
     @Index(name = "idx_user_id_type", columnList = "user_id, type"),
     @Index(name = "idx_user_id_created_at", columnList = "user_id, created_at")
 })
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RecordEntity {
     
     @Id
@@ -52,37 +61,19 @@ public class RecordEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    protected RecordEntity() {
-    }
-    
-    public RecordEntity(String id, String userId, RecordType type, String emotion,
-                       String content, String imageUrls, LocalDate recordDate, LocalTime recordTime,
-                       LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.userId = userId;
-        this.type = type;
-        this.emotion = emotion;
-        this.content = content;
-        this.imageUrls = imageUrls;
-        this.recordDate = recordDate;
-        this.recordTime = recordTime;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
-    
     public static RecordEntity from(Record record) {
-        return new RecordEntity(
-            record.getId().value(),
-            record.getUserId().getValue(),
-            record.getType(),
-            record.getEmotion(),
-            record.getContent(),
-            String.join(",", record.getImageUrls()),
-            record.getRecordDate(),
-            record.getRecordTime(),
-            record.getCreatedAt(),
-            record.getUpdatedAt()
-        );
+        return RecordEntity.builder()
+            .id(record.getId().value())
+            .userId(record.getUserId().getValue())
+            .type(record.getType())
+            .emotion(record.getEmotion())
+            .content(record.getContent())
+            .imageUrls(String.join(",", record.getImageUrls()))
+            .recordDate(record.getRecordDate())
+            .recordTime(record.getRecordTime())
+            .createdAt(record.getCreatedAt())
+            .updatedAt(record.getUpdatedAt())
+            .build();
     }
     
     public Record toDomain() {
@@ -103,16 +94,4 @@ public class RecordEntity {
             this.updatedAt
         );
     }
-    
-    // Getters
-    public String getId() { return id; }
-    public String getUserId() { return userId; }
-    public RecordType getType() { return type; }
-    public String getEmotion() { return emotion; }
-    public String getContent() { return content; }
-    public String getImageUrls() { return imageUrls; }
-    public LocalDate getRecordDate() { return recordDate; }
-    public LocalTime getRecordTime() { return recordTime; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

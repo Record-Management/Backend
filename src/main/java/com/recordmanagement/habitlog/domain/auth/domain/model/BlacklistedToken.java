@@ -48,40 +48,5 @@ public record BlacklistedToken(
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(expiresAt);
     }
-    
-    /**
-     * 토큰 ID 반환
-     * 
-     * @return 토큰 ID
-     */
-    public String getTokenId() {
-        return tokenId;
-    }
-    
-    /**
-     * 사용자 ID 반환
-     * 
-     * @return 사용자 ID
-     */
-    public String getUserId() {
-        return userId;
-    }
-    
-    /**
-     * 만료 시간 반환
-     * 
-     * @return 만료 시간
-     */
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-    
-    /**
-     * 블랙리스트 등록 시간 반환
-     * 
-     * @return 블랙리스트 등록 시간
-     */
-    public LocalDateTime getBlacklistedAt() {
-        return blacklistedAt;
-    }
+
 }

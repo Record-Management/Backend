@@ -1,11 +1,18 @@
 package com.recordmanagement.habitlog.domain.habit.domain.model;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.With;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+@Getter
+@With
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class HabitRecord {
     
     private final HabitRecordId id;
@@ -20,22 +27,6 @@ public class HabitRecord {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
-    public HabitRecord(HabitRecordId id, UserId userId, HabitType habitType,
-                      boolean notificationEnabled, LocalTime notificationTime, String memo,
-                      LocalDate recordDate, boolean isCompleted, boolean isMainRecord, 
-                      LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.userId = userId;
-        this.habitType = habitType;
-        this.notificationEnabled = notificationEnabled;
-        this.notificationTime = notificationTime;
-        this.memo = memo;
-        this.recordDate = recordDate;
-        this.isCompleted = isCompleted;
-        this.isMainRecord = isMainRecord;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
     
     public static HabitRecord create(UserId userId, HabitType habitType,
                                    boolean notificationEnabled, LocalTime notificationTime,
@@ -56,96 +47,40 @@ public class HabitRecord {
         );
     }
     
-    public HabitRecord updateHabitType(HabitType habitType) {
+    public static HabitRecord restore(HabitRecordId id, UserId userId, HabitType habitType,
+                                    boolean notificationEnabled, LocalTime notificationTime,
+                                    String memo, LocalDate recordDate, boolean isCompleted,
+                                    boolean isMainRecord, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new HabitRecord(
-            this.id,
-            this.userId,
-            habitType,
-            this.notificationEnabled,
-            this.notificationTime,
-            this.memo,
-            this.recordDate,
-            this.isCompleted,
-            this.isMainRecord,
-            this.createdAt,
-            LocalDateTime.now()
+            id, userId, habitType, notificationEnabled, notificationTime,
+            memo, recordDate, isCompleted, isMainRecord, createdAt, updatedAt
         );
+    }
+    
+    public HabitRecord updateHabitType(HabitType habitType) {
+        return this.withHabitType(habitType)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public HabitRecord updateNotificationSettings(boolean notificationEnabled, LocalTime notificationTime) {
-        return new HabitRecord(
-            this.id,
-            this.userId,
-            this.habitType,
-            notificationEnabled,
-            notificationTime,
-            this.memo,
-            this.recordDate,
-            this.isCompleted,
-            this.isMainRecord,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withNotificationEnabled(notificationEnabled)
+                  .withNotificationTime(notificationTime)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public HabitRecord updateMemo(String memo) {
-        return new HabitRecord(
-            this.id,
-            this.userId,
-            this.habitType,
-            this.notificationEnabled,
-            this.notificationTime,
-            memo,
-            this.recordDate,
-            this.isCompleted,
-            this.isMainRecord,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withMemo(memo)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public HabitRecord updateCompletionStatus(boolean isCompleted) {
-        return new HabitRecord(
-            this.id,
-            this.userId,
-            this.habitType,
-            this.notificationEnabled,
-            this.notificationTime,
-            this.memo,
-            this.recordDate,
-            isCompleted,
-            this.isMainRecord,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withCompleted(isCompleted)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public HabitRecord updateMainRecordStatus(boolean isMainRecord) {
-        return new HabitRecord(
-            this.id,
-            this.userId,
-            this.habitType,
-            this.notificationEnabled,
-            this.notificationTime,
-            this.memo,
-            this.recordDate,
-            this.isCompleted,
-            isMainRecord,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withMainRecord(isMainRecord)
+                  .withUpdatedAt(LocalDateTime.now());
     }
-    
-    // Getters
-    public HabitRecordId getId() { return id; }
-    public UserId getUserId() { return userId; }
-    public HabitType getHabitType() { return habitType; }
-    public boolean isNotificationEnabled() { return notificationEnabled; }
-    public LocalTime getNotificationTime() { return notificationTime; }
-    public String getMemo() { return memo; }
-    public LocalDate getRecordDate() { return recordDate; }
-    public boolean isCompleted() { return isCompleted; }
-    public boolean isMainRecord() { return isMainRecord; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
 }

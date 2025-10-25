@@ -2,12 +2,14 @@ package com.recordmanagement.habitlog.domain.record.domain.model;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+@Getter
 public class Record {
     
     private final RecordId id;
@@ -113,16 +115,9 @@ public class Record {
         );
     }
     
-    
-    // Getters
-    public RecordId getId() { return id; }
-    public UserId getUserId() { return userId; }
-    public RecordType getType() { return type; }
-    public String getEmotion() { return emotion; }
-    public String getContent() { return content; }
-    public List<String> getImageUrls() { return List.copyOf(imageUrls); }
-    public LocalDate getRecordDate() { return recordDate; }
-    public LocalTime getRecordTime() { return recordTime; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // getImageUrls()는 방어적 복사가 필요하므로 별도 구현
+    public List<String> getImageUrls() { 
+        return List.copyOf(imageUrls); 
+    }
 }

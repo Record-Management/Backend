@@ -127,7 +127,7 @@ public class RefreshTokenService {
      */
     @Deprecated
     public String refreshAccessToken(String refreshTokenValue) {
-        return refreshTokens(refreshTokenValue).getAccessToken();
+        return refreshTokens(refreshTokenValue).accessToken();
     }
 
     /**

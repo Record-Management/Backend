@@ -85,25 +85,25 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
     }
     
     private ExerciseRecordEntity toEntity(ExerciseRecord exerciseRecord) {
-        ExerciseRecordEntity entity = new ExerciseRecordEntity(
-            exerciseRecord.getId().getValue(),
-            exerciseRecord.getUserId().getValue(),
-            exerciseRecord.getExerciseType(),
-            exerciseRecord.getCaloriesBurned(),
-            exerciseRecord.getExerciseTimeMinutes(),
-            exerciseRecord.getStepCount(),
-            exerciseRecord.getWeight(),
-            exerciseRecord.getDailyNote(),
-            exerciseRecord.getImageUrls(),
-            exerciseRecord.getRecordDate(),
-            exerciseRecord.getRecordTime()
-        );
-        
-        return entity;
+        return ExerciseRecordEntity.builder()
+            .exerciseRecordId(exerciseRecord.getId().getValue())
+            .userId(exerciseRecord.getUserId().getValue())
+            .exerciseType(exerciseRecord.getExerciseType())
+            .caloriesBurned(exerciseRecord.getCaloriesBurned())
+            .exerciseTimeMinutes(exerciseRecord.getExerciseTimeMinutes())
+            .stepCount(exerciseRecord.getStepCount())
+            .weight(exerciseRecord.getWeight())
+            .dailyNote(exerciseRecord.getDailyNote())
+            .imageUrls(exerciseRecord.getImageUrls())
+            .recordDate(exerciseRecord.getRecordDate())
+            .recordTime(exerciseRecord.getRecordTime())
+            .createdAt(exerciseRecord.getCreatedAt())
+            .updatedAt(exerciseRecord.getUpdatedAt())
+            .build();
     }
     
     private ExerciseRecord toDomain(ExerciseRecordEntity entity) {
-        return new ExerciseRecord(
+        return ExerciseRecord.restore(
             ExerciseRecordId.from(entity.getExerciseRecordId()),
             UserId.of(entity.getUserId()),
             entity.getExerciseType(),

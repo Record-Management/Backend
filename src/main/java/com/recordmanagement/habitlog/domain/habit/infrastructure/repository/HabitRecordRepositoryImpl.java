@@ -74,23 +74,23 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     }
     
     private HabitRecordEntity toEntity(HabitRecord habitRecord) {
-        HabitRecordEntity entity = new HabitRecordEntity(
-            habitRecord.getId().getValue(),
-            habitRecord.getUserId().getValue(),
-            habitRecord.getHabitType(),
-            habitRecord.isNotificationEnabled(),
-            habitRecord.getNotificationTime(),
-            habitRecord.getMemo(),
-            habitRecord.getRecordDate(),
-            habitRecord.isCompleted(),
-            habitRecord.isMainRecord()
-        );
-        
-        return entity;
+        return HabitRecordEntity.builder()
+            .habitRecordId(habitRecord.getId().getValue())
+            .userId(habitRecord.getUserId().getValue())
+            .habitType(habitRecord.getHabitType())
+            .notificationEnabled(habitRecord.isNotificationEnabled())
+            .notificationTime(habitRecord.getNotificationTime())
+            .memo(habitRecord.getMemo())
+            .recordDate(habitRecord.getRecordDate())
+            .isCompleted(habitRecord.isCompleted())
+            .isMainRecord(habitRecord.isMainRecord())
+            .createdAt(habitRecord.getCreatedAt())
+            .updatedAt(habitRecord.getUpdatedAt())
+            .build();
     }
     
     private HabitRecord toDomain(HabitRecordEntity entity) {
-        return new HabitRecord(
+        return HabitRecord.restore(
             HabitRecordId.from(entity.getHabitRecordId()),
             UserId.of(entity.getUserId()),
             entity.getHabitType(),

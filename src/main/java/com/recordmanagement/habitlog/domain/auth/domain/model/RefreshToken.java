@@ -45,7 +45,6 @@ public class RefreshToken {
     private LocalDateTime expiresAt;
 
     /**
-     * -- SETTER --
      *  JPA 등에서 사용하기 위한 생성 시간 설정자.
      *
      * @param createdAt 생성 시간

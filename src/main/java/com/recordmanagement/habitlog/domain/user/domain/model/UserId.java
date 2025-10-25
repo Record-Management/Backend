@@ -3,8 +3,7 @@ package com.recordmanagement.habitlog.domain.user.domain.model;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.Value;
 
 import java.util.UUID;
 
@@ -26,13 +25,12 @@ import java.util.UUID;
  * @since 2025.07.30
  * @version 1.0.0
  */
-@Getter
-@EqualsAndHashCode
+@Value
 @Schema(description = "사용자 고유 식별자 값 객체")
 public class UserId {
 
     @Schema(description = "UUID 형식의 사용자 고유 ID 값", example = "550e8400-e29b-41d4-a716-446655440000")
-    private final String value;
+    String value;
 
     /**
      * 생성자 (내부 사용용)

@@ -31,22 +31,5 @@ public record TokenPair(
             throw new IllegalArgumentException("Refresh token cannot be null or empty");
         }
     }
-    
-    /**
-     * 액세스 토큰 반환
-     * 
-     * @return 액세스 토큰 문자열
-     */
-    public String getAccessToken() {
-        return accessToken;
-    }
-    
-    /**
-     * 리프레시 토큰 반환
-     * 
-     * @return 리프레시 토큰 문자열
-     */
-    public String getRefreshToken() {
-        return refreshToken;
-    }
+
 }

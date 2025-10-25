@@ -1,11 +1,13 @@
 package com.recordmanagement.habitlog.domain.exercise.domain.model;
 
+import lombok.Value;
 import java.util.Objects;
 import java.util.UUID;
 
+@Value
 public class ExerciseRecordId {
     
-    private final String value;
+    String value;
     
     private ExerciseRecordId(String value) {
         this.value = Objects.requireNonNull(value, "ExerciseRecordId value cannot be null");
@@ -17,23 +19,6 @@ public class ExerciseRecordId {
     
     public static ExerciseRecordId from(String value) {
         return new ExerciseRecordId(value);
-    }
-    
-    public String getValue() {
-        return value;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ExerciseRecordId that = (ExerciseRecordId) o;
-        return Objects.equals(value, that.value);
-    }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
     }
     
     @Override

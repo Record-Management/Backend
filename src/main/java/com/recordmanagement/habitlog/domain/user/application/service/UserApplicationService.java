@@ -227,11 +227,6 @@ public class UserApplicationService {
         return UserResponse.from(restoredUser);
     }
 
-    // ============ 호환성을 위한 레거시 메서드들 ============
-    // (중복 메서드 제거됨 - 위에 이미 정의된 메서드들과 동일)
-
-    // ============ 유틸리티 메서드 ============
-
     /**
      * 소셜 ID 마스킹 (로깅용)
      */

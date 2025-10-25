@@ -155,7 +155,7 @@ public class AuthApplicationService {
         TokenPair tokenPair = refreshTokenService.refreshTokens(refreshTokenValue);
         Long expiresIn = 3600L; // 1시간
         
-        return RefreshTokenResult.ofWithRotation(tokenPair.getAccessToken(), tokenPair.getRefreshToken(), expiresIn, user);
+        return RefreshTokenResult.ofWithRotation(tokenPair.accessToken(), tokenPair.refreshToken(), expiresIn, user);
     }
 
     /**

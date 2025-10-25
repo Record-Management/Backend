@@ -1,12 +1,19 @@
 package com.recordmanagement.habitlog.domain.exercise.domain.model;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.With;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+@Getter
+@With
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class ExerciseRecord {
     
     private final ExerciseRecordId id;
@@ -23,24 +30,6 @@ public class ExerciseRecord {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     
-    public ExerciseRecord(ExerciseRecordId id, UserId userId, ExerciseType exerciseType,
-                         Integer caloriesBurned, Integer exerciseTimeMinutes, Integer stepCount,
-                         Double weight, String dailyNote, List<String> imageUrls,
-                         LocalDate recordDate, LocalTime recordTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.userId = userId;
-        this.exerciseType = exerciseType;
-        this.caloriesBurned = caloriesBurned;
-        this.exerciseTimeMinutes = exerciseTimeMinutes;
-        this.stepCount = stepCount;
-        this.weight = weight;
-        this.dailyNote = dailyNote;
-        this.imageUrls = imageUrls != null ? List.copyOf(imageUrls) : List.of();
-        this.recordDate = recordDate;
-        this.recordTime = recordTime;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-    }
     
     public static ExerciseRecord create(UserId userId, ExerciseType exerciseType,
                                       Integer caloriesBurned, Integer exerciseTimeMinutes,
@@ -64,109 +53,49 @@ public class ExerciseRecord {
         );
     }
     
+    public static ExerciseRecord restore(ExerciseRecordId id, UserId userId, ExerciseType exerciseType,
+                                       Integer caloriesBurned, Integer exerciseTimeMinutes,
+                                       Integer stepCount, Double weight, String dailyNote,
+                                       List<String> imageUrls, LocalDate recordDate, LocalTime recordTime,
+                                       LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new ExerciseRecord(
+            id, userId, exerciseType, caloriesBurned, exerciseTimeMinutes,
+            stepCount, weight, dailyNote, imageUrls, recordDate, recordTime,
+            createdAt, updatedAt
+        );
+    }
+    
     public ExerciseRecord updateExerciseDetails(ExerciseType exerciseType, Integer caloriesBurned,
                                               Integer exerciseTimeMinutes, Integer stepCount) {
-        return new ExerciseRecord(
-            this.id,
-            this.userId,
-            exerciseType,
-            caloriesBurned,
-            exerciseTimeMinutes,
-            stepCount,
-            this.weight,
-            this.dailyNote,
-            this.imageUrls,
-            this.recordDate,
-            this.recordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withExerciseType(exerciseType)
+                  .withCaloriesBurned(caloriesBurned)
+                  .withExerciseTimeMinutes(exerciseTimeMinutes)
+                  .withStepCount(stepCount)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public ExerciseRecord updateWeight(Double weight) {
-        return new ExerciseRecord(
-            this.id,
-            this.userId,
-            this.exerciseType,
-            this.caloriesBurned,
-            this.exerciseTimeMinutes,
-            this.stepCount,
-            weight,
-            this.dailyNote,
-            this.imageUrls,
-            this.recordDate,
-            this.recordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withWeight(weight)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public ExerciseRecord updateDailyNote(String dailyNote) {
-        return new ExerciseRecord(
-            this.id,
-            this.userId,
-            this.exerciseType,
-            this.caloriesBurned,
-            this.exerciseTimeMinutes,
-            this.stepCount,
-            this.weight,
-            dailyNote,
-            this.imageUrls,
-            this.recordDate,
-            this.recordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withDailyNote(dailyNote)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public ExerciseRecord updateImages(List<String> imageUrls) {
-        return new ExerciseRecord(
-            this.id,
-            this.userId,
-            this.exerciseType,
-            this.caloriesBurned,
-            this.exerciseTimeMinutes,
-            this.stepCount,
-            this.weight,
-            this.dailyNote,
-            imageUrls,
-            this.recordDate,
-            this.recordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withImageUrls(imageUrls)
+                  .withUpdatedAt(LocalDateTime.now());
     }
     
     public ExerciseRecord updateRecordTime(LocalTime recordTime) {
-        return new ExerciseRecord(
-            this.id,
-            this.userId,
-            this.exerciseType,
-            this.caloriesBurned,
-            this.exerciseTimeMinutes,
-            this.stepCount,
-            this.weight,
-            this.dailyNote,
-            this.imageUrls,
-            this.recordDate,
-            recordTime,
-            this.createdAt,
-            LocalDateTime.now()
-        );
+        return this.withRecordTime(recordTime)
+                  .withUpdatedAt(LocalDateTime.now());
     }
-    
-    // Getters
-    public ExerciseRecordId getId() { return id; }
-    public UserId getUserId() { return userId; }
-    public ExerciseType getExerciseType() { return exerciseType; }
-    public Integer getCaloriesBurned() { return caloriesBurned; }
-    public Integer getExerciseTimeMinutes() { return exerciseTimeMinutes; }
-    public Integer getStepCount() { return stepCount; }
-    public Double getWeight() { return weight; }
-    public String getDailyNote() { return dailyNote; }
-    public List<String> getImageUrls() { return List.copyOf(imageUrls); }
-    public LocalDate getRecordDate() { return recordDate; }
-    public LocalTime getRecordTime() { return recordTime; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    // getImageUrls()는 방어적 복사가 필요하므로 별도 구현
+    public List<String> getImageUrls() { 
+        return List.copyOf(imageUrls); 
+    }
 }

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
         @Index(name = "idx_blacklisted_tokens_blacklisted_at", columnList = "blacklisted_at")
     }
 )
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -84,27 +86,10 @@ public class BlacklistedTokenEntity {
      */
     public static BlacklistedTokenEntity from(BlacklistedToken blacklistedToken) {
         return BlacklistedTokenEntity.builder()
-            .tokenId(blacklistedToken.getTokenId())
-            .userId(blacklistedToken.getUserId())
-            .expiresAt(blacklistedToken.getExpiresAt())
-            .blacklistedAt(blacklistedToken.getBlacklistedAt())
+            .tokenId(blacklistedToken.tokenId())
+            .userId(blacklistedToken.userId())
+            .expiresAt(blacklistedToken.expiresAt())
+            .blacklistedAt(blacklistedToken.blacklistedAt())
             .build();
-    }
-    
-    // Getters
-    public String getTokenId() {
-        return tokenId;
-    }
-    
-    public String getUserId() {
-        return userId;
-    }
-    
-    public LocalDateTime getExpiresAt() {
-        return expiresAt;
-    }
-    
-    public LocalDateTime getBlacklistedAt() {
-        return blacklistedAt;
     }
 }
