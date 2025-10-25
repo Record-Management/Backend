@@ -4,11 +4,14 @@ import com.recordmanagement.habitlog.domain.notification.application.dto.Notific
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationSettingsResponse;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationSettings;
 import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationSettingsRepository;
+import com.recordmanagement.habitlog.domain.notification.domain.service.NotificationReadStatusService;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 /**
  * 알림 설정 애플리케이션 서비스
@@ -24,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class NotificationApplicationService {
+public class NotificationApplicationService implements NotificationReadStatusService {
 
     private final NotificationSettingsRepository notificationSettingsRepository;
 
@@ -81,6 +84,41 @@ public class NotificationApplicationService {
 
         log.info("알림 설정 업데이트 완료: userId={}", command.getUserId().getValue());
         return NotificationSettingsResponse.from(savedSettings);
+    }
+
+    /**
+     * 알림 센터 마지막 확인 시간 업데이트
+     * 알림 센터 화면 진입 시 자동으로 호출되어 읽음 처리 시점을 기록
+     *
+     * @param userId 사용자 ID
+     */
+    public void updateLastCheckedAt(UserId userId) {
+        log.info("알림 센터 마지막 확인 시간 업데이트 시작: userId={}", userId.getValue());
+
+        NotificationSettings settings = notificationSettingsRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    return new NotificationSettings(userId);
+                });
+
+        settings.updateLastCheckedAt();
+        notificationSettingsRepository.save(settings);
+
+        log.info("알림 센터 마지막 확인 시간 업데이트 완료: userId={}", userId.getValue());
+    }
+
+    /**
+     * 사용자의 마지막 확인 시간 조회
+     * 
+     * @param userId 사용자 ID
+     * @return 마지막 확인 시간 (없으면 null)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public LocalDateTime getLastCheckedAt(UserId userId) {
+        return notificationSettingsRepository.findByUserId(userId)
+                .map(NotificationSettings::getLastCheckedAt)
+                .orElse(null);
     }
 
     /**

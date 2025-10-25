@@ -1,15 +1,21 @@
 package com.recordmanagement.habitlog.domain.notification.application.service;
 
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryResponse;
+import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryWithStatusResponse;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationHistory;
+import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationSettings;
 import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationHistoryRepository;
+import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationSettingsRepository;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import com.recordmanagement.habitlog.global.common.response.PagingResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 /**
  * 알림 히스토리 애플리케이션 서비스
@@ -28,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NotificationHistoryApplicationService {
 
     private final NotificationHistoryRepository notificationHistoryRepository;
+    private final NotificationSettingsRepository notificationSettingsRepository;
 
     /**
      * 사용자의 알림 히스토리 페이징 조회
@@ -51,6 +58,32 @@ public class NotificationHistoryApplicationService {
                 userId.getValue(), responsePage.getTotalElements());
 
         return responsePage;
+    }
+
+    /**
+     * 사용자의 알림 히스토리 조회 (읽음 상태 포함)
+     *
+     * @param userId 사용자 ID
+     * @param pageable 페이징 정보
+     * @return 읽음 상태를 포함한 알림 히스토리 응답
+     */
+    @Transactional(readOnly = true)
+    public NotificationHistoryWithStatusResponse getNotificationHistoryWithStatus(UserId userId, Pageable pageable) {
+        log.info("알림 히스토리 조회(읽음 상태 포함) 시작: userId={}", userId.getValue());
+
+        // 1. 알림 히스토리 조회
+        Page<NotificationHistoryResponse> historyPage = getNotificationHistory(userId, pageable);
+        PagingResponse<NotificationHistoryResponse> pagingResponse = PagingResponse.from(historyPage);
+
+        // 2. 최근 확인 시간 조회
+        LocalDateTime recentCheckedAt = notificationSettingsRepository.findByUserId(userId)
+                .map(NotificationSettings::getLastCheckedAt)
+                .orElse(null);
+
+        log.info("알림 히스토리 조회(읽음 상태 포함) 완료: userId={}, recentCheckedAt={}", 
+                userId.getValue(), recentCheckedAt);
+
+        return NotificationHistoryWithStatusResponse.of(pagingResponse, recentCheckedAt);
     }
 
     /**

@@ -2,9 +2,11 @@ package com.recordmanagement.habitlog.domain.notification.presentation.controlle
 
 import com.recordmanagement.habitlog.domain.notification.application.service.NotificationApplicationService;
 import com.recordmanagement.habitlog.domain.notification.application.service.NotificationHistoryApplicationService;
+import com.recordmanagement.habitlog.domain.notification.domain.service.NotificationReadStatusService;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationSettingsCommand;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationSettingsResponse;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryResponse;
+import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryWithStatusResponse;
 import com.recordmanagement.habitlog.api.notification.dto.UpdateNotificationSettingsRequest;
 import com.recordmanagement.habitlog.global.common.response.ApiResponse;
 import com.recordmanagement.habitlog.global.common.response.PagingResponse;
@@ -25,33 +27,40 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 /**
- * 알림 설정 관련 API 컨트롤러
+ * 알림 설정 및 히스토리 관련 API 컨트롤러
  * 
- * 사용자의 알림 설정을 관리하는 REST API를 제공합니다.
- * 각 알림 타입별로 개별 활성화/비활성화가 가능합니다.
+ * 사용자의 알림 설정 관리와 알림 히스토리 조회 기능을 제공하는 REST API입니다.
+ * 각 알림 타입별로 개별 활성화/비활성화가 가능하며, 읽음 처리 기능을 포함합니다.
  * 
  * 주요 기능:
- * - 알림 설정 조회
- * - 알림 설정 업데이트 (개별/전체)
+ * - 알림 설정 조회/업데이트
+ * - 알림 히스토리 조회 (읽음 상태 포함)
+ * - 미읽은 알림 개수 조회
+ * - 모든 알림 읽음 처리
  * 
  * 지원하는 알림 타입:
  * - dailyRecordNotification: 메인 기록 미등록 알림
  * - exerciseNotification: 운동 기록 알림
  * - habitNotification: 습관 기록 알림
  * 
+ * 읽음 처리 기능:
+ * - recentCheckedAt 필드로 읽음/안읽음 상태 판단
+ * - 알림 센터 진입 시 자동 읽음 처리
+ * 
  * @author 전우선
  * @since 2025.10.23
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
-@Tag(name = "Notification", description = "알림 설정 관련 API")
+@Tag(name = "Notification", description = "알림 설정 및 히스토리 관련 API")
 public class NotificationController {
 
     private final NotificationApplicationService notificationApplicationService;
     private final NotificationHistoryApplicationService notificationHistoryApplicationService;
+    private final NotificationReadStatusService notificationReadStatusService;
 
     /**
      * 알림 설정 조회 API
@@ -215,6 +224,10 @@ public class NotificationController {
         description = """
             사용자의 알림 히스토리를 페이징으로 조회합니다.
             
+            ### 응답 정보
+            - notifications: 알림 히스토리 목록 (페이징)
+            - recentCheckedAt: 알림 센터 마지막 확인 시간 (읽음/안읽음 판단용)
+            
             ### 정렬 순서
             - 최신 알림부터 표시 (sentAt 역순)
             
@@ -222,9 +235,15 @@ public class NotificationController {
             - page: 페이지 번호 (0부터 시작, 기본값 0)
             - size: 페이지 크기 (기본값 20, 최대 100)
             
+            ### 읽음 상태 판단
+            - recentCheckedAt이 null이면 최초 조회 (모든 알림이 새로움)
+            - sentAt > recentCheckedAt인 알림은 읽지 않은 알림
+            - sentAt <= recentCheckedAt인 알림은 읽은 알림
+            
             ### 사용 시나리오
             - 앱 내 알림 센터 화면
             - 알림 목록 무한 스크롤
+            - 읽음/안읽음 상태 표시
             """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
@@ -240,24 +259,27 @@ public class NotificationController {
                           "code": "SUCCESS",
                           "message": "요청이 성공적으로 처리되었습니다.",
                           "data": {
-                            "items": [
-                              {
-                                "mainRecordType": "EXERCISE",
-                                "description": "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!",
-                                "sentAt": "2025-10-23T20:00:00"
-                              },
-                              {
-                                "mainRecordType": "DAILY",
-                                "description": "오늘의 소중한 순간을 기록으로 남겨보세요!",
-                                "sentAt": "2025-10-23T19:00:00"
+                            "notifications": {
+                              "items": [
+                                {
+                                  "mainRecordType": "EXERCISE",
+                                  "description": "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!",
+                                  "sentAt": "2025-10-23T20:00:00"
+                                },
+                                {
+                                  "mainRecordType": "DAILY",
+                                  "description": "오늘의 소중한 순간을 기록으로 남겨보세요!",
+                                  "sentAt": "2025-10-23T19:00:00"
+                                }
+                              ],
+                              "pageInfo": {
+                                "page": 0,
+                                "size": 20,
+                                "totalElements": 2,
+                                "totalPages": 1
                               }
-                            ],
-                            "pageInfo": {
-                              "page": 0,
-                              "size": 20,
-                              "totalElements": 2,
-                              "totalPages": 1
-                            }
+                            },
+                            "recentCheckedAt": "2025-10-25T16:45:30"
                           }
                         }
                         """
@@ -267,7 +289,7 @@ public class NotificationController {
         }
     )
     @GetMapping("/history")
-    public ResponseEntity<ApiResponse<PagingResponse<NotificationHistoryResponse>>> getNotificationHistory(
+    public ResponseEntity<ApiResponse<NotificationHistoryWithStatusResponse>> getNotificationHistory(
             @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기 (최대 100)", example = "20")
@@ -284,12 +306,11 @@ public class NotificationController {
         String userId = authentication.getName();
         Pageable pageable = PageRequest.of(page, size);
         
-        Page<NotificationHistoryResponse> historyPage = notificationHistoryApplicationService
-                .getNotificationHistory(UserId.from(userId), pageable);
+        NotificationHistoryWithStatusResponse response = notificationHistoryApplicationService
+                .getNotificationHistoryWithStatus(UserId.from(userId), pageable);
 
-        PagingResponse<NotificationHistoryResponse> response = PagingResponse.from(historyPage);
-
-        log.info("알림 히스토리 조회 완료: userId={}, totalElements={}", userId, historyPage.getTotalElements());
+        log.info("알림 히스토리 조회 완료: userId={}, recentCheckedAt={}", 
+                userId, response.getRecentCheckedAt());
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -360,9 +381,17 @@ public class NotificationController {
         description = """
             사용자의 모든 미읽은 알림을 읽음으로 처리합니다.
             
+            ### 처리 내용
+            1. 모든 미읽은 알림을 읽음 상태로 변경
+            2. 알림 센터 마지막 확인 시간(lastCheckedAt) 업데이트
+            
             ### 사용 시나리오
             - 알림 센터 화면 진입 시 자동 읽음 처리
             - "모두 읽음" 버튼 클릭 시
+            
+            ### 효과
+            - 이후 알림 히스토리 조회 시 recentCheckedAt 값이 업데이트됨
+            - 프론트엔드에서 읽음/안읽음 상태 정확히 판단 가능
             """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
@@ -393,7 +422,13 @@ public class NotificationController {
         log.info("모든 알림 읽음 처리 요청 수신");
 
         String userId = authentication.getName();
-        int updatedCount = notificationHistoryApplicationService.markAllAsRead(UserId.from(userId));
+        UserId userIdObj = UserId.from(userId);
+        
+        // 1. 알림 히스토리 읽음 처리
+        int updatedCount = notificationHistoryApplicationService.markAllAsRead(userIdObj);
+        
+        // 2. 알림 센터 마지막 확인 시간 업데이트
+        notificationReadStatusService.updateLastCheckedAt(userIdObj);
 
         MarkAllReadResponse response = new MarkAllReadResponse(updatedCount);
 

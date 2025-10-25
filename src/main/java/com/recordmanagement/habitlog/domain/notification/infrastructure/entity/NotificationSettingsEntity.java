@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 /**
  * 알림 설정 JPA 엔터티
  *
@@ -41,6 +43,9 @@ public class NotificationSettingsEntity extends BaseEntity {
     @Column(name = "habit_notification_enabled", nullable = false)
     private boolean habitNotificationEnabled;
 
+    @Column(name = "last_checked_at")
+    private LocalDateTime lastCheckedAt;
+
     /**
      * 도메인 모델로부터 JPA 엔터티 생성
      *
@@ -52,6 +57,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         this.dailyRecordNotificationEnabled = notificationSettings.isDailyRecordNotificationEnabled();
         this.exerciseNotificationEnabled = notificationSettings.isExerciseNotificationEnabled();
         this.habitNotificationEnabled = notificationSettings.isHabitNotificationEnabled();
+        this.lastCheckedAt = notificationSettings.getLastCheckedAt();
         this.setCreatedAt(notificationSettings.getCreatedAt());
         this.setUpdatedAt(notificationSettings.getUpdatedAt());
     }
@@ -72,6 +78,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         // 리플렉션을 사용하여 private 필드 설정
         try {
             setFieldValue(notificationSettings, "id", NotificationSettingsId.from(this.id));
+            setFieldValue(notificationSettings, "lastCheckedAt", this.lastCheckedAt);
             setFieldValue(notificationSettings, "createdAt", this.getCreatedAt());
             setFieldValue(notificationSettings, "updatedAt", this.getUpdatedAt());
         } catch (Exception e) {

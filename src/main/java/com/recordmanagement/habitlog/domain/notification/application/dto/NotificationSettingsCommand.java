@@ -1,8 +1,7 @@
 package com.recordmanagement.habitlog.domain.notification.application.dto;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.Value;
 
 /**
  * 알림 설정 업데이트 명령 DTO
@@ -11,12 +10,10 @@ import lombok.RequiredArgsConstructor;
  * @since 2025.10.23
  * @version 1.0.0
  */
-@Getter
-@RequiredArgsConstructor
+@Value
 public class NotificationSettingsCommand {
-
-    private final UserId userId;
-    private final Boolean dailyRecordNotificationEnabled;
-    private final Boolean exerciseNotificationEnabled;
-    private final Boolean habitNotificationEnabled;
+    UserId userId;
+    Boolean dailyRecordNotificationEnabled;
+    Boolean exerciseNotificationEnabled;
+    Boolean habitNotificationEnabled;
 }

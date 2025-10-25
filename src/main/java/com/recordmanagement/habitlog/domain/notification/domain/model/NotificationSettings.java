@@ -56,6 +56,9 @@ public class NotificationSettings {
     @Schema(description = "마지막 수정 시간", example = "2025-10-23T15:30:00")
     private LocalDateTime updatedAt;
 
+    @Schema(description = "알림 센터 마지막 확인 시간", example = "2025-10-23T16:45:30")
+    private LocalDateTime lastCheckedAt;
+
     /**
      * 새로운 알림 설정 생성자
      *
@@ -144,6 +147,16 @@ public class NotificationSettings {
      */
     public boolean belongsToUser(UserId userId) {
         return this.userId.equals(userId);
+    }
+
+    /**
+     * 알림 센터 마지막 확인 시간 업데이트
+     * 
+     * 알림 센터 화면 진입 시 자동으로 호출되어 읽음 처리 시점을 기록
+     */
+    public void updateLastCheckedAt() {
+        this.lastCheckedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     /**
