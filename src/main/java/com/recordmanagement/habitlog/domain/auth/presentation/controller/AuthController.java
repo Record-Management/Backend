@@ -272,9 +272,10 @@ public class AuthController {
             - 블랙리스트된 토큰은 즉시 사용 불가능합니다
             - 토큰 탈취 시에도 안전하게 무효화됩니다
             
-            ### 인증 방식
-            - Authorization 헤더의 액세스 토큰 (블랙리스트용)
-            - 요청 본문의 refreshToken (무효화용)
+            ### 🔐 인증 방식 (필수)
+            - **Authorization 헤더**: `Bearer {accessToken}` 형식으로 제공 필수
+            - **요청 본문**: refreshToken 포함 필수
+            - 액세스 토큰이 없으면 400 에러 반환
             
             ### 로그아웃 옵션
             - **단일 기기 로그아웃 (allDevices: false)**: 현재 기기만 로그아웃
@@ -297,6 +298,22 @@ public class AuthController {
                           "statusCode": 200,
                           "code": "S200",
                           "message": "로그아웃되었습니다."
+                        }
+                        """
+                    )
+                )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "400",
+                description = "Authorization 헤더 누락",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 400,
+                          "code": "E40023",
+                          "message": "로그아웃 시 Authorization 헤더에 액세스 토큰이 필요합니다."
                         }
                         """
                     )
