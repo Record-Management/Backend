@@ -98,6 +98,9 @@ public enum ErrorCode {
     @Schema(description = "리프레시 토큰 만료 시간 null")
     REFRESH_TOKEN_EXPIRES_AT_NULL(400, "E40022", "만료 시간은 null일 수 없습니다."),
 
+    @Schema(description = "로그아웃 시 액세스 토큰 누락")
+    MISSING_ACCESS_TOKEN_FOR_LOGOUT(400, "E40023", "로그아웃 시 Authorization 헤더에 액세스 토큰이 필요합니다."),
+
     // ------------------------------------------------------------------------
     // 사용자 관련 에러 (E40021 ~ E40030)
     // ------------------------------------------------------------------------

@@ -8,6 +8,8 @@ import com.recordmanagement.habitlog.domain.auth.application.dto.SocialLoginComm
 import com.recordmanagement.habitlog.domain.auth.application.dto.SocialLoginResult;
 import com.recordmanagement.habitlog.domain.auth.application.dto.AppleTransferSubCommand;
 import com.recordmanagement.habitlog.global.common.response.ApiResponse;
+import com.recordmanagement.habitlog.global.config.exception.CustomException;
+import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
 import com.recordmanagement.habitlog.api.auth.dto.LogoutRequest;
 import com.recordmanagement.habitlog.api.auth.dto.RefreshTokenRequest;
@@ -309,8 +311,12 @@ public class AuthController {
 
         log.info("로그아웃 요청: allDevices={}", request.isAllDevices());
 
-        // Authorization 헤더에서 액세스 토큰 추출 (블랙리스트용)
+        // Authorization 헤더에서 액세스 토큰 추출 (필수)
         String accessToken = extractAccessTokenFromHeader(httpRequest);
+        if (accessToken == null || accessToken.trim().isEmpty()) {
+            log.warn("로그아웃 요청에 Authorization 헤더가 누락됨");
+            throw new CustomException(ErrorCode.MISSING_ACCESS_TOKEN_FOR_LOGOUT);
+        }
 
         LogoutCommand command = new LogoutCommand(
                 request.getRefreshToken(),
