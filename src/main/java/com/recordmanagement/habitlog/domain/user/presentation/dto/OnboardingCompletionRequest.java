@@ -50,8 +50,4 @@ public class OnboardingCompletionRequest {
     @Max(value = 30, message = "목표 일수는 최대 30일이어야 합니다")
     @Schema(description = "목표 일수", example = "20")
     private Integer goalDays;
-    
-    @NotNull(message = "알림 허용 여부는 필수입니다")
-    @Schema(description = "알림 허용 여부", example = "true")
-    private Boolean notificationEnabled;
 }

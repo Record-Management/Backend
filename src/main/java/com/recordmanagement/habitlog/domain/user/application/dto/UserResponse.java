@@ -168,9 +168,6 @@ public class UserResponse {
     @Schema(description = "목표 일수", example = "20")
     private final Integer goalDays;
 
-    @Schema(description = "알림 허용 여부", example = "true")
-    private final Boolean notificationEnabled;
-
     @Schema(description = "회원 탈퇴 요청 시간", example = "2025-10-20T15:30:00", nullable = true)
     private final LocalDateTime deletedAt;
 
@@ -200,7 +197,6 @@ public class UserResponse {
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
-                .notificationEnabled(user.getNotificationEnabled())
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
                 .withdrawalReason(user.getWithdrawalReason())

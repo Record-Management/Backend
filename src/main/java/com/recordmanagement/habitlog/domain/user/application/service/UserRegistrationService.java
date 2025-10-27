@@ -105,8 +105,7 @@ public class UserRegistrationService {
                 command.nickname(),
                 command.mainRecordType(), 
                 command.birthDate(),
-                command.goalDays(),
-                command.notificationEnabled()
+                command.goalDays()
         );
         User updatedUser = userRepository.save(user);
         

@@ -26,8 +26,5 @@ public record OnboardingCompletionCommand(
     LocalDate birthDate,
     
     @Schema(description = "목표 일수", example = "20")
-    Integer goalDays,
-    
-    @Schema(description = "알림 허용 여부", example = "true")
-    Boolean notificationEnabled
+    Integer goalDays
 ) {}

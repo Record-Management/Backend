@@ -81,9 +81,6 @@ public class UserEntity {
     @Column(name = "goal_days")
     private Integer goalDays;
 
-    @Column(name = "notification_enabled")
-    private Boolean notificationEnabled;
-
     @Column(name = "fcm_token", length = 1000)
     private String fcmToken;
 
@@ -116,7 +113,6 @@ public class UserEntity {
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
-                .notificationEnabled(user.getNotificationEnabled())
                 .fcmToken(null)  // FCM 토큰은 보안상 응답에 포함하지 않음
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
@@ -176,10 +172,6 @@ public class UserEntity {
             var goalDaysField = User.class.getDeclaredField("goalDays");
             goalDaysField.setAccessible(true);
             goalDaysField.set(user, this.goalDays);
-
-            var notificationEnabledField = User.class.getDeclaredField("notificationEnabled");
-            notificationEnabledField.setAccessible(true);
-            notificationEnabledField.set(user, this.notificationEnabled);
 
             // TODO: Firebase 설정 후 주석 해제
             // var fcmTokenField = User.class.getDeclaredField("fcmToken");

@@ -72,9 +72,6 @@ public class User {
     @Schema(description = "목표 일수", example = "20")
     private Integer goalDays;
 
-    @Schema(description = "알림 허용 여부", example = "true")
-    private Boolean notificationEnabled;
-
     @Schema(description = "FCM 토큰 (푸시 알림용)", example = "dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuLi4u")
     private String fcmToken;
 
@@ -133,7 +130,7 @@ public class User {
      * - updatedAt 자동 갱신
      * - 이미 온보딩이 완료된 경우 예외 발생
      */
-    public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays, Boolean notificationEnabled) {
+    public void completeOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays) {
         if (this.onboardingCompleted) {
             throw new CustomException(ErrorCode.USER_ONBOARDING_ALREADY_COMPLETED);
         }
@@ -142,7 +139,6 @@ public class User {
         this.mainRecordType = mainRecordType;
         this.birthDate = birthDate;
         this.goalDays = goalDays;
-        this.notificationEnabled = notificationEnabled;
         this.onboardingCompleted = true;
         this.updatedAt = LocalDateTime.now();
     }
@@ -165,7 +161,6 @@ public class User {
             setFieldValue(newUser, "mainRecordType", this.mainRecordType);
             setFieldValue(newUser, "birthDate", this.birthDate);
             setFieldValue(newUser, "goalDays", this.goalDays);
-            setFieldValue(newUser, "notificationEnabled", this.notificationEnabled);
             setFieldValue(newUser, "fcmToken", this.fcmToken);
             setFieldValue(newUser, "onboardingCompleted", this.onboardingCompleted);
             setFieldValue(newUser, "createdAt", this.createdAt);
@@ -221,6 +216,7 @@ public class User {
         }
         this.updatedAt = LocalDateTime.now();
     }
+
 
     /**
      * 회원 탈퇴 처리 (soft delete)

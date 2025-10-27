@@ -184,7 +184,6 @@ public class UserController {
                             "mainRecordType": "EXERCISE",
                             "birthDate": "1998-06-02",
                             "goalDays": 20,
-                            "notificationEnabled": true,
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -242,7 +241,6 @@ public class UserController {
                             "mainRecordType": "EXERCISE",
                             "birthDate": "1998-06-02",
                             "goalDays": 20,
-                            "notificationEnabled": true,
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -259,9 +257,9 @@ public class UserController {
             Authentication authentication) {
 
         log.info("온보딩 완료 요청 수신");
-        log.info("요청 데이터: nickname=[{}], mainRecordType=[{}], birthDate=[{}], goalDays=[{}], notificationEnabled=[{}]", 
+        log.info("요청 데이터: nickname=[{}], mainRecordType=[{}], birthDate=[{}], goalDays=[{}]", 
                 request.getNickname(), request.getMainRecordType(), request.getBirthDate(), 
-                request.getGoalDays(), request.getNotificationEnabled());
+                request.getGoalDays());
 
         String userId = authentication.getName();
         
@@ -270,8 +268,7 @@ public class UserController {
                 request.getNickname(),
                 request.getMainRecordType(),
                 request.getBirthDate(),
-                request.getGoalDays(),
-                request.getNotificationEnabled()
+                request.getGoalDays()
         );
 
         UserResponse user = userApplicationService.completeOnboarding(command);
@@ -384,7 +381,6 @@ public class UserController {
                             "mainRecordType": "EXERCISE",
                             "birthDate": [1990, 1, 1],
                             "goalDays": 20,
-                            "notificationEnabled": true,
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -428,6 +424,7 @@ public class UserController {
 
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
+
 
     /**
      * FCM 토큰 삭제 API

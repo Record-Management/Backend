@@ -69,7 +69,7 @@ public class FcmNotificationService {
             return;
         }
 
-        // 알림 설정 확인
+        // 알림 설정 확인 (NotificationSettings.dailyRecordNotificationEnabled)
         boolean isNotificationEnabled = notificationSettingsRepository.findByUserId(userId)
                 .map(settings -> settings.isDailyRecordNotificationEnabled())
                 .orElse(false);

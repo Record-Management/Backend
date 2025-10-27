@@ -132,6 +132,7 @@ public class UserApplicationService {
         log.info("FCM 토큰 삭제 완료: userId={}", userId);
     }
 
+
     /**
      * 사용자 소유권 검증
      */
