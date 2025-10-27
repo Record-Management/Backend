@@ -8,6 +8,7 @@ import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecordId;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
+import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import org.slf4j.Logger;
@@ -29,13 +30,16 @@ public class HabitRecordApplicationService {
     private final HabitRecordRepository habitRecordRepository;
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final MainRecordDeterminationService mainRecordDeterminationService;
     
     public HabitRecordApplicationService(HabitRecordRepository habitRecordRepository,
                                        RecordRepository recordRepository,
-                                       ExerciseRecordRepository exerciseRecordRepository) {
+                                       ExerciseRecordRepository exerciseRecordRepository,
+                                       MainRecordDeterminationService mainRecordDeterminationService) {
         this.habitRecordRepository = habitRecordRepository;
         this.recordRepository = recordRepository;
         this.exerciseRecordRepository = exerciseRecordRepository;
+        this.mainRecordDeterminationService = mainRecordDeterminationService;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -43,19 +47,32 @@ public class HabitRecordApplicationService {
         log.info("습관기록 생성 시작: userId=[{}], habitType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.habitType(), command.recordDate());
         
-        // 하루 최대 1개 습관기록 제한 검증
+        // 하루 최대 2개 습관기록 제한 검증
         int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
             command.userId(), 
             command.recordDate()
         );
         
-        if (habitRecordCount >= 1) {
+        if (habitRecordCount >= 2) {
             throw new CustomException(ErrorCode.HABIT_RECORD_LIMIT_EXCEEDED);
         }
         
         // 전체 기록 종류 최대 2가지 제한 검증 (습관기록이 없는 경우에만)
         if (habitRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
+        }
+        
+        // 메인 기록 결정 (명시적으로 설정되지 않은 경우)
+        boolean isMainRecord = true; // 기본값
+        if (command.isMainRecord() == null) {
+            isMainRecord = mainRecordDeterminationService.determineMainRecord(
+                command.userId(), 
+                RecordType.HABIT, 
+                command.recordDate(), 
+                habitRecordCount
+            );
+        } else {
+            isMainRecord = command.isMainRecord();
         }
         
         HabitRecord habitRecord = HabitRecord.create(
@@ -67,10 +84,8 @@ public class HabitRecordApplicationService {
             command.recordDate()
         );
         
-        // isMainRecord가 명시적으로 설정된 경우 적용
-        if (command.isMainRecord() != null && !command.isMainRecord()) {
-            habitRecord = habitRecord.updateMainRecordStatus(command.isMainRecord());
-        }
+        // 메인 기록 상태 설정
+        habitRecord = habitRecord.updateMainRecordStatus(isMainRecord);
         
         HabitRecord savedHabitRecord = habitRecordRepository.save(habitRecord);
         
@@ -111,12 +126,20 @@ public class HabitRecordApplicationService {
                 command.userId()
         ).orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
+        // 습관 타입이 변경되는 경우 메인 기록 결정 (현재 HabitRecord에서는 타입 변경이 없으므로 주석 처리)
+        // boolean isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+        //     command.userId(), 
+        //     RecordType.HABIT
+        // );
+        // log.info("습관기록 수정으로 메인 기록 재결정: recordId={}, isMain={}", 
+        //         habitRecordId, isMainRecord);
+        
         HabitRecord updatedRecord = existingRecord
                 .updateHabitType(command.habitType())
                 .updateNotificationSettings(command.notificationEnabled(), command.notificationTime())
                 .updateMemo(command.memo());
         
-        // isMainRecord가 명시적으로 설정된 경우 적용
+        // isMainRecord가 명시적으로 설정된 경우 적용 (그렇지 않으면 기존 값 유지)
         if (command.isMainRecord() != null) {
             updatedRecord = updatedRecord.updateMainRecordStatus(command.isMainRecord());
         }

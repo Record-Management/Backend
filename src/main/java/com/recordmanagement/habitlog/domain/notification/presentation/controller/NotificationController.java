@@ -80,6 +80,10 @@ public class NotificationController {
             - 습관 기록 알림 활성화 여부
             - 목표 미설정 알림 활성화 여부
             
+            ### 기본값 정책
+            - 신규 사용자: 모든 알림이 **true**로 설정 (자동 생성)
+            - 설정 조회 시 자동으로 기본 설정이 생성되어 일관된 결과 보장
+            
             ### 사용 시나리오
             - 설정 화면 진입 시 현재 알림 설정 표시
             - 앱 시작 시 알림 설정 확인
@@ -147,6 +151,10 @@ public class NotificationController {
             - exerciseNotificationEnabled: 운동 기록 알림
             - habitNotificationEnabled: 습관 기록 알림
             - noGoalNotificationEnabled: 목표 미설정 알림
+            
+            ### 선택적 업데이트
+            - null이 아닌 값만 업데이트됩니다
+            - 설정이 없는 경우 기본 설정을 자동 생성합니다
             
             ### 요청 예시
             - 특정 알림만 수정: {"dailyRecordNotificationEnabled": false}
@@ -232,6 +240,10 @@ public class NotificationController {
             ### 응답 정보
             - notifications: 알림 히스토리 목록 (페이징)
             - recentCheckedAt: 알림 센터 마지막 확인 시간 (읽음/안읽음 판단용)
+            
+            ### 날짜/시간 필드 타입
+            - sentAt: **string** (ISO 8601 형식: yyyy-MM-ddTHH:mm:ss)
+            - recentCheckedAt: **string** (ISO 8601 형식: yyyy-MM-ddTHH:mm:ss)
             
             ### 정렬 순서
             - 최신 알림부터 표시 (sentAt 역순)

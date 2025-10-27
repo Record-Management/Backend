@@ -4,7 +4,7 @@ import com.recordmanagement.habitlog.domain.notification.application.dto.Notific
 import com.recordmanagement.habitlog.domain.notification.application.strategy.NotificationMessageStrategyFactory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationHistory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationType;
-import com.recordmanagement.habitlog.domain.notification.domain.repository.NotificationSettingsRepository;
+import com.recordmanagement.habitlog.domain.notification.application.service.NotificationApplicationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
@@ -40,7 +40,7 @@ public class FcmNotificationService {
 
     private final NotificationSender notificationSender;
     private final UserRepository userRepository;
-    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final NotificationApplicationService notificationApplicationService;
     private final NotificationMessageStrategyFactory messageStrategyFactory;
     private final com.recordmanagement.habitlog.domain.notification.application.service.NotificationHistoryApplicationService notificationHistoryApplicationService;
 
@@ -69,10 +69,8 @@ public class FcmNotificationService {
             return;
         }
 
-        // 알림 설정 확인 (NotificationSettings.dailyRecordNotificationEnabled)
-        boolean isNotificationEnabled = notificationSettingsRepository.findByUserId(userId)
-                .map(settings -> settings.isDailyRecordNotificationEnabled())
-                .orElse(false);
+        // 알림 설정 확인 (일관성 있는 서비스 메서드 사용)
+        boolean isNotificationEnabled = notificationApplicationService.isDailyRecordNotificationEnabled(userId);
 
         if (!isNotificationEnabled) {
             log.info("메인 기록 알림이 비활성화되어 있습니다: userId={}", userId.getValue());

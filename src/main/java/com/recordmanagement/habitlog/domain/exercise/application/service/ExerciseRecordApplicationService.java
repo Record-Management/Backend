@@ -8,6 +8,7 @@ import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
+import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileService;
@@ -31,15 +32,18 @@ public class ExerciseRecordApplicationService {
     private final RecordRepository recordRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
+    private final MainRecordDeterminationService mainRecordDeterminationService;
     
     public ExerciseRecordApplicationService(ExerciseRecordRepository exerciseRecordRepository,
                                           RecordRepository recordRepository,
                                           HabitRecordRepository habitRecordRepository,
-                                          S3FileService s3FileService) {
+                                          S3FileService s3FileService,
+                                          MainRecordDeterminationService mainRecordDeterminationService) {
         this.exerciseRecordRepository = exerciseRecordRepository;
         this.recordRepository = recordRepository;
         this.habitRecordRepository = habitRecordRepository;
         this.s3FileService = s3FileService;
+        this.mainRecordDeterminationService = mainRecordDeterminationService;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -47,13 +51,13 @@ public class ExerciseRecordApplicationService {
         log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
         
-        // 하루 최대 1개 운동기록 제한 검증
+        // 하루 최대 2개 운동기록 제한 검증
         int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
             command.userId(), 
             command.recordDate()
         );
         
-        if (exerciseRecordCount >= 1) {
+        if (exerciseRecordCount >= 2) {
             throw new CustomException(ErrorCode.EXERCISE_RECORD_LIMIT_EXCEEDED);
         }
         
@@ -61,6 +65,14 @@ public class ExerciseRecordApplicationService {
         if (exerciseRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
+        
+        // 메인 기록 결정
+        boolean isMainRecord = mainRecordDeterminationService.determineMainRecord(
+            command.userId(), 
+            RecordType.EXERCISE, 
+            command.recordDate(), 
+            exerciseRecordCount
+        );
         
         ExerciseRecord exerciseRecord = ExerciseRecord.create(
             command.userId(),
@@ -74,6 +86,9 @@ public class ExerciseRecordApplicationService {
             command.recordDate(),
             command.recordTime()
         );
+        
+        // 메인 기록 상태 설정 (ExerciseRecord 도메인에 isMainRecord 필드가 있다면)
+        // exerciseRecord = exerciseRecord.updateMainRecordStatus(isMainRecord);
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(exerciseRecord);
         
@@ -91,6 +106,14 @@ public class ExerciseRecordApplicationService {
                 command.exerciseRecordId(), command.userId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
+        // 운동 타입이 변경되는 경우 메인 기록 결정 (현재 ExerciseRecord에서는 타입 변경이 없으므로 주석 처리)
+        // boolean isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+        //     command.userId(), 
+        //     RecordType.EXERCISE
+        // );
+        // log.info("운동기록 수정으로 메인 기록 재결정: recordId={}, isMain={}", 
+        //         command.exerciseRecordId().getValue(), isMainRecord);
+        
         ExerciseRecord updatedRecord = existingRecord
                 .updateExerciseDetails(command.exerciseType(), command.caloriesBurned(), 
                                      command.exerciseTimeMinutes(), command.stepCount())
@@ -98,6 +121,9 @@ public class ExerciseRecordApplicationService {
                 .updateDailyNote(command.dailyNote())
                 .updateImages(command.imageUrls())
                 .updateRecordTime(command.recordTime());
+        
+        // 메인 기록 상태 업데이트 (ExerciseRecord 도메인에 해당 메서드가 있다면)
+        // updatedRecord = updatedRecord.updateMainRecordStatus(isMainRecord);
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(updatedRecord);
         

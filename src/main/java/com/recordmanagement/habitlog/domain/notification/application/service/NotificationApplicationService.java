@@ -140,53 +140,77 @@ public class NotificationApplicationService implements NotificationReadStatusSer
 
     /**
      * 사용자의 특정 알림이 활성화되어 있는지 확인
+     * 설정이 없으면 기본 설정을 생성하여 일관성 보장
      *
      * @param userId 사용자 ID
      * @return 메인 기록 알림 활성화 여부
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isDailyRecordNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
                 .map(NotificationSettings::isDailyRecordNotificationEnabled)
-                .orElse(false);
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    NotificationSettings newSettings = new NotificationSettings(userId);
+                    notificationSettingsRepository.save(newSettings);
+                    return true; // 기본값: 활성화
+                });
     }
 
     /**
      * 사용자의 운동 알림이 활성화되어 있는지 확인
+     * 설정이 없으면 기본 설정을 생성하여 일관성 보장
      *
      * @param userId 사용자 ID
      * @return 운동 기록 알림 활성화 여부
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isExerciseNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
                 .map(NotificationSettings::isExerciseNotificationEnabled)
-                .orElse(false);
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    NotificationSettings newSettings = new NotificationSettings(userId);
+                    notificationSettingsRepository.save(newSettings);
+                    return true; // 기본값: 활성화
+                });
     }
 
     /**
      * 사용자의 습관 알림이 활성화되어 있는지 확인
+     * 설정이 없으면 기본 설정을 생성하여 일관성 보장
      *
      * @param userId 사용자 ID
      * @return 습관 기록 알림 활성화 여부
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isHabitNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
                 .map(NotificationSettings::isHabitNotificationEnabled)
-                .orElse(false);
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    NotificationSettings newSettings = new NotificationSettings(userId);
+                    notificationSettingsRepository.save(newSettings);
+                    return true; // 기본값: 활성화
+                });
     }
 
     /**
      * 사용자의 목표 미설정 알림이 활성화되어 있는지 확인
+     * 설정이 없으면 기본 설정을 생성하여 일관성 보장
      *
      * @param userId 사용자 ID
      * @return 목표 미설정 알림 활성화 여부
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public boolean isNoGoalNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
                 .map(NotificationSettings::isNoGoalNotificationEnabled)
-                .orElse(false);
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    NotificationSettings newSettings = new NotificationSettings(userId);
+                    notificationSettingsRepository.save(newSettings);
+                    return true; // 기본값: 활성화
+                });
     }
 }

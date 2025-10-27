@@ -8,6 +8,7 @@ import com.recordmanagement.habitlog.domain.record.application.dto.RecordRespons
 import com.recordmanagement.habitlog.domain.record.application.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.strategy.RecordTypeValidationStrategyFactory;
+import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.record.domain.model.Record;
@@ -24,6 +25,7 @@ import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecordId;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
  * @since 2025.10.24
  * @version 3.0.0 (OCP + ISP 적용)
  */
+@Slf4j
 @Service
 @Transactional
 public class RecordApplicationService {
@@ -59,6 +62,7 @@ public class RecordApplicationService {
     private final ExerciseRecordSecurityRepository exerciseRecordSecurityRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
+    private final MainRecordDeterminationService mainRecordDeterminationService;
     private final RecordTypeValidationStrategyFactory validationStrategyFactory;
     
     public RecordApplicationService(RecordRepository recordRepository, 
@@ -66,32 +70,45 @@ public class RecordApplicationService {
                                    ExerciseRecordSecurityRepository exerciseRecordSecurityRepository,
                                    HabitRecordRepository habitRecordRepository,
                                    S3FileService s3FileService,
+                                   MainRecordDeterminationService mainRecordDeterminationService,
                                    RecordTypeValidationStrategyFactory validationStrategyFactory) {
         this.recordRepository = recordRepository;
         this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
         this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
         this.habitRecordRepository = habitRecordRepository;
         this.s3FileService = s3FileService;
+        this.mainRecordDeterminationService = mainRecordDeterminationService;
         this.validationStrategyFactory = validationStrategyFactory;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
-        // 일상 기록인 경우 하루 최대 1개 제한 검증
+        // 기존 기록 개수 조회 (메인 기록 결정에 필요)
+        int existingRecordCount = 0;
+        
+        // 일상 기록인 경우 하루 최대 2개 제한 검증
         if (command.type() == RecordType.DAILY) {
-            int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
+            existingRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
                 command.userId(), 
                 command.recordDate(), 
                 RecordType.DAILY
             );
             
-            if (dailyRecordCount >= 1) {
+            if (existingRecordCount >= 2) {
                 throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
             }
         }
         
         // 전체 기록 종류 최대 2가지 제한 검증
         validateRecordTypeLimit(command.userId(), command.recordDate(), RecordType.DAILY);
+        
+        // 메인 기록 결정
+        boolean isMainRecord = mainRecordDeterminationService.determineMainRecord(
+            command.userId(), 
+            command.type(), 
+            command.recordDate(), 
+            existingRecordCount
+        );
         
         Record record = Record.create(
             command.userId(),
@@ -102,6 +119,9 @@ public class RecordApplicationService {
             command.recordDate(),
             command.recordTime()
         );
+        
+        // 메인 기록 상태 설정 (Record 도메인에 isMainRecord 필드가 있다면)
+        // record = record.updateMainRecordStatus(isMainRecord);
         
         Record savedRecord = recordRepository.save(record);
         return RecordResponse.from(savedRecord);
@@ -115,12 +135,28 @@ public class RecordApplicationService {
         // 작성자 확인
         validateRecordOwnership(existingRecord, command.userId());
         
+        // 기록 타입이 변경되는 경우 메인 기록 결정
+        boolean isMainRecord = false;
+        if (!existingRecord.getType().equals(command.type())) {
+            isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+                command.userId(), 
+                command.type()
+            );
+            log.info("기록 타입 변경으로 메인 기록 재결정: recordId={}, oldType={}, newType={}, isMain={}", 
+                    command.recordId().value(), existingRecord.getType(), command.type(), isMainRecord);
+        }
+        
         // 기록 수정 (날짜와 시간은 불변)
         Record updatedRecord = existingRecord
             .updateType(command.type())
             .updateEmotion(command.emotion())
             .updateContent(command.content())
             .updateImages(command.imageUrls());
+        
+        // 타입이 변경된 경우 메인 기록 상태도 업데이트 (Record 도메인에 해당 메서드가 있다면)
+        // if (!existingRecord.getType().equals(command.type())) {
+        //     updatedRecord = updatedRecord.updateMainRecordStatus(isMainRecord);
+        // }
         
         Record savedRecord = recordRepository.save(updatedRecord);
         return RecordResponse.from(savedRecord);

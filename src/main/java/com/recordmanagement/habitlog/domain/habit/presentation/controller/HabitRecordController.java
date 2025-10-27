@@ -95,14 +95,14 @@ public class HabitRecordController {
                             {
                                 "statusCode": 400,
                                 "code": "E40409",
-                                "message": "하루에 등록할 수 있는 습관 기록은 최대 1개입니다.",
+                                "message": "하루에 등록할 수 있는 습관 기록은 최대 2개입니다.",
                                 "data": null
                             }
                             """
                     ),
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
                         name = "기록 종류 2가지 제한 초과",
-                        summary = "하루 최대 2가지 기록 종류 제한 초과",
+                        summary = "하루 최대 2개 기록 제한 초과",
                         value = """
                             {
                                 "statusCode": 400,
