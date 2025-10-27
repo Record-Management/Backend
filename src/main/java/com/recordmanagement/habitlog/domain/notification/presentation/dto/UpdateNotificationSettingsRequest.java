@@ -38,4 +38,11 @@ public class UpdateNotificationSettingsRequest {
         nullable = true
     )
     private Boolean habitNotificationEnabled;
+
+    @Schema(
+        description = "목표 미설정 알림 활성화 여부",
+        example = "true",
+        nullable = true
+    )
+    private Boolean noGoalNotificationEnabled;
 }

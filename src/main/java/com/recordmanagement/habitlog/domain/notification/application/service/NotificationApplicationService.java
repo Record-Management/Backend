@@ -79,6 +79,9 @@ public class NotificationApplicationService implements NotificationReadStatusSer
         if (command.getHabitNotificationEnabled() != null) {
             settings.updateHabitNotification(command.getHabitNotificationEnabled());
         }
+        if (command.getNoGoalNotificationEnabled() != null) {
+            settings.updateNoGoalNotification(command.getNoGoalNotificationEnabled());
+        }
 
         NotificationSettings savedSettings = notificationSettingsRepository.save(settings);
 
@@ -171,6 +174,19 @@ public class NotificationApplicationService implements NotificationReadStatusSer
     public boolean isHabitNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
                 .map(NotificationSettings::isHabitNotificationEnabled)
+                .orElse(false);
+    }
+
+    /**
+     * 사용자의 목표 미설정 알림이 활성화되어 있는지 확인
+     *
+     * @param userId 사용자 ID
+     * @return 목표 미설정 알림 활성화 여부
+     */
+    @Transactional(readOnly = true)
+    public boolean isNoGoalNotificationEnabled(UserId userId) {
+        return notificationSettingsRepository.findByUserId(userId)
+                .map(NotificationSettings::isNoGoalNotificationEnabled)
                 .orElse(false);
     }
 }

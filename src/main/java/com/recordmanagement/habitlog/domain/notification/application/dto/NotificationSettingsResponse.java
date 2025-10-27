@@ -29,6 +29,9 @@ public class NotificationSettingsResponse {
     @Schema(description = "습관 기록 알림 활성화 여부", example = "false")
     private final boolean habitNotificationEnabled;
 
+    @Schema(description = "목표 미설정 알림 활성화 여부", example = "true")
+    private final boolean noGoalNotificationEnabled;
+
     /**
      * 도메인 모델로부터 응답 DTO 생성
      *
@@ -40,7 +43,8 @@ public class NotificationSettingsResponse {
             settings.getUserId().getValue(),
             settings.isDailyRecordNotificationEnabled(),
             settings.isExerciseNotificationEnabled(),
-            settings.isHabitNotificationEnabled()
+            settings.isHabitNotificationEnabled(),
+            settings.isNoGoalNotificationEnabled()
         );
     }
 }

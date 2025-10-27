@@ -78,6 +78,7 @@ public class NotificationController {
             - 메인 기록 미등록 알림 활성화 여부
             - 운동 기록 알림 활성화 여부
             - 습관 기록 알림 활성화 여부
+            - 목표 미설정 알림 활성화 여부
             
             ### 사용 시나리오
             - 설정 화면 진입 시 현재 알림 설정 표시
@@ -100,7 +101,8 @@ public class NotificationController {
                             "userId": "550e8400-e29b-41d4-a716-446655440000",
                             "dailyRecordNotificationEnabled": true,
                             "exerciseNotificationEnabled": true,
-                            "habitNotificationEnabled": false
+                            "habitNotificationEnabled": false,
+                            "noGoalNotificationEnabled": true
                           }
                         }
                         """
@@ -144,6 +146,7 @@ public class NotificationController {
             - dailyRecordNotificationEnabled: 메인 기록 미등록 알림
             - exerciseNotificationEnabled: 운동 기록 알림
             - habitNotificationEnabled: 습관 기록 알림
+            - noGoalNotificationEnabled: 목표 미설정 알림
             
             ### 요청 예시
             - 특정 알림만 수정: {"dailyRecordNotificationEnabled": false}
@@ -170,7 +173,8 @@ public class NotificationController {
                             "userId": "550e8400-e29b-41d4-a716-446655440000",
                             "dailyRecordNotificationEnabled": false,
                             "exerciseNotificationEnabled": true,
-                            "habitNotificationEnabled": true
+                            "habitNotificationEnabled": true,
+                            "noGoalNotificationEnabled": false
                           }
                         }
                         """
@@ -200,7 +204,8 @@ public class NotificationController {
                 UserId.from(userId),
                 request.getDailyRecordNotificationEnabled(),
                 request.getExerciseNotificationEnabled(),
-                request.getHabitNotificationEnabled()
+                request.getHabitNotificationEnabled(),
+                request.getNoGoalNotificationEnabled()
         );
 
         NotificationSettingsResponse updatedSettings = notificationApplicationService.updateNotificationSettings(command);
