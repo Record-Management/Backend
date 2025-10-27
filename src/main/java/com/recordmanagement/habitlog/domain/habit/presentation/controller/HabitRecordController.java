@@ -35,7 +35,19 @@ public class HabitRecordController {
     
     @PostMapping
     @Operation(summary = "습관기록 작성", 
-               description = "새로운 습관기록을 작성합니다.",
+               description = """
+               새로운 습관기록을 작성합니다.
+               
+               **필수 항목:**
+               - habitType: 습관 종류 (필수)
+               - notificationEnabled: 알림 설정 여부 (필수)
+               - recordDate: 기록 날짜 (필수, 오늘 날짜만 허용)
+               
+               **선택 항목:**
+               - notificationTime: 알림 시간
+               - memo: 메모/글쓰기
+               - isMainRecord: 메인 기록 여부
+               """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

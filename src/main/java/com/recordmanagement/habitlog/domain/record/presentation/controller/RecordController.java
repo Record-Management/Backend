@@ -45,7 +45,18 @@ public class RecordController {
     
     // ==================== 타입별 생성 API ====================
     
-    @Operation(summary = "하루 기록 작성", description = "새로운 하루 기록을 작성합니다",
+    @Operation(summary = "하루 기록 작성", description = """
+            새로운 하루 기록을 작성합니다.
+            
+            **필수 항목:**
+            - content: 기록 내용 (필수)
+            - recordDate: 기록 날짜 (필수, 오늘 날짜만 허용)
+            - recordTime: 기록 시간 (필수)
+            
+            **선택 항목:**
+            - emotion: 감정 표현
+            - imageUrls: 사진 (최대 3장)
+            """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
         description = "하루 기록 작성 요청",
