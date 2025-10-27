@@ -56,7 +56,7 @@ public class UnifiedRecordController {
                             {
                                 "id": "550e8400-e29b-41d4-a716-446655440000",
                                 "type": "DAILY",
-                                "recordDate": "2025-01-07",
+                                "recordDate": "2025-10-27",
                                 "recordTime": "15:21",
                                 "createdAt": "2025-01-07T15:21:00",
                                 "updatedAt": "2025-01-07T15:21:00",
@@ -67,7 +67,7 @@ public class UnifiedRecordController {
                             {
                                 "id": "660e8400-e29b-41d4-a716-446655440001",
                                 "type": "EXERCISE",
-                                "recordDate": "2025-01-07",
+                                "recordDate": "2025-10-27",
                                 "recordTime": "16:30",
                                 "createdAt": "2025-01-07T16:30:00",
                                 "updatedAt": "2025-01-07T16:30:00",
@@ -82,7 +82,7 @@ public class UnifiedRecordController {
                             {
                                 "id": "770e8400-e29b-41d4-a716-446655440002",
                                 "type": "HABIT",
-                                "recordDate": "2025-01-07",
+                                "recordDate": "2025-10-27",
                                 "recordTime": null,
                                 "createdAt": "2025-01-07T09:00:00",
                                 "updatedAt": "2025-01-07T09:00:00",
@@ -139,7 +139,7 @@ public class UnifiedRecordController {
                         "data": {
                             "id": "550e8400-e29b-41d4-a716-446655440000",
                             "type": "DAILY",
-                            "recordDate": "2025-01-07",
+                            "recordDate": "2025-10-27",
                             "recordTime": "15:21",
                             "createdAt": "2025-01-07T15:21:00",
                             "updatedAt": "2025-01-07T15:21:00",

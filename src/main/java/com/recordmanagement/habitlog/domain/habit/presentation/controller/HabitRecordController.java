@@ -54,7 +54,7 @@ public class HabitRecordController {
                             "data": {
                                 "id": "habit_record_123",
                                 "type": "HABIT",
-                                "recordDate": "2025-10-16",
+                                "recordDate": "2025-10-27",
                                 "recordTime": "14:30:00",
                                 "createdAt": "2025-10-16T14:30:00",
                                 "updatedAt": "2025-10-16T14:30:00",
@@ -147,7 +147,7 @@ public class HabitRecordController {
                         "data": {
                             "id": "habit_record_123",
                             "type": "HABIT",
-                            "recordDate": "2025-10-16",
+                            "recordDate": "2025-10-27",
                             "recordTime": "14:30:00",
                             "createdAt": "2025-10-16T14:30:00",
                             "updatedAt": "2025-10-16T16:45:00",
@@ -246,7 +246,7 @@ public class HabitRecordController {
                         "data": {
                             "id": "habit_record_123",
                             "type": "HABIT",
-                            "recordDate": "2025-10-16",
+                            "recordDate": "2025-10-27",
                             "recordTime": null,
                             "createdAt": "2025-10-16T14:30:00",
                             "updatedAt": "2025-10-16T16:45:00",

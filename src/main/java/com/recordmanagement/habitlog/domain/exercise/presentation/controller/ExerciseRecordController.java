@@ -45,7 +45,7 @@ public class ExerciseRecordController {
                    - exerciseType: 운동 종목 (필수)
                    - 운동기록 중 최소 1개: caloriesBurned(칼로리) OR exerciseTimeMinutes(운동시간) OR stepCount(걸음수) OR weight(몸무게)
                    - dailyNote: 나의 기록 (필수)
-                   - recordDate: 기록 날짜 (필수)
+                   - recordDate: 기록 날짜 (필수, 오늘 날짜만 허용)
                    - recordTime: 기록 시간 (필수)
                    
                    **선택 항목:**
@@ -76,7 +76,7 @@ public class ExerciseRecordController {
                                 "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...",
                                 "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."
                             ],
-                            "recordDate": "2025-01-07",
+                            "recordDate": "2025-10-27",
                             "recordTime": "13:30"
                         }
                         """
@@ -89,7 +89,7 @@ public class ExerciseRecordController {
                             "exerciseType": "RUNNING",
                             "caloriesBurned": 250,
                             "dailyNote": "30분 달리기 완주했어요!",
-                            "recordDate": "2025-01-07",
+                            "recordDate": "2025-10-27",
                             "recordTime": "07:00"
                         }
                         """
@@ -102,7 +102,7 @@ public class ExerciseRecordController {
                             "exerciseType": "YOGA",
                             "exerciseTimeMinutes": 45,
                             "dailyNote": "요가로 몸과 마음을 정화했어요.",
-                            "recordDate": "2025-01-07",
+                            "recordDate": "2025-10-27",
                             "recordTime": "18:00"
                         }
                         """
@@ -123,7 +123,7 @@ public class ExerciseRecordController {
                     "data": {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
                         "type": "EXERCISE",
-                        "recordDate": "2025-01-07",
+                        "recordDate": "2025-10-27",
                         "recordTime": "13:30:00",
                         "createdAt": "2025-09-18T15:30:00",
                         "updatedAt": "2025-09-18T15:30:00",
@@ -272,7 +272,7 @@ public class ExerciseRecordController {
                     "data": {
                         "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
                         "type": "EXERCISE",
-                        "recordDate": "2025-01-07",
+                        "recordDate": "2025-10-27",
                         "recordTime": "13:30:00",
                         "createdAt": "2025-09-18T15:30:00",
                         "updatedAt": "2025-09-18T16:15:00",

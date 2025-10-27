@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.api.record.dto;
 
+import com.recordmanagement.habitlog.global.common.validation.ValidRecordDate;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -24,6 +25,7 @@ public class CreateRecordRequest {
     private List<String> imageUrls;
     
     @NotNull(message = "기록 날짜는 필수입니다")
+    @ValidRecordDate
     private String recordDate;
     
     @NotNull(message = "기록 시간은 필수입니다")

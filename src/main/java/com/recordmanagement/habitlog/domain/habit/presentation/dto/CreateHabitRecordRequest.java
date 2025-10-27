@@ -24,7 +24,7 @@ public record CreateHabitRecordRequest(
     @Schema(description = "글쓰기/메모", example = "오늘도 물 2L 마시기 성공!")
     String memo,
     
-    @Schema(description = "기록 날짜", example = "2024-01-15")
+    @Schema(description = "기록 날짜", example = "2025-10-27")
     @NotNull(message = "기록 날짜는 필수입니다")
     LocalDate recordDate,
     
