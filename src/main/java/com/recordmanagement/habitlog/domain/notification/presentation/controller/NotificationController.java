@@ -239,11 +239,13 @@ public class NotificationController {
             
             ### 응답 정보
             - notifications: 알림 히스토리 목록 (페이징)
-            - recentCheckedAt: 알림 센터 마지막 확인 시간 (읽음/안읽음 판단용)
+            - recentCheckedDate/recentCheckedTime: 알림 센터 마지막 확인 날짜/시간 (읽음/안읽음 판단용)
             
             ### 날짜/시간 필드 타입
-            - sentAt: **string** (ISO 8601 형식: yyyy-MM-ddTHH:mm:ss)
-            - recentCheckedAt: **string** (ISO 8601 형식: yyyy-MM-ddTHH:mm:ss)
+            - sentDate: **string** (날짜 형식: yyyy-MM-dd)
+            - sentTime: **[int, int, int]** (시간 배열: [시, 분, 초])
+            - recentCheckedDate: **string** (날짜 형식: yyyy-MM-dd)
+            - recentCheckedTime: **[int, int, int]** (시간 배열: [시, 분, 초])
             
             ### 정렬 순서
             - 최신 알림부터 표시 (sentAt 역순)
@@ -253,9 +255,9 @@ public class NotificationController {
             - size: 페이지 크기 (기본값 20, 최대 100)
             
             ### 읽음 상태 판단
-            - recentCheckedAt이 null이면 최초 조회 (모든 알림이 새로움)
-            - sentAt > recentCheckedAt인 알림은 읽지 않은 알림
-            - sentAt <= recentCheckedAt인 알림은 읽은 알림
+            - recentCheckedDate/Time이 null이면 최초 조회 (모든 알림이 새로움)
+            - sentDate + sentTime > recentCheckedDate + recentCheckedTime인 알림은 읽지 않은 알림
+            - sentDate + sentTime <= recentCheckedDate + recentCheckedTime인 알림은 읽은 알림
             
             ### 사용 시나리오
             - 앱 내 알림 센터 화면
@@ -281,12 +283,14 @@ public class NotificationController {
                                 {
                                   "mainRecordType": "EXERCISE",
                                   "description": "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!",
-                                  "sentAt": "2025-10-23T20:00:00"
+                                  "sentDate": "2025-10-23",
+                                  "sentTime": [20, 0, 0]
                                 },
                                 {
                                   "mainRecordType": "DAILY",
                                   "description": "오늘의 소중한 순간을 기록으로 남겨보세요!",
-                                  "sentAt": "2025-10-23T19:00:00"
+                                  "sentDate": "2025-10-23",
+                                  "sentTime": [19, 0, 0]
                                 }
                               ],
                               "pageInfo": {
@@ -296,7 +300,8 @@ public class NotificationController {
                                 "totalPages": 1
                               }
                             },
-                            "recentCheckedAt": "2025-10-25T16:45:30"
+                            "recentCheckedDate": "2025-10-25",
+                            "recentCheckedTime": [16, 45, 30]
                           }
                         }
                         """
@@ -326,8 +331,8 @@ public class NotificationController {
         NotificationHistoryWithStatusResponse response = notificationHistoryApplicationService
                 .getNotificationHistoryWithStatus(UserId.from(userId), pageable);
 
-        log.info("알림 히스토리 조회 완료: userId={}, recentCheckedAt={}", 
-                userId, response.getRecentCheckedAt());
+        log.info("알림 히스토리 조회 완료: userId={}, recentCheckedDate={}, recentCheckedTime={}", 
+                userId, response.getRecentCheckedDate(), response.getRecentCheckedTime());
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }

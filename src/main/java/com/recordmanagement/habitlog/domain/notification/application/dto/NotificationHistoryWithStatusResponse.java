@@ -1,12 +1,13 @@
 package com.recordmanagement.habitlog.domain.notification.application.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.recordmanagement.habitlog.global.common.response.PagingResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Value;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 알림 히스토리 조회 응답 (읽음 상태 포함)
@@ -27,9 +28,15 @@ public class NotificationHistoryWithStatusResponse {
     @Schema(description = "알림 히스토리 목록 (페이징)")
     PagingResponse<NotificationHistoryResponse> notifications;
 
-    @Schema(description = "알림 센터 마지막 확인 시간 (null이면 최초 조회)", example = "2025-10-25T16:45:30")
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    LocalDateTime recentCheckedAt;
+    @Schema(description = "알림 센터 마지막 확인 날짜 (null이면 최초 조회)", 
+            example = "2025-10-25", 
+            nullable = true)
+    LocalDate recentCheckedDate;
+
+    @Schema(description = "알림 센터 마지막 확인 시간 [시, 분, 초] (null이면 최초 조회)", 
+            example = "[16, 45, 30]", 
+            nullable = true)
+    LocalTime recentCheckedTime;
 
     /**
      * 알림 히스토리와 최근 확인 시간으로 응답 생성
@@ -41,9 +48,19 @@ public class NotificationHistoryWithStatusResponse {
     public static NotificationHistoryWithStatusResponse of(
             PagingResponse<NotificationHistoryResponse> notifications,
             LocalDateTime recentCheckedAt) {
+        
+        LocalDate recentCheckedDate = null;
+        LocalTime recentCheckedTime = null;
+        
+        if (recentCheckedAt != null) {
+            recentCheckedDate = recentCheckedAt.toLocalDate();
+            recentCheckedTime = recentCheckedAt.toLocalTime();
+        }
+        
         return NotificationHistoryWithStatusResponse.builder()
                 .notifications(notifications)
-                .recentCheckedAt(recentCheckedAt)
+                .recentCheckedDate(recentCheckedDate)
+                .recentCheckedTime(recentCheckedTime)
                 .build();
     }
 }
