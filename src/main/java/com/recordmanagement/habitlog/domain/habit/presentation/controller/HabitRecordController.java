@@ -46,7 +46,18 @@ public class HabitRecordController {
                **선택 항목:**
                - notificationTime: 알림 시간
                - memo: 메모/글쓰기
-               - isMainRecord: 메인 기록 여부
+               - isMainRecord: 메인 기록 여부 (명시적 설정)
+               
+               **메인/서브 기록 결정:**
+               - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
+               - isMainRecord가 설정되지 않은 경우: 자동 결정
+                 • 사용자의 메인 기록 타입이 'HABIT'인 경우 → 메인 기록
+                 • 사용자의 메인 기록 타입이 'DAILY' 또는 'EXERCISE'인 경우 → 서브 기록
+               - 작성 순서와는 무관하게 결정됩니다
+               
+               **기록 제한:**
+               - 하루 최대 2개의 습관 기록 작성 가능
+               - 하루 최대 2가지 기록 타입 작성 가능
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -141,7 +152,16 @@ public class HabitRecordController {
     
     @PutMapping("/{habitRecordId}")
     @Operation(summary = "습관기록 수정", 
-               description = "기존 습관기록을 수정합니다.",
+               description = """
+               기존 습관기록을 수정합니다.
+               
+               **메인/서브 기록 결정:**
+               - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
+               - isMainRecord가 설정되지 않은 경우: 자동 결정
+                 • 사용자의 메인 기록 타입이 'HABIT'인 경우 → 메인 기록
+                 • 사용자의 메인 기록 타입이 'DAILY' 또는 'EXERCISE'인 경우 → 서브 기록
+               - 작성 순서와는 무관하게 결정됩니다
+               """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",

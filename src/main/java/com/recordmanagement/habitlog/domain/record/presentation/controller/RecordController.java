@@ -56,6 +56,15 @@ public class RecordController {
             **선택 항목:**
             - emotion: 감정 표현
             - imageUrls: 사진 (최대 3장)
+            
+            **메인/서브 기록 결정:**
+            - 사용자의 메인 기록 타입이 'DAILY'인 경우 → 메인 기록
+            - 사용자의 메인 기록 타입이 'EXERCISE' 또는 'HABIT'인 경우 → 서브 기록
+            - 작성 순서와는 무관하게 결정됩니다
+            
+            **기록 제한:**
+            - 하루 최대 2개의 일상 기록 작성 가능
+            - 하루 최대 2가지 기록 타입 작성 가능
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(

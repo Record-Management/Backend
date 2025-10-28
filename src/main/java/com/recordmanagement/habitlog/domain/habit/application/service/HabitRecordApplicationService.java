@@ -126,22 +126,30 @@ public class HabitRecordApplicationService {
                 command.userId()
         ).orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
-        // 습관 타입이 변경되는 경우 메인 기록 결정 (현재 HabitRecord에서는 타입 변경이 없으므로 주석 처리)
-        // boolean isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
-        //     command.userId(), 
-        //     RecordType.HABIT
-        // );
-        // log.info("습관기록 수정으로 메인 기록 재결정: recordId={}, isMain={}", 
-        //         habitRecordId, isMainRecord);
+        // 메인 기록 자동 결정 (명시적 설정이 없는 경우)
+        boolean autoIsMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+            command.userId(), 
+            RecordType.HABIT
+        );
+        log.info("습관기록 수정으로 메인 기록 자동 결정: recordId={}, autoIsMain={}", 
+                habitRecordId, autoIsMainRecord);
         
         HabitRecord updatedRecord = existingRecord
                 .updateHabitType(command.habitType())
                 .updateNotificationSettings(command.notificationEnabled(), command.notificationTime())
                 .updateMemo(command.memo());
         
-        // isMainRecord가 명시적으로 설정된 경우 적용 (그렇지 않으면 기존 값 유지)
+        // 메인 기록 상태 결정: 명시적 설정 > 자동 결정 > 기존 값 유지
         if (command.isMainRecord() != null) {
+            // 명시적으로 설정된 경우
             updatedRecord = updatedRecord.updateMainRecordStatus(command.isMainRecord());
+            log.info("습관기록 메인 상태 명시적 설정: recordId={}, isMain={}", 
+                    habitRecordId, command.isMainRecord());
+        } else {
+            // 자동 결정된 값 적용
+            updatedRecord = updatedRecord.updateMainRecordStatus(autoIsMainRecord);
+            log.info("습관기록 메인 상태 자동 적용: recordId={}, isMain={}", 
+                    habitRecordId, autoIsMainRecord);
         }
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);

@@ -87,7 +87,8 @@ public class ExerciseRecordApplicationService {
             command.recordTime()
         );
         
-        // 메인 기록 상태 설정 (ExerciseRecord 도메인에 isMainRecord 필드가 있다면)
+        // 메인 기록 상태 설정 (ExerciseRecord에는 isMainRecord 필드가 없음)
+        // 추후 ExerciseRecord에 메인/서브 필드 추가 시 활성화
         // exerciseRecord = exerciseRecord.updateMainRecordStatus(isMainRecord);
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(exerciseRecord);
@@ -106,13 +107,13 @@ public class ExerciseRecordApplicationService {
                 command.exerciseRecordId(), command.userId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
-        // 운동 타입이 변경되는 경우 메인 기록 결정 (현재 ExerciseRecord에서는 타입 변경이 없으므로 주석 처리)
-        // boolean isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
-        //     command.userId(), 
-        //     RecordType.EXERCISE
-        // );
-        // log.info("운동기록 수정으로 메인 기록 재결정: recordId={}, isMain={}", 
-        //         command.exerciseRecordId().getValue(), isMainRecord);
+        // 메인 기록 결정 (사용자 메인 기록 타입과 일치 여부 확인)
+        boolean isMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+            command.userId(), 
+            RecordType.EXERCISE
+        );
+        log.info("운동기록 수정으로 메인 기록 결정: recordId={}, isMain={}", 
+                command.exerciseRecordId().getValue(), isMainRecord);
         
         ExerciseRecord updatedRecord = existingRecord
                 .updateExerciseDetails(command.exerciseType(), command.caloriesBurned(), 
@@ -122,7 +123,8 @@ public class ExerciseRecordApplicationService {
                 .updateImages(command.imageUrls())
                 .updateRecordTime(command.recordTime());
         
-        // 메인 기록 상태 업데이트 (ExerciseRecord 도메인에 해당 메서드가 있다면)
+        // 메인 기록 상태 업데이트 (ExerciseRecord에는 isMainRecord 필드가 없음)
+        // 추후 ExerciseRecord에 메인/서브 필드 추가 시 활성화
         // updatedRecord = updatedRecord.updateMainRecordStatus(isMainRecord);
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(updatedRecord);
