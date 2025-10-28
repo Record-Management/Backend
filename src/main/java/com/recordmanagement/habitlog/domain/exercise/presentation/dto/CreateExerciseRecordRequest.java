@@ -7,14 +7,18 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @ValidExerciseData
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateExerciseRecordRequest {
     
     @NotNull(message = "운동 종목은 필수입니다")
