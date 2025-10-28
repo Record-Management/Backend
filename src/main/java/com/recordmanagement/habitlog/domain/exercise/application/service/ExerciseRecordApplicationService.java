@@ -12,8 +12,8 @@ import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDete
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,29 +22,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class ExerciseRecordApplicationService {
-    
-    private static final Logger log = LoggerFactory.getLogger(ExerciseRecordApplicationService.class);
     
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final RecordRepository recordRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
     private final MainRecordDeterminationService mainRecordDeterminationService;
-    
-    public ExerciseRecordApplicationService(ExerciseRecordRepository exerciseRecordRepository,
-                                          RecordRepository recordRepository,
-                                          HabitRecordRepository habitRecordRepository,
-                                          S3FileService s3FileService,
-                                          MainRecordDeterminationService mainRecordDeterminationService) {
-        this.exerciseRecordRepository = exerciseRecordRepository;
-        this.recordRepository = recordRepository;
-        this.habitRecordRepository = habitRecordRepository;
-        this.s3FileService = s3FileService;
-        this.mainRecordDeterminationService = mainRecordDeterminationService;
-    }
     
     @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {

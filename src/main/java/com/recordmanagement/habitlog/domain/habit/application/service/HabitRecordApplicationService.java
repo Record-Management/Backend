@@ -11,8 +11,8 @@ import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseR
 import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,26 +21,16 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 @Transactional
 public class HabitRecordApplicationService {
-    
-    private static final Logger log = LoggerFactory.getLogger(HabitRecordApplicationService.class);
     
     private final HabitRecordRepository habitRecordRepository;
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final MainRecordDeterminationService mainRecordDeterminationService;
-    
-    public HabitRecordApplicationService(HabitRecordRepository habitRecordRepository,
-                                       RecordRepository recordRepository,
-                                       ExerciseRecordRepository exerciseRecordRepository,
-                                       MainRecordDeterminationService mainRecordDeterminationService) {
-        this.habitRecordRepository = habitRecordRepository;
-        this.recordRepository = recordRepository;
-        this.exerciseRecordRepository = exerciseRecordRepository;
-        this.mainRecordDeterminationService = mainRecordDeterminationService;
-    }
     
     @CacheEvict(value = "calendar", allEntries = true)
     public HabitRecordResponse createHabitRecord(CreateHabitRecordCommand command) {
