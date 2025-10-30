@@ -72,6 +72,13 @@ public class UserApplicationService {
     }
 
     /**
+     * 온보딩 재설정 처리
+     */
+    public UserResponse resetOnboarding(OnboardingCompletionCommand command) {
+        return userRegistrationService.resetOnboarding(command);
+    }
+
+    /**
      * 소셜 로그인 사용자 조회
      */
     @Transactional(readOnly = true)

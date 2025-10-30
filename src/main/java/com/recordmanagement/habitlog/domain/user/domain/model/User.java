@@ -72,6 +72,9 @@ public class User {
     @Schema(description = "목표 일수", example = "20")
     private Integer goalDays;
 
+    @Schema(description = "습관 시작일 (습관 기록 타입인 경우)", example = "2025-10-20")
+    private LocalDate habitStartDate;
+
     @Schema(description = "FCM 토큰 (푸시 알림용)", example = "dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuLi4u")
     private String fcmToken;
 
@@ -139,6 +142,38 @@ public class User {
         this.mainRecordType = mainRecordType;
         this.birthDate = birthDate;
         this.goalDays = goalDays;
+        
+        // 습관 타입인 경우 즉시 목표 기간 시작
+        if (mainRecordType == RecordType.HABIT) {
+            this.habitStartDate = LocalDate.now();
+        }
+        
+        this.onboardingCompleted = true;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 온보딩 재설정 처리
+     *
+     * - 기존 사용자도 목표 재설정을 위해 온보딩을 다시 할 수 있도록 함
+     * - 모든 온보딩 데이터를 새로 설정
+     * - updatedAt 자동 갱신
+     * - 온보딩 완료 여부와 관계없이 실행 가능
+     */
+    public void resetOnboarding(String nickname, RecordType mainRecordType, LocalDate birthDate, Integer goalDays) {
+        this.nickname = nickname;
+        this.mainRecordType = mainRecordType;
+        this.birthDate = birthDate;
+        this.goalDays = goalDays;
+        
+        // 습관 타입으로 변경하는 경우 즉시 목표 기간 시작
+        if (mainRecordType == RecordType.HABIT) {
+            this.habitStartDate = LocalDate.now();
+        } else {
+            // 다른 타입으로 변경하는 경우 습관 시작일 초기화
+            this.habitStartDate = null;
+        }
+        
         this.onboardingCompleted = true;
         this.updatedAt = LocalDateTime.now();
     }
@@ -161,6 +196,7 @@ public class User {
             setFieldValue(newUser, "mainRecordType", this.mainRecordType);
             setFieldValue(newUser, "birthDate", this.birthDate);
             setFieldValue(newUser, "goalDays", this.goalDays);
+            setFieldValue(newUser, "habitStartDate", this.habitStartDate);
             setFieldValue(newUser, "fcmToken", this.fcmToken);
             setFieldValue(newUser, "onboardingCompleted", this.onboardingCompleted);
             setFieldValue(newUser, "createdAt", this.createdAt);
@@ -283,6 +319,45 @@ public class User {
     public boolean canBeRestored() {
         return isWithdrawn() && !isPermanentlyDeleted();
     }
+
+    /**
+     * 습관 목표 기간 계산
+     * 
+     * @return 습관 시작일부터 목표 일수까지의 기간 정보
+     */
+    public HabitPeriodInfo getHabitPeriodInfo() {
+        if (this.mainRecordType != RecordType.HABIT || this.habitStartDate == null || this.goalDays == null) {
+            return null;
+        }
+        
+        LocalDate endDate = this.habitStartDate.plusDays(this.goalDays - 1);
+        return new HabitPeriodInfo(this.habitStartDate, endDate, this.goalDays);
+    }
+
+    /**
+     * 특정 날짜가 습관 목표 기간 내에 있는지 확인
+     * 
+     * @param date 확인할 날짜
+     * @return true 목표 기간 내, false 목표 기간 외
+     */
+    public boolean isWithinHabitPeriod(LocalDate date) {
+        HabitPeriodInfo periodInfo = getHabitPeriodInfo();
+        if (periodInfo == null) {
+            return false;
+        }
+        
+        return !date.isBefore(periodInfo.startDate()) && !date.isAfter(periodInfo.endDate());
+    }
+
+    /**
+     * 습관 목표 기간 정보
+     */
+    public record HabitPeriodInfo(
+        LocalDate startDate,
+        LocalDate endDate,
+        Integer totalDays
+    ) {}
+
 
     /**
      * 동일 사용자 여부 확인

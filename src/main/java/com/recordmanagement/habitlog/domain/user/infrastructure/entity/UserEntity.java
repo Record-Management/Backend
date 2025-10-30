@@ -81,6 +81,9 @@ public class UserEntity {
     @Column(name = "goal_days")
     private Integer goalDays;
 
+    @Column(name = "habit_start_date")
+    private LocalDate habitStartDate;
+
     @Column(name = "fcm_token", length = 1000)
     private String fcmToken;
 
@@ -113,7 +116,8 @@ public class UserEntity {
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
-                .fcmToken(null)  // FCM 토큰은 보안상 응답에 포함하지 않음
+                .habitStartDate(user.getHabitStartDate())
+                .fcmToken(user.getFcmToken())
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
                 .withdrawalReason(user.getWithdrawalReason())
@@ -173,10 +177,13 @@ public class UserEntity {
             goalDaysField.setAccessible(true);
             goalDaysField.set(user, this.goalDays);
 
-            // TODO: Firebase 설정 후 주석 해제
-            // var fcmTokenField = User.class.getDeclaredField("fcmToken");
-            // fcmTokenField.setAccessible(true);
-            // fcmTokenField.set(user, this.fcmToken);
+            var habitStartDateField = User.class.getDeclaredField("habitStartDate");
+            habitStartDateField.setAccessible(true);
+            habitStartDateField.set(user, this.habitStartDate);
+
+            var fcmTokenField = User.class.getDeclaredField("fcmToken");
+            fcmTokenField.setAccessible(true);
+            fcmTokenField.set(user, this.fcmToken);
 
             var deletedAtField = User.class.getDeclaredField("deletedAt");
             deletedAtField.setAccessible(true);

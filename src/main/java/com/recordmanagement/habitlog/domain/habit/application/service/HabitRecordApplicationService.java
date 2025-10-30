@@ -11,6 +11,9 @@ import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseR
 import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import com.recordmanagement.habitlog.domain.user.domain.model.User;
+import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
+import com.recordmanagement.habitlog.domain.user.exception.UserException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -31,11 +34,36 @@ public class HabitRecordApplicationService {
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final MainRecordDeterminationService mainRecordDeterminationService;
+    private final UserRepository userRepository;
     
     @CacheEvict(value = "calendar", allEntries = true)
     public HabitRecordResponse createHabitRecord(CreateHabitRecordCommand command) {
         log.info("습관기록 생성 시작: userId=[{}], habitType=[{}], recordDate=[{}]", 
                 command.userId().getValue(), command.habitType(), command.recordDate());
+        
+        // 사용자 정보 조회
+        User user = userRepository.findById(command.userId())
+                .orElseThrow(() -> UserException.notFound(command.userId().getValue()));
+        
+        // 습관 타입 사용자만 습관 기록 생성 가능
+        if (user.getMainRecordType() != RecordType.HABIT) {
+            throw new CustomException(ErrorCode.INVALID_RECORD_TYPE_FOR_USER);
+        }
+        
+        // 습관 시작일이 설정되어 있어야 함 (온보딩 시점에 설정됨)
+        if (user.getHabitStartDate() == null) {
+            log.error("습관 시작일이 설정되지 않음: userId=[{}]", command.userId().getValue());
+            throw new CustomException(ErrorCode.INVALID_RECORD_TYPE_FOR_USER);
+        }
+        
+        // 습관 목표 기간 내 날짜인지 검증
+        if (!user.isWithinHabitPeriod(command.recordDate())) {
+            User.HabitPeriodInfo periodInfo = user.getHabitPeriodInfo();
+            log.warn("습관 기록 기간 외 등록 시도: userId=[{}], recordDate=[{}], habitPeriod=[{} ~ {}]", 
+                    command.userId().getValue(), command.recordDate(), 
+                    periodInfo.startDate(), periodInfo.endDate());
+            throw new CustomException(ErrorCode.HABIT_RECORD_OUT_OF_PERIOD);
+        }
         
         // 하루 최대 2개 습관기록 제한 검증
         int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(

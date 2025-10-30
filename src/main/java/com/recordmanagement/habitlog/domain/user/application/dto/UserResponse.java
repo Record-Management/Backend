@@ -168,6 +168,13 @@ public class UserResponse {
     @Schema(description = "목표 일수", example = "20")
     private final Integer goalDays;
 
+    @Schema(description = "습관 시작일 (습관 기록 타입인 경우)", example = "[2025, 10, 20]", nullable = true)
+    @JsonSerialize(using = LocalDateArraySerializer.class)
+    private final LocalDate habitStartDate;
+
+    @Schema(description = "습관 목표 기간 정보 (습관 기록 타입인 경우)", nullable = true)
+    private final HabitPeriodInfo habitPeriodInfo;
+
     @Schema(description = "회원 탈퇴 요청 시간", example = "2025-10-20T15:30:00", nullable = true)
     private final LocalDateTime deletedAt;
 
@@ -197,6 +204,9 @@ public class UserResponse {
                 .mainRecordType(user.getMainRecordType())
                 .birthDate(user.getBirthDate())
                 .goalDays(user.getGoalDays())
+                .habitStartDate(user.getHabitStartDate())
+                .habitPeriodInfo(user.getHabitPeriodInfo() != null ? 
+                    HabitPeriodInfo.from(user.getHabitPeriodInfo()) : null)
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
                 .withdrawalReason(user.getWithdrawalReason())
@@ -256,5 +266,30 @@ public class UserResponse {
                 .socialType(socialType)
                 .createdAt(createdAt)
                 .build();
+    }
+
+    /**
+     * 습관 목표 기간 정보 DTO
+     */
+    @Schema(description = "습관 목표 기간 정보")
+    public record HabitPeriodInfo(
+        @Schema(description = "습관 시작일", example = "[2025, 10, 20]")
+        @JsonSerialize(using = LocalDateArraySerializer.class)
+        LocalDate startDate,
+        
+        @Schema(description = "습관 종료일", example = "[2025, 10, 30]")  
+        @JsonSerialize(using = LocalDateArraySerializer.class)
+        LocalDate endDate,
+        
+        @Schema(description = "총 목표 일수", example = "10")
+        Integer totalDays
+    ) {
+        public static HabitPeriodInfo from(com.recordmanagement.habitlog.domain.user.domain.model.User.HabitPeriodInfo domainInfo) {
+            return new HabitPeriodInfo(
+                domainInfo.startDate(),
+                domainInfo.endDate(),
+                domainInfo.totalDays()
+            );
+        }
     }
 }

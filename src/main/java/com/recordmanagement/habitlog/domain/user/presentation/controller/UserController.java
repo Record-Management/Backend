@@ -278,6 +278,87 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(user));
     }
 
+    /**
+     * 온보딩 재설정 API
+     * 기존 사용자가 목표 재설정을 위해 온보딩을 다시 진행할 때 호출
+     *
+     * @param request 온보딩 완료 요청 DTO
+     * @param authentication 인증된 사용자 정보
+     * @return 업데이트된 사용자 정보
+     */
+    @Operation(
+        summary = "온보딩 재설정", 
+        description = """
+            기존 사용자의 목표 재설정을 위한 온보딩 처리를 합니다.
+            
+            ### 기존 온보딩과의 차이점
+            - 이미 온보딩이 완료된 사용자도 재설정 가능
+            - 목표 변경, 메인 기록 타입 변경 등에 사용
+            
+            ### 사용 시나리오
+            - 사용자가 목표를 변경하고 싶을 때
+            - 메인 기록 타입을 변경하고 싶을 때
+            - 개인정보 업데이트가 필요할 때
+            """,
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "온보딩 재설정 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "name": "카카오닉네임",
+                            "nickname": "홍길동",
+                            "email": null,
+                            "socialType": "KAKAO",
+                            "mainRecordType": "DAILY",
+                            "birthDate": "1998-06-02",
+                            "goalDays": 30,
+                            "onboardingCompleted": true,
+                            "createdAt": "2025-09-02T02:46:41.454753"
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @PostMapping("/onboarding/reset")
+    public ResponseEntity<ApiResponse<UserResponse>> resetOnboarding(
+            @Valid @RequestBody OnboardingCompletionRequest request,
+            Authentication authentication) {
+
+        log.info("온보딩 재설정 요청 수신");
+        log.info("요청 데이터: nickname=[{}], mainRecordType=[{}], birthDate=[{}], goalDays=[{}]", 
+                request.getNickname(), request.getMainRecordType(), request.getBirthDate(), 
+                request.getGoalDays());
+
+        String userId = authentication.getName();
+        
+        OnboardingCompletionCommand command = new OnboardingCompletionCommand(
+                userId,
+                request.getNickname(),
+                request.getMainRecordType(),
+                request.getBirthDate(),
+                request.getGoalDays()
+        );
+
+        UserResponse user = userApplicationService.resetOnboarding(command);
+
+        log.info("온보딩 재설정 처리 완료");
+
+        return ResponseEntity.ok(ApiResponse.success(user));
+    }
+
     @Operation(
         summary = "FCM 토큰 업데이트",
         description = "푸시 알림을 위한 FCM 토큰을 업데이트합니다.",
@@ -425,6 +506,70 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
     }
 
+    /**
+     * 습관 기간 정보 조회 API
+     * 습관 타입 사용자의 목표 기간 정보를 반환합니다.
+     *
+     * @param authentication 인증된 사용자 정보
+     * @return 습관 목표 기간 정보
+     */
+    @Operation(
+        summary = "습관 기간 정보 조회",
+        description = """
+            습관 타입 사용자의 목표 기간 정보를 조회합니다.
+            
+            ### 포함 정보
+            - 습관 시작일 (첫 번째 습관 기록을 등록한 날짜)
+            - 습관 종료일 (시작일 + 목표 일수)
+            - 총 목표 일수
+            
+            ### 사용 시나리오
+            - 카드 UI에서 진행 상황 표시
+            - 달력에서 습관 기간 하이라이트
+            - 목표 달성률 계산
+            
+            ### 주의사항
+            - 습관 타입이 아닌 사용자는 null 반환
+            - 아직 습관을 시작하지 않은 경우 null 반환
+            """,
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "습관 기간 정보 조회 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "startDate": [2025, 10, 20],
+                            "endDate": [2025, 10, 30], 
+                            "totalDays": 10
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @GetMapping("/habit-period")
+    public ResponseEntity<ApiResponse<UserResponse.HabitPeriodInfo>> getHabitPeriodInfo(Authentication authentication) {
+        
+        log.info("습관 기간 정보 조회 요청 수신");
+        
+        String userId = authentication.getName();
+        UserResponse user = userApplicationService.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        log.info("습관 기간 정보 조회 완료: userId={}", userId);
+        
+        return ResponseEntity.ok(ApiResponse.success(user.getHabitPeriodInfo()));
+    }
 
     /**
      * FCM 토큰 삭제 API

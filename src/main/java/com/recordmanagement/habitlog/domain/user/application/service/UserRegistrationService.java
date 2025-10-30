@@ -114,6 +114,33 @@ public class UserRegistrationService {
     }
 
     /**
+     * 온보딩 재설정 처리
+     * 기존 사용자의 목표 재설정을 위한 온보딩 처리
+     * 
+     * @param command 온보딩 완료 커맨드
+     * @return 업데이트된 사용자 정보
+     */
+    public UserResponse resetOnboarding(OnboardingCompletionCommand command) {
+        log.info("온보딩 재설정 처리: userId={}, mainRecordType={}", 
+                command.userId(), command.mainRecordType());
+
+        UserId userId = UserId.of(command.userId());
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> UserException.notFound(command.userId()));
+
+        user.resetOnboarding(
+                command.nickname(),
+                command.mainRecordType(), 
+                command.birthDate(),
+                command.goalDays()
+        );
+        User updatedUser = userRepository.save(user);
+        
+        log.info("온보딩 재설정 완료: userId={}", updatedUser.getId().getValue());
+        return UserResponse.from(updatedUser);
+    }
+
+    /**
      * 소셜 로그인 사용자 조회
      * 소셜 타입과 소셜 ID 조합으로 사용자 검색
      * 
