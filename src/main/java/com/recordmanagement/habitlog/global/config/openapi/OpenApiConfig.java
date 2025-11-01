@@ -65,6 +65,12 @@ public class OpenApiConfig {
                         
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
                         
+                        ### 🆕 v1.3.0 업데이트 (2025.11.01)
+                        - 🎯 **습관 목표 기간 시스템 개선**: 온보딩 시점부터 목표 달성까지 체계적 관리
+                        - 📅 **캘린더 자동 습관 표시**: 목표 기간 전체에 걸쳐 메인 습관 슬롯 자동 생성
+                        - 🔄 **목표 재설정 API**: 간편한 습관 목표 변경 기능
+                        - 📊 **습관 기간 정보 API**: 현재 습관 진행 상황 및 기간 정보 조회
+                        
                         ### 🔐 인증 방식 
                         - JWT 기반 Bearer 토큰 인증
                         - 액세스 토큰 (1시간) + 리프레시 토큰 (30일) 구조
@@ -80,7 +86,7 @@ public class OpenApiConfig {
                         - **프론트엔드 Android** 🤖: [HabitLog Android App](https://github.com/Record-Management/Android)
                         - **문의사항**: 💬Discord - jws0602
                         """)
-                .version("v1.2.0")
+                .version("v1.3.0")
                 .contact(new Contact()
                         .name("전우선 (Jeon Woo Seon)")
                         .email("wooxexn@gmail.com")

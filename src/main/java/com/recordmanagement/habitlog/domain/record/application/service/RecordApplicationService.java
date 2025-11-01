@@ -24,6 +24,8 @@ import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecord;
 import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecordId;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import com.recordmanagement.habitlog.domain.user.domain.model.User;
+import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
 import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +64,7 @@ public class RecordApplicationService {
     private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final ExerciseRecordSecurityRepository exerciseRecordSecurityRepository;
     private final HabitRecordRepository habitRecordRepository;
+    private final UserRepository userRepository;
     private final S3FileService s3FileService;
     private final MainRecordDeterminationService mainRecordDeterminationService;
     private final RecordTypeValidationStrategyFactory validationStrategyFactory;
@@ -69,6 +73,7 @@ public class RecordApplicationService {
                                    ExerciseRecordQueryRepository exerciseRecordQueryRepository,
                                    ExerciseRecordSecurityRepository exerciseRecordSecurityRepository,
                                    HabitRecordRepository habitRecordRepository,
+                                   UserRepository userRepository,
                                    S3FileService s3FileService,
                                    MainRecordDeterminationService mainRecordDeterminationService,
                                    RecordTypeValidationStrategyFactory validationStrategyFactory) {
@@ -76,6 +81,7 @@ public class RecordApplicationService {
         this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
         this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
         this.habitRecordRepository = habitRecordRepository;
+        this.userRepository = userRepository;
         this.s3FileService = s3FileService;
         this.mainRecordDeterminationService = mainRecordDeterminationService;
         this.validationStrategyFactory = validationStrategyFactory;
@@ -212,6 +218,9 @@ public class RecordApplicationService {
             allRecords.addAll(habitRecords.stream()
                 .map(UnifiedRecordResponse::fromHabitRecord)
                 .toList());
+            
+            // 메인 습관 기록 자동 생성 로직 추가
+            generatePlaceholderMainHabitRecords(userIdObj, startDate, endDate, allRecords);
         }
         
         // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
@@ -319,6 +328,83 @@ public class RecordApplicationService {
         
         // 모든 조회 시도가 실패한 경우
         throw new CustomException(ErrorCode.RECORD_NOT_FOUND);
+    }
+    
+    /**
+     * 메인 습관 기록 자동 생성 로직
+     * 사용자의 메인 기록 타입이 HABIT인 경우, 습관 시작일부터 목표 날짜까지의 기간 중
+     * 실제 기록이 없는 날짜에 대해 플레이스홀더 메인 습관 기록을 생성
+     */
+    private void generatePlaceholderMainHabitRecords(UserId userId, LocalDate startDate, LocalDate endDate, 
+                                                   List<UnifiedRecordResponse> allRecords) {
+        // 사용자 정보 조회
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 메인 기록 타입이 HABIT이 아닌 경우 처리하지 않음
+        if (user.getMainRecordType() != RecordType.HABIT) {
+            return;
+        }
+        
+        // 습관 시작일이 설정되지 않은 경우 처리하지 않음
+        if (user.getHabitStartDate() == null) {
+            return;
+        }
+        
+        // 습관 기간 범위 계산
+        LocalDate habitStartDate = user.getHabitStartDate();
+        LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
+        
+        // 캘린더 조회 범위와 습관 기간의 교집합 계산
+        LocalDate rangeStart = habitStartDate.isAfter(startDate) ? habitStartDate : startDate;
+        LocalDate rangeEnd = habitEndDate.isBefore(endDate) ? habitEndDate : endDate;
+        
+        // 교집합이 없는 경우 처리하지 않음
+        if (rangeStart.isAfter(rangeEnd)) {
+            return;
+        }
+        
+        // 기존 습관 기록이 있는 날짜 집합 생성
+        Set<LocalDate> existingHabitDates = allRecords.stream()
+            .filter(record -> record.type() == RecordType.HABIT)
+            .map(UnifiedRecordResponse::recordDate)
+            .collect(Collectors.toSet());
+        
+        // 습관 기간 내 각 날짜에 대해 플레이스홀더 생성
+        for (LocalDate date = rangeStart; !date.isAfter(rangeEnd); date = date.plusDays(1)) {
+            // 이미 습관 기록이 있는 날짜는 스킵
+            if (!existingHabitDates.contains(date)) {
+                // 플레이스홀더 습관 기록 생성
+                UnifiedRecordResponse placeholderRecord = createPlaceholderHabitRecord(user, date);
+                allRecords.add(placeholderRecord);
+            }
+        }
+        
+        log.info("메인 습관 플레이스홀더 생성 완료: userId={}, habitPeriod=[{} ~ {}], calendarRange=[{} ~ {}]", 
+                userId.getValue(), habitStartDate, habitEndDate, startDate, endDate);
+    }
+    
+    /**
+     * 플레이스홀더 습관 기록 생성
+     */
+    private UnifiedRecordResponse createPlaceholderHabitRecord(User user, LocalDate date) {
+        return new UnifiedRecordResponse(
+            "placeholder-" + user.getId().getValue() + "-" + date.toString(), // 임시 ID
+            RecordType.HABIT,
+            date,
+            null, // recordTime
+            null, // createdAt
+            null, // updatedAt
+            null, // imageUrls
+            null, null, // emotion, content (일상 기록 필드)
+            null, null, null, null, null, null, // 운동 기록 필드들
+            null, // habitType (실제 습관 타입 없음)
+            null, // notificationEnabled
+            null, // notificationTime
+            null, // memo
+            false, // isCompleted (미완료 상태)
+            true // isMainRecord (메인 기록)
+        );
     }
     
     /**

@@ -44,7 +44,10 @@ public record UnifiedRecordResponse(
     Boolean notificationEnabled,
     LocalTime notificationTime,
     String memo,
-    Boolean isCompleted
+    Boolean isCompleted,
+    
+    // 메인 기록 여부 (EXERCISE, HABIT 기록용)
+    Boolean isMainRecord
 ) {
     
     /**
@@ -62,7 +65,8 @@ public record UnifiedRecordResponse(
             record.getEmotion(),
             record.getContent(),
             null, null, null, null, null, null,
-            null, null, null, null, null
+            null, null, null, null, null,
+            null // 일상 기록은 isMainRecord가 없음
         );
     }
     
@@ -85,7 +89,8 @@ public record UnifiedRecordResponse(
             exerciseRecord.getStepCount(),
             exerciseRecord.getWeight(),
             exerciseRecord.getDailyNote(),
-            null, null, null, null, null // 운동 기록은 habit 필드가 없음
+            null, null, null, null, null, // 운동 기록은 habit 필드가 없음
+            null // 운동 기록은 isMainRecord가 없음
         );
     }
     
@@ -107,7 +112,8 @@ public record UnifiedRecordResponse(
             habitRecord.isNotificationEnabled(),
             habitRecord.getNotificationTime(),
             habitRecord.getMemo(),
-            habitRecord.isCompleted()
+            habitRecord.isCompleted(),
+            habitRecord.isMainRecord() // 습관 기록의 isMainRecord
         );
     }
     
@@ -135,7 +141,8 @@ public record UnifiedRecordResponse(
             this.notificationEnabled,
             this.notificationTime,
             this.memo,
-            this.isCompleted
+            this.isCompleted,
+            this.isMainRecord
         );
     }
 }

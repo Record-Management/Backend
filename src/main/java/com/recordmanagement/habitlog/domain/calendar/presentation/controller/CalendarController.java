@@ -31,7 +31,14 @@ public class CalendarController {
         this.recordApplicationService = recordApplicationService;
     }
     
-    @Operation(summary = "캘린더 조회", description = "월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.",
+    @Operation(summary = "캘린더 조회", description = """
+            월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
+            
+            ### 🆕 자동 습관 슬롯 생성 (v1.3.0)
+            - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 걸쳐 자동으로 습관 슬롯이 생성됩니다
+            - 실제 습관 기록이 없는 날짜에는 플레이스홀더 기록이 표시되어 목표 달성 현황을 명확히 볼 수 있습니다
+            - 플레이스홀더 기록은 isMainRecord: true, isCompleted: false로 표시됩니다
+            """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
@@ -48,6 +55,17 @@ public class CalendarController {
                         "month": 1,
                         "monthlyRecords": [
                             {
+                                "date": "2025-01-05",
+                                "records": [
+                                    {
+                                        "id": "placeholder-user123-2025-01-05",
+                                        "type": "HABIT",
+                                        "isMainRecord": true,
+                                        "isCompleted": false
+                                    }
+                                ]
+                            },
+                            {
                                 "date": "2025-01-07",
                                 "records": [
                                     {
@@ -55,8 +73,10 @@ public class CalendarController {
                                         "type": "DAILY"
                                     },
                                     {
-                                        "id": "550e8400-e29b-41d4-a716-446655440001",
-                                        "type": "EXERCISE"
+                                        "id": "habit-real-id-123",
+                                        "type": "HABIT",
+                                        "isMainRecord": true,
+                                        "isCompleted": true
                                     }
                                 ]
                             }
