@@ -179,6 +179,28 @@ public class User {
     }
 
     /**
+     * 목표 재설정 처리 (간소화 버전)
+     *
+     * - 기록 타입과 목표 일수만 변경
+     * - 닉네임, 생년월일은 기존 값 유지
+     * - 습관 타입으로 변경 시 즉시 목표 기간 시작
+     */
+    public void resetGoal(RecordType mainRecordType, Integer goalDays) {
+        this.mainRecordType = mainRecordType;
+        this.goalDays = goalDays;
+        
+        // 습관 타입으로 변경하는 경우 즉시 목표 기간 시작
+        if (mainRecordType == RecordType.HABIT) {
+            this.habitStartDate = LocalDate.now();
+        } else {
+            // 다른 타입으로 변경하는 경우 습관 시작일 초기화
+            this.habitStartDate = null;
+        }
+        
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
      * 소셜 ID 업데이트
      * Apple 재로그인 시 새로운 sub로 업데이트하기 위함
      * 기존 User 객체를 복사하되 socialId만 변경하여 새 객체 생성

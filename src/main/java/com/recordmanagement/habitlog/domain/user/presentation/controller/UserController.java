@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.user.application.service.UserApplica
 import com.recordmanagement.habitlog.domain.user.application.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.OnboardingCompletionCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.FcmTokenUpdateCommand;
+import com.recordmanagement.habitlog.domain.user.application.dto.GoalResetCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
 import com.recordmanagement.habitlog.global.common.response.ApiResponse;
@@ -11,6 +12,7 @@ import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
 import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
 import com.recordmanagement.habitlog.api.user.dto.FcmTokenUpdateRequest;
 import com.recordmanagement.habitlog.api.user.dto.UpdateProfileRequest;
+import com.recordmanagement.habitlog.domain.user.presentation.dto.GoalResetRequest;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
@@ -504,6 +506,91 @@ public class UserController {
         log.info("프로필 업데이트 완료");
 
         return ResponseEntity.ok(ApiResponse.success(updatedUser));
+    }
+
+    /**
+     * 목표 재설정 API (간소화 버전)
+     * 기록 타입과 목표 일수만 변경하는 간단한 재설정
+     *
+     * @param request 목표 재설정 요청 DTO
+     * @param authentication 인증된 사용자 정보
+     * @return 업데이트된 사용자 정보
+     */
+    @Operation(
+        summary = "목표 재설정", 
+        description = """
+            기존 사용자의 기록 타입과 목표 일수만 간단히 재설정합니다.
+            
+            ### 온보딩 재설정과의 차이점
+            - 기록 타입과 목표 일수만 변경
+            - 닉네임, 생년월일은 기존 값 유지
+            - 더 간단하고 빠른 재설정
+            
+            ### 사용 시나리오
+            - 목표 완료 후 새로운 목표 설정
+            - 기록 타입 변경 (운동 → 습관 등)
+            - 목표 일수만 조정
+            """,
+        security = @SecurityRequirement(name = "bearerAuth"),
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "목표 재설정 성공",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "name": "카카오닉네임",
+                            "nickname": "홍길동",
+                            "email": null,
+                            "socialType": "KAKAO",
+                            "mainRecordType": "HABIT",
+                            "birthDate": "1998-06-02",
+                            "goalDays": 10,
+                            "habitStartDate": [2025, 11, 1],
+                            "habitPeriodInfo": {
+                              "startDate": [2025, 11, 1],
+                              "endDate": [2025, 11, 10],
+                              "totalDays": 10
+                            },
+                            "onboardingCompleted": true,
+                            "createdAt": "2025-09-02T02:46:41.454753"
+                          }
+                        }
+                        """
+                    )
+                )
+            )
+        }
+    )
+    @PostMapping("/goal-reset")
+    public ResponseEntity<ApiResponse<UserResponse>> resetGoal(
+            @Valid @RequestBody GoalResetRequest request,
+            Authentication authentication) {
+
+        log.info("목표 재설정 요청 수신");
+        log.info("요청 데이터: mainRecordType=[{}], goalDays=[{}]", 
+                request.getMainRecordType(), request.getGoalDays());
+
+        String userId = authentication.getName();
+        
+        GoalResetCommand command = new GoalResetCommand(
+                userId,
+                request.getMainRecordType(),
+                request.getGoalDays()
+        );
+
+        UserResponse user = userApplicationService.resetGoal(command);
+
+        log.info("목표 재설정 처리 완료");
+
+        return ResponseEntity.ok(ApiResponse.success(user));
     }
 
     /**

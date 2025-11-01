@@ -1,6 +1,7 @@
 package com.recordmanagement.habitlog.domain.user.application.service;
 
 import com.recordmanagement.habitlog.domain.user.application.dto.FcmTokenUpdateCommand;
+import com.recordmanagement.habitlog.domain.user.application.dto.GoalResetCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.OnboardingCompletionCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserRegistrationCommand;
@@ -76,6 +77,24 @@ public class UserApplicationService {
      */
     public UserResponse resetOnboarding(OnboardingCompletionCommand command) {
         return userRegistrationService.resetOnboarding(command);
+    }
+
+    /**
+     * 목표 재설정 처리 (간소화 버전)
+     * 기록 타입과 목표 일수만 변경
+     */
+    public UserResponse resetGoal(GoalResetCommand command) {
+        log.info("목표 재설정 처리: userId=[{}], mainRecordType=[{}], goalDays=[{}]", 
+                command.userId(), command.mainRecordType(), command.goalDays());
+
+        User user = userRepository.findById(UserId.of(command.userId()))
+                .orElseThrow(() -> UserException.notFound(command.userId()));
+
+        user.resetGoal(command.mainRecordType(), command.goalDays());
+        User updatedUser = userRepository.save(user);
+        
+        log.info("목표 재설정 완료: userId=[{}]", updatedUser.getId().getValue());
+        return UserResponse.from(updatedUser);
     }
 
     /**
