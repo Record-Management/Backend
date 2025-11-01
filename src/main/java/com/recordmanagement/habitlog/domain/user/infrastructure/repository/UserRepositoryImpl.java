@@ -132,4 +132,17 @@ public class UserRepositoryImpl implements UserRepository {
                 .map(UserEntity::toDomain)
                 .collect(Collectors.toList());
     }
+
+    /**
+     * 활성 사용자 조회 (탈퇴하지 않은 사용자)
+     * 
+     * @return 활성 사용자 목록
+     */
+    @Override
+    public List<User> findActiveUsers() {
+        return userJpaRepository.findByDeletedAtIsNull()
+                .stream()
+                .map(UserEntity::toDomain)
+                .collect(Collectors.toList());
+    }
 }

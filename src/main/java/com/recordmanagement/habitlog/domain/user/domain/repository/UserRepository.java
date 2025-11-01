@@ -97,4 +97,11 @@ public interface UserRepository {
      * @return 영구 삭제 대상 탈퇴 사용자 목록
      */
     List<User> findExpiredWithdrawnUsers(LocalDateTime currentTime);
+
+    /**
+     * 활성 사용자 조회 (탈퇴하지 않은 사용자)
+     * 
+     * @return 활성 사용자 목록
+     */
+    List<User> findActiveUsers();
 }

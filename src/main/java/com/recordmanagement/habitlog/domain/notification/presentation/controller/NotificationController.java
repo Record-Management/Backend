@@ -42,6 +42,13 @@ import jakarta.validation.Valid;
  * - dailyRecordNotification: 메인 기록 미등록 알림
  * - exerciseNotification: 운동 기록 알림
  * - habitNotification: 습관 기록 알림
+ * - noGoalNotification: 목표 미설정 알림
+ * 
+ * 자동 알림 시스템:
+ * - 매일 오후 7시(한국시간) 자동 발송
+ * - 오늘 기록 안 한 사용자 대상
+ * - 목표 설정 안 한 사용자 대상
+ * - 개인별 알림 설정에 따라 발송
  * 
  * 읽음 처리 기능:
  * - recentCheckedAt 필드로 읽음/안읽음 상태 판단
@@ -80,6 +87,11 @@ public class NotificationController {
             - 습관 기록 알림 활성화 여부
             - 목표 미설정 알림 활성화 여부
             
+            ### 자동 알림 시스템 연동
+            - 매일 오후 7시에 설정값에 따라 알림 발송
+            - 각 타입별 개별 on/off 가능
+            - FCM 토큰 등록 필수
+            
             ### 기본값 정책
             - 신규 사용자: 모든 알림이 **true**로 설정 (자동 생성)
             - 설정 조회 시 자동으로 기본 설정이 생성되어 일관된 결과 보장
@@ -87,6 +99,7 @@ public class NotificationController {
             ### 사용 시나리오
             - 설정 화면 진입 시 현재 알림 설정 표시
             - 앱 시작 시 알림 설정 확인
+            - 푸시 알림 수신 여부 제어
             """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {

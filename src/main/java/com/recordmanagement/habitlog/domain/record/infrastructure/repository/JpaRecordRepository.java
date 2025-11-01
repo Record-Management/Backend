@@ -31,4 +31,7 @@ public interface JpaRecordRepository extends JpaRepository<RecordEntity, String>
     
     // 사용자 ID로 모든 기록 삭제 (회원 탈퇴 시)
     void deleteByUserId(String userId);
+    
+    // 특정 날짜의 특정 타입 기록 존재 여부 확인
+    boolean existsByUserIdAndRecordDateAndType(String userId, LocalDate recordDate, RecordType type);
 }

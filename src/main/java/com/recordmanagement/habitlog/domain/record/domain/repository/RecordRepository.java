@@ -28,4 +28,6 @@ public interface RecordRepository {
     void deleteByUserId(String userId);
     
     boolean existsById(RecordId recordId);
+    
+    boolean existsByUserIdAndRecordDateAndType(UserId userId, LocalDate recordDate, RecordType type);
 }

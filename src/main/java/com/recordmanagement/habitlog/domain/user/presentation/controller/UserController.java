@@ -363,7 +363,19 @@ public class UserController {
 
     @Operation(
         summary = "FCM 토큰 업데이트",
-        description = "푸시 알림을 위한 FCM 토큰을 업데이트합니다.",
+        description = """
+            푸시 알림을 위한 FCM 토큰을 업데이트합니다.
+            
+            ### 자동 알림 시스템 연동
+            - 매일 오후 7시 자동 알림 수신을 위해 필수
+            - 토큰 등록 후 즉시 알림 수신 가능
+            - 알림 설정과 함께 사용하여 개인화된 알림 제어
+            
+            ### 사용 시나리오
+            - 앱 설치 후 최초 푸시 알림 설정
+            - 토큰 갱신 시 업데이트
+            - 알림 수신 재활성화
+            """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

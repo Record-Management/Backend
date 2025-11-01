@@ -70,6 +70,7 @@ public class OpenApiConfig {
                         - 📅 **캘린더 자동 습관 표시**: 목표 기간 전체에 걸쳐 메인 습관 슬롯 자동 생성
                         - 🔄 **목표 재설정 API**: 간편한 습관 목표 변경 기능
                         - 📊 **습관 기간 정보 API**: 현재 습관 진행 상황 및 기간 정보 조회
+                        - 🔔 **자동 알림 시스템**: 매일 오후 7시 스마트 알림 자동 발송
                         
                         ### 🔐 인증 방식 
                         - JWT 기반 Bearer 토큰 인증
@@ -80,6 +81,8 @@ public class OpenApiConfig {
                         1. **소셜 로그인** → JWT 토큰 획득
                         2. **인증이 필요한 API** → Authorization 헤더에 Bearer 토큰 포함
                         3. **토큰 만료** → 리프레시 토큰으로 액세스 토큰 갱신
+                        4. **FCM 토큰 등록** → 푸시 알림 수신을 위한 토큰 등록
+                        5. **알림 설정** → 개인화된 알림 수신 설정 관리
                         
                         ### 🔗 관련 링크
                         - **프론트엔드 iOS** 📱: [HabitLog iOS App](https://github.com/Record-Management/IOS)

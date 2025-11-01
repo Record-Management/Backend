@@ -77,4 +77,9 @@ public class RecordRepositoryImpl implements RecordRepository {
     public void deleteByUserId(String userId) {
         jpaRecordRepository.deleteByUserId(userId);
     }
+    
+    @Override
+    public boolean existsByUserIdAndRecordDateAndType(UserId userId, LocalDate recordDate, RecordType type) {
+        return jpaRecordRepository.existsByUserIdAndRecordDateAndType(userId.getValue(), recordDate, type);
+    }
 }

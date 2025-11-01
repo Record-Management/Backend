@@ -82,4 +82,11 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, String> {
      * @return 영구 삭제 대상 탈퇴 사용자 엔티티 목록
      */
     List<UserEntity> findByDeletionScheduledAtBeforeAndDeletedAtIsNotNull(LocalDateTime deletionScheduledAt);
+
+    /**
+     * 활성 사용자 조회 (탈퇴하지 않은 사용자)
+     * 
+     * @return 활성 사용자 엔티티 목록
+     */
+    List<UserEntity> findByDeletedAtIsNull();
 }
