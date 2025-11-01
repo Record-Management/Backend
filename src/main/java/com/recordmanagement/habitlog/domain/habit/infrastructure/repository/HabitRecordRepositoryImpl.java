@@ -114,4 +114,11 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     public void deleteByUserId(String userId) {
         jpaHabitRecordRepository.deleteByUserId(userId);
     }
+    
+    @Override
+    public boolean existsMainRecordByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
+        return jpaHabitRecordRepository.existsByUserIdAndRecordDateAndIsMainRecord(
+            userId.getValue(), recordDate, true
+        );
+    }
 }

@@ -7,6 +7,7 @@ import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCo
 import com.recordmanagement.habitlog.domain.user.application.dto.UserRegistrationCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserWithdrawalCommand;
+import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
@@ -16,6 +17,7 @@ import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +50,7 @@ public class UserApplicationService {
     
     // 직접 사용하는 의존성 (Apple Transfer Sub 등 특수 기능용)
     private final UserRepository userRepository;
+    private final ApplicationContext applicationContext;
 
     // ============ 사용자 등록 관련 (UserRegistrationService에 위임) ============
 
@@ -69,14 +72,63 @@ public class UserApplicationService {
      * 온보딩 완료 처리
      */
     public UserResponse completeOnboarding(OnboardingCompletionCommand command) {
-        return userRegistrationService.completeOnboarding(command);
+        log.info("온보딩 완료 처리: userId=[{}], mainRecordType=[{}], goalDays=[{}]", 
+                command.userId(), command.mainRecordType(), command.goalDays());
+
+        // UserRegistrationService에 온보딩 완료 위임
+        UserResponse result = userRegistrationService.completeOnboarding(command);
+        
+        // 메인 기록 타입이 HABIT인 경우 플레이스홀더 생성
+        if (command.mainRecordType() == RecordType.HABIT) {
+            try {
+                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
+                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
+                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
+                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(UserId.of(command.userId()));
+                log.info("온보딩 완료로 메인 기록 타입이 HABIT로 설정되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
+                        command.userId());
+            } catch (Exception e) {
+                log.error("온보딩 완료 후 플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
+                        command.userId(), e.getMessage(), e);
+                // 플레이스홀더 생성 실패가 온보딩 완료 자체를 실패시키지 않도록 함
+            }
+        }
+        
+        return result;
     }
 
     /**
      * 온보딩 재설정 처리
      */
     public UserResponse resetOnboarding(OnboardingCompletionCommand command) {
-        return userRegistrationService.resetOnboarding(command);
+        log.info("온보딩 재설정 처리: userId=[{}], mainRecordType=[{}], goalDays=[{}]", 
+                command.userId(), command.mainRecordType(), command.goalDays());
+
+        // 기존 사용자 정보 조회하여 기존 메인 기록 타입 확인
+        User existingUser = userRepository.findById(UserId.of(command.userId()))
+                .orElseThrow(() -> UserException.notFound(command.userId()));
+        RecordType previousMainRecordType = existingUser.getMainRecordType();
+        
+        // UserRegistrationService에 온보딩 재설정 위임
+        UserResponse result = userRegistrationService.resetOnboarding(command);
+        
+        // 메인 기록 타입이 HABIT로 변경된 경우 플레이스홀더 생성
+        if (command.mainRecordType() == RecordType.HABIT && previousMainRecordType != RecordType.HABIT) {
+            try {
+                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
+                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
+                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
+                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(UserId.of(command.userId()));
+                log.info("온보딩 재설정으로 메인 기록 타입이 HABIT로 변경되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
+                        command.userId());
+            } catch (Exception e) {
+                log.error("온보딩 재설정 후 플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
+                        command.userId(), e.getMessage(), e);
+                // 플레이스홀더 생성 실패가 온보딩 재설정 자체를 실패시키지 않도록 함
+            }
+        }
+        
+        return result;
     }
 
     /**
@@ -90,8 +142,27 @@ public class UserApplicationService {
         User user = userRepository.findById(UserId.of(command.userId()))
                 .orElseThrow(() -> UserException.notFound(command.userId()));
 
+        // 기존 메인 기록 타입 저장
+        RecordType previousMainRecordType = user.getMainRecordType();
+        
         user.resetGoal(command.mainRecordType(), command.goalDays());
         User updatedUser = userRepository.save(user);
+        
+        // 메인 기록 타입이 HABIT로 변경된 경우 플레이스홀더 생성
+        if (command.mainRecordType() == RecordType.HABIT && previousMainRecordType != RecordType.HABIT) {
+            try {
+                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
+                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
+                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
+                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(updatedUser.getId());
+                log.info("메인 기록 타입이 HABIT로 변경되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
+                        updatedUser.getId().getValue());
+            } catch (Exception e) {
+                log.error("플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
+                        updatedUser.getId().getValue(), e.getMessage(), e);
+                // 플레이스홀더 생성 실패가 목표 재설정 자체를 실패시키지 않도록 함
+            }
+        }
         
         log.info("목표 재설정 완료: userId=[{}]", updatedUser.getId().getValue());
         return UserResponse.from(updatedUser);

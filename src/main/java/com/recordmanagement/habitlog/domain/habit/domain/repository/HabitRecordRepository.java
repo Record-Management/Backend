@@ -29,4 +29,6 @@ public interface HabitRecordRepository {
     boolean existsByIdAndUserId(HabitRecordId id, UserId userId);
     
     int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
+    
+    boolean existsMainRecordByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
 }

@@ -220,7 +220,14 @@ public class UserController {
      */
     @Operation(
         summary = "온보딩 완료", 
-        description = "사용자의 온보딩 과정 완료를 처리합니다.",
+        description = """
+            사용자의 온보딩 과정 완료를 처리합니다.
+            
+            ### HABIT 타입으로 온보딩 완료시 자동 처리
+            - 메인 기록 타입을 HABIT로 설정하면 전체 목표 기간에 대해 메인 습관 기록이 자동 생성
+            - habitStartDate가 현재 날짜로 설정되고 habitPeriodInfo가 포함됨
+            - 생성된 기록들은 캘린더 API에서 확인 가능
+            """,
         security = @SecurityRequirement(name = "bearerAuth"),
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -296,6 +303,11 @@ public class UserController {
             ### 기존 온보딩과의 차이점
             - 이미 온보딩이 완료된 사용자도 재설정 가능
             - 목표 변경, 메인 기록 타입 변경 등에 사용
+            
+            ### HABIT 타입으로 변경시 자동 처리
+            - 메인 기록 타입을 HABIT로 변경하면 전체 목표 기간에 대해 메인 습관 기록이 자동 생성
+            - 기존 메인 습관 기록들은 서브 기록으로 변경
+            - habitStartDate가 현재 날짜로 설정되고 habitPeriodInfo가 업데이트됨
             
             ### 사용 시나리오
             - 사용자가 목표를 변경하고 싶을 때
@@ -538,6 +550,11 @@ public class UserController {
             - 닉네임, 생년월일은 기존 값 유지
             - 더 간단하고 빠른 재설정
             
+            ### HABIT 타입으로 변경시 자동 처리
+            - 메인 기록 타입을 HABIT로 변경하면 전체 목표 기간에 대해 메인 습관 기록이 자동 생성
+            - 기존 메인 습관 기록들은 서브 기록으로 변경
+            - habitStartDate가 현재 날짜로 설정되고 habitPeriodInfo가 업데이트됨
+            
             ### 사용 시나리오
             - 목표 완료 후 새로운 목표 설정
             - 기록 타입 변경 (운동 → 습관 등)
@@ -547,10 +564,12 @@ public class UserController {
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "200",
-                description = "목표 재설정 성공",
+                description = "목표 재설정 성공 (HABIT 타입으로 변경시 자동으로 메인 습관 기록들이 생성됨)",
                 content = @io.swagger.v3.oas.annotations.media.Content(
                     mediaType = "application/json",
                     examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        name = "HABIT 타입으로 목표 재설정 성공",
+                        summary = "HABIT 타입 목표 재설정 - 자동 메인 습관 기록 생성 포함",
                         value = """
                         {
                           "statusCode": 200,
@@ -575,6 +594,12 @@ public class UserController {
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
                         }
+                        
+                        ℹ️ HABIT 타입으로 변경시 자동으로 다음 작업이 수행됩니다:
+                        - 전체 목표 기간(11/01~11/10)에 기본 메인 습관 기록들이 자동 생성
+                        - 기존 메인 습관 기록들은 서브 기록으로 변경
+                        - habitStartDate가 현재 날짜로 설정
+                        - 생성된 기록들은 캘린더 API에서 확인 가능
                         """
                     )
                 )

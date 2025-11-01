@@ -41,34 +41,39 @@ public class HabitRecordController {
                **필수 항목:**
                - habitType: 습관 종류 (필수)
                - notificationEnabled: 알림 설정 여부 (필수)
-               - recordDate: 기록 날짜 (필수, 오늘 날짜만 허용)
+               - recordDate: 기록 날짜 (필수, 습관 기간 내 날짜)
                
                **선택 항목:**
                - notificationTime: 알림 시간
                - memo: 메모/글쓰기
                - isMainRecord: 메인 기록 여부 (명시적 설정)
                
+               **습관 기록 특징:**
+               - 다른 기록과 달리 미래 날짜 작성 가능 (습관 기간 내)
+               - 메인 습관 기록 작성시 남은 기간의 모든 날짜에 자동으로 메인 습관 기록 생성
+               - 기존 메인 습관 기록이 있으면 서브 기록으로 자동 변경
+               
                **메인/서브 기록 결정:**
                - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
                - isMainRecord가 설정되지 않은 경우: 자동 결정
-                 • 사용자의 메인 기록 타입이 'HABIT'인 경우 → 메인 기록
-                 • 사용자의 메인 기록 타입이 'DAILY' 또는 'EXERCISE'인 경우 → 서브 기록
-               - 작성 순서와는 무관하게 결정됩니다
+                 • 해당 날짜에 이미 메인 습관 기록이 있으면 → 서브 기록
+                 • 메인 습관 기록이 없으면 사용자의 메인 기록 타입에 따라 결정
                
                **기록 제한:**
                - 하루 최대 2개의 습관 기록 작성 가능
                - 하루 최대 2가지 기록 타입 작성 가능
+               - 습관 목표 기간 내 날짜만 허용
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            description = "습관기록 작성 성공",
+            description = "습관기록 작성 성공 (메인 기록인 경우 남은 기간에 자동으로 메인 습관 기록들이 생성됨)",
             content = @io.swagger.v3.oas.annotations.media.Content(
                 mediaType = "application/json",
                 examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                    name = "성공 응답",
-                    summary = "습관기록 작성 성공",
+                    name = "메인 습관기록 작성 성공",
+                    summary = "메인 습관기록 작성 성공 - 자동 생성 포함",
                     value = """
                         {
                             "statusCode": 200,
@@ -77,18 +82,23 @@ public class HabitRecordController {
                             "data": {
                                 "id": "habit_record_123",
                                 "type": "HABIT",
-                                "recordDate": "2025-10-27",
-                                "recordTime": "14:30:00",
-                                "createdAt": "2025-10-16T14:30:00",
-                                "updatedAt": "2025-10-16T14:30:00",
-                                "habitType": "EXERCISE",
+                                "recordDate": "2025-11-01",
+                                "recordTime": null,
+                                "createdAt": "2025-11-01T14:30:00",
+                                "updatedAt": "2025-11-01T14:30:00",
+                                "habitType": "WATER_DRINKING",
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
-                                "memo": "오늘도 운동 완료!",
+                                "memo": "물 마시기 시작!",
                                 "isCompleted": false,
                                 "isMainRecord": true
                             }
                         }
+                        
+                        ℹ️ 메인 습관 기록 작성시 자동으로 다음 작업이 수행됩니다:
+                        - 남은 목표 기간(11/02~11/10)에 동일한 습관의 메인 기록들이 자동 생성
+                        - 기존 메인 습관 기록들은 서브 기록으로 변경
+                        - 생성된 기록들은 캘린더 API에서 확인 가능
                         """
                 )
             )
@@ -155,22 +165,26 @@ public class HabitRecordController {
                description = """
                기존 습관기록을 수정합니다.
                
+               **메인 습관 기록 수정시 자동 처리:**
+               - 메인 기록의 습관 타입을 변경하면 남은 목표 기간의 모든 메인 습관 기록이 동일한 습관 타입으로 자동 업데이트
+               - 알림 설정도 함께 동기화됨
+               - 기존 메인 기록들은 자동으로 서브 기록으로 변경
+               
                **메인/서브 기록 결정:**
                - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
                - isMainRecord가 설정되지 않은 경우: 자동 결정
                  • 사용자의 메인 기록 타입이 'HABIT'인 경우 → 메인 기록
                  • 사용자의 메인 기록 타입이 'DAILY' 또는 'EXERCISE'인 경우 → 서브 기록
-               - 작성 순서와는 무관하게 결정됩니다
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
         responseCode = "200",
-        description = "습관기록 수정 성공",
+        description = "습관기록 수정 성공 (메인 기록 습관 타입 변경시 남은 기간의 모든 메인 기록이 자동 업데이트됨)",
         content = @io.swagger.v3.oas.annotations.media.Content(
             mediaType = "application/json",
             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                name = "성공 응답",
-                summary = "습관기록 수정 성공",
+                name = "메인 습관기록 수정 성공",
+                summary = "메인 습관기록 수정 성공 - 자동 일괄 업데이트 포함",
                 value = """
                     {
                         "statusCode": 200,
@@ -179,18 +193,23 @@ public class HabitRecordController {
                         "data": {
                             "id": "habit_record_123",
                             "type": "HABIT",
-                            "recordDate": "2025-10-27",
-                            "recordTime": "14:30:00",
-                            "createdAt": "2025-10-16T14:30:00",
-                            "updatedAt": "2025-10-16T16:45:00",
+                            "recordDate": "2025-11-01",
+                            "recordTime": null,
+                            "createdAt": "2025-11-01T14:30:00",
+                            "updatedAt": "2025-11-01T16:45:00",
                             "habitType": "READING",
                             "notificationEnabled": false,
                             "notificationTime": "21:00:00",
-                            "memo": "수정된 독서 기록입니다!",
-                            "isCompleted": true,
+                            "memo": "독서로 변경!",
+                            "isCompleted": false,
                             "isMainRecord": true
                         }
                     }
+                    
+                    ℹ️ 메인 습관 기록의 습관 타입 변경시 자동으로 다음 작업이 수행됩니다:
+                    - 남은 목표 기간(11/02~11/10)의 모든 메인 습관 기록이 'READING'으로 업데이트
+                    - 알림 설정도 동일하게 동기화됨
+                    - 변경된 기록들은 캘린더 API에서 확인 가능
                     """
             )
         )

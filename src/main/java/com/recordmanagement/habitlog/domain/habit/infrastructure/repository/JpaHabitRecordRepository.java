@@ -23,4 +23,7 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
     
     // 사용자 ID로 모든 습관 기록 삭제 (회원 탈퇴 시)
     void deleteByUserId(String userId);
+    
+    // 특정 날짜에 메인 습관 기록 존재 여부 확인
+    boolean existsByUserIdAndRecordDateAndIsMainRecord(String userId, LocalDate recordDate, boolean isMainRecord);
 }

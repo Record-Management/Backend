@@ -34,10 +34,11 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
-            ### 🆕 자동 습관 슬롯 생성 (v1.3.0)
-            - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 걸쳐 자동으로 습관 슬롯이 생성됩니다
-            - 실제 습관 기록이 없는 날짜에는 플레이스홀더 기록이 표시되어 목표 달성 현황을 명확히 볼 수 있습니다
-            - 플레이스홀더 기록은 isMainRecord: true, isCompleted: false로 표시됩니다
+            ### 🆕 자동 메인 습관 기록 시스템 (v1.4.0)
+            - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 메인 습관 기록이 자동 생성됩니다
+            - 사용자가 메인 습관을 등록하거나 HABIT 타입으로 목표를 변경하면 남은 기간에 실제 DB 기록이 생성됩니다
+            - 자동 생성된 기록은 isMainRecord: true, isCompleted: false로 시작하며 사용자가 완료 처리 가능합니다
+            - 메인 습관 기록 수정시 남은 기간의 모든 메인 기록이 동일한 습관 타입으로 자동 업데이트됩니다
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -45,44 +46,67 @@ public class CalendarController {
         description = "캘린더 조회 성공",
         content = @Content(
             mediaType = "application/json",
-            examples = @ExampleObject(value = """
+            examples = @ExampleObject(
+                name = "자동 생성된 메인 습관 기록 포함 캘린더",
+                summary = "HABIT 타입 사용자의 캘린더 - 자동 생성된 메인 습관 기록 포함",
+                value = """
                 {
                     "statusCode": 200,
                     "code": "S200",
                     "message": "캘린더가 성공적으로 조회되었습니다",
                     "data": {
                         "year": 2025,
-                        "month": 1,
+                        "month": 11,
                         "monthlyRecords": [
                             {
-                                "date": "2025-01-05",
+                                "date": "2025-11-01",
                                 "records": [
                                     {
-                                        "id": "placeholder-user123-2025-01-05",
+                                        "id": "habit_record_001",
                                         "type": "HABIT",
                                         "isMainRecord": true,
-                                        "isCompleted": false
+                                        "isCompleted": true,
+                                        "habitType": "WATER_DRINKING"
                                     }
                                 ]
                             },
                             {
-                                "date": "2025-01-07",
+                                "date": "2025-11-02",
                                 "records": [
                                     {
-                                        "id": "550e8400-e29b-41d4-a716-446655440000",
-                                        "type": "DAILY"
-                                    },
-                                    {
-                                        "id": "habit-real-id-123",
+                                        "id": "habit_record_002",
                                         "type": "HABIT",
                                         "isMainRecord": true,
-                                        "isCompleted": true
+                                        "isCompleted": false,
+                                        "habitType": "WATER_DRINKING"
+                                    }
+                                ]
+                            },
+                            {
+                                "date": "2025-11-03",
+                                "records": [
+                                    {
+                                        "id": "daily_record_001",
+                                        "type": "DAILY",
+                                        "isMainRecord": false
+                                    },
+                                    {
+                                        "id": "habit_record_003",
+                                        "type": "HABIT",
+                                        "isMainRecord": true,
+                                        "isCompleted": false,
+                                        "habitType": "WATER_DRINKING"
                                     }
                                 ]
                             }
                         ]
                     }
                 }
+                
+                ℹ️ HABIT 타입 사용자의 캘린더 특징:
+                - 목표 기간(11/01~11/10) 전체에 메인 습관 기록이 자동 생성됨
+                - 사용자가 완료 처리하면 isCompleted가 true로 변경
+                - 메인 습관 수정시 남은 기간의 모든 기록이 동기화됨
                 """)
         )
     )
