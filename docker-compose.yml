@@ -30,6 +30,7 @@ services:
     networks:
       - habitlog-network
     environment:
+      - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=${SERVER_PORT}
       - SPRING_DATASOURCE_URL=jdbc:mysql://habitlog-db:3306/${DB_NAME}

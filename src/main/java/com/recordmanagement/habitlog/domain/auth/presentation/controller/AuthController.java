@@ -139,6 +139,7 @@ public class AuthController {
                               "email": "hong@example.com",
                               "socialType": "KAKAO",
                               "createdAt": "2025-09-02T02:46:41.454753",
+             
                               "onboardingCompleted": false
                             },
                             "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
