@@ -164,37 +164,68 @@ public class HabitRecordApplicationService {
                 command.userId()
         ).orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
-        // 메인 기록 자동 결정 (명시적 설정이 없는 경우)
-        boolean autoIsMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
-            command.userId(), 
-            RecordType.HABIT
-        );
-        log.info("습관기록 수정으로 메인 기록 자동 결정: recordId={}, autoIsMain={}", 
-                habitRecordId, autoIsMainRecord);
-        
         HabitRecord updatedRecord = existingRecord
                 .updateHabitType(command.habitType())
                 .updateNotificationSettings(command.notificationEnabled(), command.notificationTime())
                 .updateMemo(command.memo());
         
-        // 메인 기록 상태 결정: 명시적 설정 > 자동 결정 > 기존 값 유지
+        // 메인 기록 상태 결정: 기존 작성 API와 동일한 로직 적용
+        boolean finalIsMainRecord;
         if (command.isMainRecord() != null) {
             // 명시적으로 설정된 경우
-            updatedRecord = updatedRecord.updateMainRecordStatus(command.isMainRecord());
+            finalIsMainRecord = command.isMainRecord();
             log.info("습관기록 메인 상태 명시적 설정: recordId={}, isMain={}", 
                     habitRecordId, command.isMainRecord());
         } else {
-            // 자동 결정된 값 적용
-            updatedRecord = updatedRecord.updateMainRecordStatus(autoIsMainRecord);
-            log.info("습관기록 메인 상태 자동 적용: recordId={}, isMain={}", 
-                    habitRecordId, autoIsMainRecord);
+            // isMainRecord가 null인 경우 기존 작성 API와 동일한 조건 적용
+            // 해당 날짜에 이미 메인 습관 기록이 있는지 확인 (현재 수정 중인 기록 제외)
+            boolean hasOtherMainHabitRecord = habitRecordRepository.findByUserIdAndRecordDate(
+                command.userId(), existingRecord.getRecordDate()
+            ).stream()
+            .filter(record -> !record.getId().equals(existingRecord.getId())) // 현재 수정 중인 기록 제외
+            .anyMatch(HabitRecord::isMainRecord);
+            
+            if (hasOtherMainHabitRecord) {
+                // 다른 메인 습관 기록이 있으면 서브 기록으로 설정
+                finalIsMainRecord = false;
+                log.info("해당 날짜에 다른 메인 습관 기록이 있어 서브 기록으로 설정: recordId={}, recordDate={}", 
+                        habitRecordId, existingRecord.getRecordDate());
+            } else {
+                // 메인 기록 자동 결정
+                finalIsMainRecord = mainRecordDeterminationService.determineMainRecordOnUpdate(
+                    command.userId(), 
+                    RecordType.HABIT
+                );
+                log.info("습관기록 수정으로 메인 기록 자동 결정: recordId={}, autoIsMain={}", 
+                        habitRecordId, finalIsMainRecord);
+            }
+        }
+        
+        // 메인 기록 상태 업데이트
+        updatedRecord = updatedRecord.updateMainRecordStatus(finalIsMainRecord);
+        
+        // 메인 기록으로 변경되는 경우 기존 메인 기록들을 서브로 변경
+        if (finalIsMainRecord && !existingRecord.isMainRecord()) {
+            // 해당 날짜의 다른 메인 습관 기록들을 서브로 변경
+            List<HabitRecord> otherMainRecords = habitRecordRepository.findByUserIdAndRecordDate(
+                command.userId(), existingRecord.getRecordDate()
+            ).stream()
+            .filter(record -> !record.getId().equals(existingRecord.getId()))
+            .filter(HabitRecord::isMainRecord)
+            .toList();
+            
+            for (HabitRecord otherMainRecord : otherMainRecords) {
+                HabitRecord convertedToSub = otherMainRecord.updateMainRecordStatus(false);
+                habitRecordRepository.save(convertedToSub);
+                log.info("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
+                        otherMainRecord.getId().getValue(), existingRecord.getRecordDate());
+            }
         }
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);
         
-        // 메인 기록으로 변경된 경우, 습관 타입이 변경되었으면 남은 기간의 모든 메인 기록을 업데이트
-        boolean isNowMainRecord = (command.isMainRecord() != null) ? command.isMainRecord() : autoIsMainRecord;
-        if (isNowMainRecord && !existingRecord.getHabitType().equals(savedRecord.getHabitType())) {
+        // 메인 기록으로 변경된 경우 또는 메인 기록의 습관 타입이 변경된 경우 일괄 업데이트
+        if (finalIsMainRecord && (!existingRecord.isMainRecord() || !existingRecord.getHabitType().equals(savedRecord.getHabitType()))) {
             updateMainHabitRecordsForRemainingPeriod(command.userId(), savedRecord);
         }
         
@@ -207,13 +238,21 @@ public class HabitRecordApplicationService {
     public void deleteHabitRecord(String habitRecordId, UserId userId) {
         log.info("습관기록 삭제 시작: habitRecordId=[{}], userId=[{}]", habitRecordId, userId.getValue());
         
-        if (!habitRecordRepository.existsByIdAndUserId(HabitRecordId.from(habitRecordId), userId)) {
-            throw new CustomException(ErrorCode.RECORD_NOT_FOUND);
+        // 삭제할 기록 조회
+        HabitRecord recordToDelete = habitRecordRepository.findByIdAndUserId(
+                HabitRecordId.from(habitRecordId), userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
+        
+        // 메인 습관 기록은 삭제 불가
+        if (recordToDelete.isMainRecord()) {
+            log.warn("메인 습관 기록 삭제 시도: habitRecordId={}, userId={}", habitRecordId, userId.getValue());
+            throw new CustomException(ErrorCode.MAIN_HABIT_RECORD_DELETE_NOT_ALLOWED);
         }
         
+        // 서브 습관 기록만 삭제 가능
         habitRecordRepository.deleteByIdAndUserId(HabitRecordId.from(habitRecordId), userId);
         
-        log.info("습관기록 삭제 완료: habitRecordId=[{}]", habitRecordId);
+        log.info("서브 습관기록 삭제 완료: habitRecordId=[{}]", habitRecordId);
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -343,7 +382,8 @@ public class HabitRecordApplicationService {
     }
     
     /**
-     * 메인 습관 기록 변경시 남은 목표 기간의 모든 메인 습관 기록을 동일한 습관 타입으로 업데이트
+     * 메인 습관 기록 변경시 오늘부터 목표 기간의 모든 메인 습관 기록을 동일한 습관 타입으로 업데이트
+     * (서브 습관을 메인으로 전환하는 경우)
      */
     private void updateMainHabitRecordsForRemainingPeriod(UserId userId, HabitRecord updatedMainRecord) {
         User user = userRepository.findById(userId)
@@ -351,21 +391,23 @@ public class HabitRecordApplicationService {
         
         LocalDate recordDate = updatedMainRecord.getRecordDate();
         LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
+        LocalDate today = LocalDate.now();
         
-        // 수정된 기록 날짜 다음날부터 목표 종료일까지의 모든 메인 습관 기록 업데이트
-        LocalDate nextDate = recordDate.plusDays(1);
+        // 서브 습관을 메인으로 전환하는 경우 오늘부터 목표 종료일까지 모든 메인 기록 업데이트
+        LocalDate startUpdateDate = today;
         
-        if (nextDate.isAfter(habitEndDate)) {
-            log.info("목표 기간이 이미 완료되어 메인 습관 기록 업데이트 불필요: userId={}, recordDate={}, habitEndDate={}", 
-                    userId.getValue(), recordDate, habitEndDate);
+        if (startUpdateDate.isAfter(habitEndDate)) {
+            log.info("목표 기간이 이미 완료되어 메인 습관 기록 업데이트 불필요: userId={}, startDate={}, habitEndDate={}", 
+                    userId.getValue(), startUpdateDate, habitEndDate);
             return;
         }
         
-        // 해당 기간의 모든 메인 습관 기록 조회
+        // 오늘부터 목표 종료일까지의 모든 메인 습관 기록 조회 (현재 수정 중인 기록 제외)
         List<HabitRecord> mainRecordsToUpdate = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            userId, nextDate, habitEndDate
+            userId, startUpdateDate, habitEndDate
         ).stream()
         .filter(HabitRecord::isMainRecord)
+        .filter(record -> !record.getId().equals(updatedMainRecord.getId())) // 현재 수정 중인 기록 제외
         .toList();
         
         int updatedCount = 0;
@@ -387,6 +429,48 @@ public class HabitRecordApplicationService {
         }
         
         log.info("메인 습관 기록 일괄 업데이트 완료: userId={}, 업데이트된 기록 수={}, 기간=[{} ~ {}]", 
-                userId.getValue(), updatedCount, nextDate, habitEndDate);
+                userId.getValue(), updatedCount, startUpdateDate, habitEndDate);
+    }
+    
+    /**
+     * 메인 습관 기록 삭제시 목표 기간의 연관된 모든 습관 기록 삭제
+     */
+    private void deleteMainHabitRecordsForRemainingPeriod(UserId userId, HabitRecord deletedMainRecord) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        LocalDate recordDate = deletedMainRecord.getRecordDate();
+        LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
+        
+        // 삭제된 기록 날짜부터 목표 종료일까지의 모든 메인 습관 기록 삭제
+        LocalDate nextDate = recordDate.plusDays(1);
+        
+        if (nextDate.isAfter(habitEndDate)) {
+            log.info("목표 기간이 이미 완료되어 추가 메인 습관 기록 삭제 불필요: userId={}, recordDate={}, habitEndDate={}", 
+                    userId.getValue(), recordDate, habitEndDate);
+            return;
+        }
+        
+        // 해당 기간의 모든 메인 습관 기록 조회 및 삭제
+        List<HabitRecord> mainRecordsToDelete = habitRecordRepository.findByUserIdAndRecordDateBetween(
+            userId, nextDate, habitEndDate
+        ).stream()
+        .filter(HabitRecord::isMainRecord)
+        .filter(record -> record.getHabitType().equals(deletedMainRecord.getHabitType()))
+        .toList();
+        
+        int deletedCount = 0;
+        
+        // 모든 연관 메인 기록 삭제
+        for (HabitRecord mainRecord : mainRecordsToDelete) {
+            habitRecordRepository.deleteById(mainRecord.getId());
+            deletedCount++;
+            
+            log.debug("연관 메인 습관 기록 삭제: habitRecordId={}, date={}", 
+                    mainRecord.getId().getValue(), mainRecord.getRecordDate());
+        }
+        
+        log.info("메인 습관 기록 연관 삭제 완료: userId={}, 삭제된 기록 수={}, 기간=[{} ~ {}]", 
+                userId.getValue(), deletedCount, nextDate, habitEndDate);
     }
 }

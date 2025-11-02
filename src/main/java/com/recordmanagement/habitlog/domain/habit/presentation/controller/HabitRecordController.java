@@ -166,7 +166,8 @@ public class HabitRecordController {
                기존 습관기록을 수정합니다.
                
                **메인 습관 기록 수정시 자동 처리:**
-               - 메인 기록의 습관 타입을 변경하면 남은 목표 기간의 모든 메인 습관 기록이 동일한 습관 타입으로 자동 업데이트
+               - 메인 기록의 습관 타입을 변경하면 오늘부터 목표 기간의 모든 메인 습관 기록이 동일한 습관 타입으로 자동 업데이트
+               - 서브 습관을 메인으로 전환하면 오늘부터 목표 종료일까지 모든 메인 기록이 해당 습관으로 변경
                - 알림 설정도 함께 동기화됨
                - 기존 메인 기록들은 자동으로 서브 기록으로 변경
                
@@ -206,8 +207,9 @@ public class HabitRecordController {
                         }
                     }
                     
-                    ℹ️ 메인 습관 기록의 습관 타입 변경시 자동으로 다음 작업이 수행됩니다:
-                    - 남은 목표 기간(11/02~11/10)의 모든 메인 습관 기록이 'READING'으로 업데이트
+                    ℹ️ 서브 → 메인 전환 또는 메인 습관 타입 변경시 자동 처리:
+                    - 오늘(11/01)부터 목표 종료일(11/10)까지 모든 메인 습관 기록이 'READING'으로 업데이트
+                    - 기존 메인 기록은 자동으로 서브 기록으로 변경
                     - 알림 설정도 동일하게 동기화됨
                     - 변경된 기록들은 캘린더 API에서 확인 가능
                     """
@@ -241,27 +243,58 @@ public class HabitRecordController {
     
     @DeleteMapping("/{habitRecordId}")
     @Operation(summary = "습관기록 삭제", 
-               description = "특정 습관기록을 삭제합니다.",
+               description = """
+               특정 습관기록을 삭제합니다.
+               
+               **삭제 정책:**
+               - 서브 습관 기록: 삭제 가능
+               - 메인 습관 기록: 삭제 불가능 (400 에러 발생)
+               
+               **메인 습관 기록 삭제 시도시:**
+               메인 습관 기록은 목표 달성을 위한 핵심 기록으로 삭제할 수 없습니다.
+               완료/미완료 상태 변경만 가능하며, 습관 타입 변경은 수정 API를 이용해주세요.
+               """,
                security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "습관기록 삭제 성공",
-        content = @io.swagger.v3.oas.annotations.media.Content(
-            mediaType = "application/json",
-            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                name = "성공 응답",
-                summary = "습관기록 삭제 성공",
-                value = """
-                    {
-                        "statusCode": 200,
-                        "code": "S20000",
-                        "message": "정상적으로 처리되었습니다.",
-                        "data": null
-                    }
-                    """
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "서브 습관기록 삭제 성공",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    name = "서브 습관기록 삭제 성공",
+                    summary = "서브 습관기록 삭제 성공",
+                    value = """
+                        {
+                            "statusCode": 200,
+                            "code": "S20000",
+                            "message": "정상적으로 처리되었습니다.",
+                            "data": null
+                        }
+                        """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "메인 습관기록 삭제 시도 - 삭제 불가",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    name = "메인 습관기록 삭제 실패",
+                    summary = "메인 습관기록 삭제 불가 에러",
+                    value = """
+                        {
+                            "statusCode": 400,
+                            "code": "E40413",
+                            "message": "메인 습관 기록은 삭제할 수 없습니다. 서브 습관 기록만 삭제 가능합니다.",
+                            "data": null
+                        }
+                        """
+                )
             )
         )
-    )
+    })
     public ResponseEntity<ApiResponse<Void>> deleteHabitRecord(
             @PathVariable String habitRecordId,
             Authentication authentication) {
