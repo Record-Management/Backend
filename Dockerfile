@@ -31,6 +31,11 @@ RUN ./gradlew clean build -x test --no-daemon --parallel
 # 2단계: Runtime stage  
 FROM amazoncorretto:17-alpine
 
+# 시간대 패키지 설치 및 한국 시간대 설정
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+    echo "Asia/Seoul" > /etc/timezone
+
 # 보안: non-root 사용자 생성
 RUN addgroup -g 1001 -S spring && \
     adduser -S spring -G spring -u 1001
