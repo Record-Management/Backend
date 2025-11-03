@@ -7,7 +7,7 @@ import com.recordmanagement.habitlog.domain.notification.application.dto.Notific
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationSettingsResponse;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryResponse;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationHistoryWithStatusResponse;
-import com.recordmanagement.habitlog.api.notification.dto.UpdateNotificationSettingsRequest;
+import com.recordmanagement.habitlog.domain.notification.presentation.dto.UpdateNotificationSettingsRequest;
 import com.recordmanagement.habitlog.global.common.response.ApiResponse;
 import com.recordmanagement.habitlog.global.common.response.PagingResponse;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;

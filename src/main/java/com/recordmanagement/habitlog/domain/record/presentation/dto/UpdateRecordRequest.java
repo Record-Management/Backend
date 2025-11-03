@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.record.dto;
+package com.recordmanagement.habitlog.domain.record.presentation.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

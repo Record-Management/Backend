@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.auth.dto;
+package com.recordmanagement.habitlog.domain.auth.presentation.dto;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;

@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.notification.dto;
+package com.recordmanagement.habitlog.domain.notification.presentation.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

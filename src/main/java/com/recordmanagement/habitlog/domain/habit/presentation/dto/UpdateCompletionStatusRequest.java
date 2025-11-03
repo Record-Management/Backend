@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.habit.dto;
+package com.recordmanagement.habitlog.domain.habit.presentation.dto;
 
 import jakarta.validation.constraints.NotNull;
 

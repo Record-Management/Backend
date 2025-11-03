@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.user.dto;
+package com.recordmanagement.habitlog.domain.user.presentation.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

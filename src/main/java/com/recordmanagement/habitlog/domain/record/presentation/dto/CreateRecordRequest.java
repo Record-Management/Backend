@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.record.dto;
+package com.recordmanagement.habitlog.domain.record.presentation.dto;
 
 import com.recordmanagement.habitlog.global.common.validation.ValidRecordDate;
 import jakarta.validation.constraints.NotBlank;

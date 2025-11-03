@@ -1,8 +1,8 @@
 package com.recordmanagement.habitlog.domain.habit.presentation.controller;
 
-import com.recordmanagement.habitlog.api.habit.dto.CreateHabitRecordRequest;
-import com.recordmanagement.habitlog.api.habit.dto.UpdateHabitRecordRequest;
-import com.recordmanagement.habitlog.api.habit.dto.UpdateCompletionStatusRequest;
+import com.recordmanagement.habitlog.domain.habit.presentation.dto.CreateHabitRecordRequest;
+import com.recordmanagement.habitlog.domain.habit.presentation.dto.UpdateHabitRecordRequest;
+import com.recordmanagement.habitlog.domain.habit.presentation.dto.UpdateCompletionStatusRequest;
 import com.recordmanagement.habitlog.domain.habit.application.service.HabitRecordApplicationService;
 import com.recordmanagement.habitlog.domain.habit.application.dto.CreateHabitRecordCommand;
 import com.recordmanagement.habitlog.domain.habit.application.dto.HabitRecordResponse;

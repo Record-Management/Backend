@@ -1,7 +1,7 @@
 package com.recordmanagement.habitlog.domain.record.presentation.controller;
 
-import com.recordmanagement.habitlog.api.record.dto.CreateRecordRequest;
-import com.recordmanagement.habitlog.api.record.dto.UpdateRecordRequest;
+import com.recordmanagement.habitlog.domain.record.presentation.dto.CreateRecordRequest;
+import com.recordmanagement.habitlog.domain.record.presentation.dto.UpdateRecordRequest;
 import com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService;
 import com.recordmanagement.habitlog.domain.record.application.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.dto.RecordResponse;

@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.api.user.dto;
+package com.recordmanagement.habitlog.domain.user.presentation.dto;
 
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -8,10 +8,10 @@ import com.recordmanagement.habitlog.domain.user.application.dto.GoalResetComman
 import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
 import com.recordmanagement.habitlog.global.common.response.ApiResponse;
-import com.recordmanagement.habitlog.api.user.dto.UserWithdrawalRequest;
-import com.recordmanagement.habitlog.api.user.dto.OnboardingCompletionRequest;
-import com.recordmanagement.habitlog.api.user.dto.FcmTokenUpdateRequest;
-import com.recordmanagement.habitlog.api.user.dto.UpdateProfileRequest;
+import com.recordmanagement.habitlog.domain.user.presentation.dto.UserWithdrawalRequest;
+import com.recordmanagement.habitlog.domain.user.presentation.dto.OnboardingCompletionRequest;
+import com.recordmanagement.habitlog.domain.user.presentation.dto.FcmTokenUpdateRequest;
+import com.recordmanagement.habitlog.domain.user.presentation.dto.UpdateProfileRequest;
 import com.recordmanagement.habitlog.domain.user.presentation.dto.GoalResetRequest;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
