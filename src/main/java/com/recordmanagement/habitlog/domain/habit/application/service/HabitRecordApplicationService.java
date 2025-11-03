@@ -243,16 +243,72 @@ public class HabitRecordApplicationService {
                 HabitRecordId.from(habitRecordId), userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECORD_NOT_FOUND));
         
-        // 메인 습관 기록은 삭제 불가
         if (recordToDelete.isMainRecord()) {
-            log.warn("메인 습관 기록 삭제 시도: habitRecordId={}, userId={}", habitRecordId, userId.getValue());
-            throw new CustomException(ErrorCode.MAIN_HABIT_RECORD_DELETE_NOT_ALLOWED);
+            // 메인 기록 삭제 - 복합 로직 처리
+            handleMainRecordDeletion(recordToDelete, userId);
+        } else {
+            // 서브 기록 삭제 - 단순 삭제
+            habitRecordRepository.deleteByIdAndUserId(HabitRecordId.from(habitRecordId), userId);
+            log.info("서브 습관기록 삭제 완료: habitRecordId=[{}]", habitRecordId);
         }
+    }
+    
+    /**
+     * 메인 기록 삭제 처리 로직
+     * 1. 메인+서브 상황: 서브 중 하나를 메인으로 전환
+     * 2. 메인만 상황: 목표기간 내 모든 습관 기록 삭제
+     */
+    private void handleMainRecordDeletion(HabitRecord mainRecordToDelete, UserId userId) {
+        LocalDate recordDate = mainRecordToDelete.getRecordDate();
         
-        // 서브 습관 기록만 삭제 가능
-        habitRecordRepository.deleteByIdAndUserId(HabitRecordId.from(habitRecordId), userId);
+        // 같은 날짜의 서브 기록 조회
+        List<HabitRecord> subRecordsOnSameDate = habitRecordRepository.findByUserIdAndRecordDate(userId, recordDate)
+                .stream()
+                .filter(record -> !record.isMainRecord())
+                .filter(record -> !record.getId().equals(mainRecordToDelete.getId()))
+                .toList();
         
-        log.info("서브 습관기록 삭제 완료: habitRecordId=[{}]", habitRecordId);
+        if (!subRecordsOnSameDate.isEmpty()) {
+            // 케이스 1: 메인+서브 상황 - 서브 중 하나를 메인으로 전환
+            handleMainWithSubDeletion(mainRecordToDelete, subRecordsOnSameDate, userId);
+        } else {
+            // 케이스 2: 메인만 상황 - 목표기간 내 모든 습관 기록 삭제
+            handleMainOnlyDeletion(mainRecordToDelete, userId);
+        }
+    }
+    
+    /**
+     * 메인+서브 상황에서 메인 삭제 처리
+     * 서브 중 첫 번째를 메인으로 전환
+     */
+    private void handleMainWithSubDeletion(HabitRecord mainRecord, List<HabitRecord> subRecords, UserId userId) {
+        // 서브 중 첫 번째를 메인으로 전환
+        HabitRecord newMainRecord = subRecords.get(0).updateMainRecordStatus(true);
+        habitRecordRepository.save(newMainRecord);
+        
+        // 기존 메인 기록 삭제
+        habitRecordRepository.deleteById(mainRecord.getId());
+        
+        // 새 메인 기록으로 목표기간까지 업데이트
+        updateMainHabitRecordsForRemainingPeriod(userId, newMainRecord);
+        
+        log.info("메인+서브 삭제 처리 완료: 기존메인=[{}] 삭제, 새메인=[{}] 전환", 
+                mainRecord.getId().getValue(), newMainRecord.getId().getValue());
+    }
+    
+    /**
+     * 메인만 상황에서 메인 삭제 처리
+     * 목표기간 내 모든 습관 기록 삭제
+     */
+    private void handleMainOnlyDeletion(HabitRecord mainRecord, UserId userId) {
+        // 현재 메인 기록 삭제
+        habitRecordRepository.deleteById(mainRecord.getId());
+        
+        // 목표기간까지의 연관 습관 기록 모두 삭제
+        deleteMainHabitRecordsForRemainingPeriod(userId, mainRecord);
+        
+        log.info("메인만 삭제 처리 완료: 메인기록=[{}] 및 연관 기록 모두 삭제", 
+                mainRecord.getId().getValue());
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -433,44 +489,35 @@ public class HabitRecordApplicationService {
     }
     
     /**
-     * 메인 습관 기록 삭제시 목표 기간의 연관된 모든 습관 기록 삭제
+     * 메인 습관 기록 삭제시 목표 기간 전체의 해당 습관 모든 기록 삭제
+     * (습관 포기 의도 - 시작일부터 종료일까지 모든 해당 습관 삭제)
      */
     private void deleteMainHabitRecordsForRemainingPeriod(UserId userId, HabitRecord deletedMainRecord) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        LocalDate recordDate = deletedMainRecord.getRecordDate();
+        LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
         
-        // 삭제된 기록 날짜부터 목표 종료일까지의 모든 메인 습관 기록 삭제
-        LocalDate nextDate = recordDate.plusDays(1);
-        
-        if (nextDate.isAfter(habitEndDate)) {
-            log.info("목표 기간이 이미 완료되어 추가 메인 습관 기록 삭제 불필요: userId={}, recordDate={}, habitEndDate={}", 
-                    userId.getValue(), recordDate, habitEndDate);
-            return;
-        }
-        
-        // 해당 기간의 모든 메인 습관 기록 조회 및 삭제
-        List<HabitRecord> mainRecordsToDelete = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            userId, nextDate, habitEndDate
+        // 목표 기간 전체(시작일~종료일)에서 해당 습관 타입의 모든 기록 삭제
+        List<HabitRecord> allHabitRecordsToDelete = habitRecordRepository.findByUserIdAndRecordDateBetween(
+            userId, habitStartDate, habitEndDate
         ).stream()
-        .filter(HabitRecord::isMainRecord)
         .filter(record -> record.getHabitType().equals(deletedMainRecord.getHabitType()))
         .toList();
         
         int deletedCount = 0;
         
-        // 모든 연관 메인 기록 삭제
-        for (HabitRecord mainRecord : mainRecordsToDelete) {
-            habitRecordRepository.deleteById(mainRecord.getId());
+        // 목표 기간 전체의 해당 습관 모든 기록 삭제
+        for (HabitRecord habitRecord : allHabitRecordsToDelete) {
+            habitRecordRepository.deleteById(habitRecord.getId());
             deletedCount++;
             
-            log.debug("연관 메인 습관 기록 삭제: habitRecordId={}, date={}", 
-                    mainRecord.getId().getValue(), mainRecord.getRecordDate());
+            log.debug("해당 습관 기록 삭제: habitRecordId={}, date={}, type={}", 
+                    habitRecord.getId().getValue(), habitRecord.getRecordDate(), habitRecord.getHabitType());
         }
         
-        log.info("메인 습관 기록 연관 삭제 완료: userId={}, 삭제된 기록 수={}, 기간=[{} ~ {}]", 
-                userId.getValue(), deletedCount, nextDate, habitEndDate);
+        log.info("습관 포기로 인한 전체 기록 삭제 완료: userId={}, 삭제된 기록 수={}, 습관타입={}, 기간=[{} ~ {}]", 
+                userId.getValue(), deletedCount, deletedMainRecord.getHabitType(), habitStartDate, habitEndDate);
     }
 }

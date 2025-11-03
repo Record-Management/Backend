@@ -59,6 +59,10 @@ public class HabitRecordController {
                  • 해당 날짜에 이미 메인 습관 기록이 있으면 → 서브 기록
                  • 메인 습관 기록이 없으면 사용자의 메인 기록 타입에 따라 결정
                
+               **삭제 정책 (참고):**
+               - 서브 기록: 단순 삭제
+               - 메인 기록: 메인+서브 상황시 서브→메인 자동 전환, 메인만 상황시 목표기간 전체 삭제
+               
                **기록 제한:**
                - 하루 최대 2개의 습관 기록 작성 가능
                - 하루 최대 2가지 기록 타입 작성 가능
@@ -247,47 +251,89 @@ public class HabitRecordController {
                특정 습관기록을 삭제합니다.
                
                **삭제 정책:**
-               - 서브 습관 기록: 삭제 가능
-               - 메인 습관 기록: 삭제 불가능 (400 에러 발생)
                
-               **메인 습관 기록 삭제 시도시:**
-               메인 습관 기록은 목표 달성을 위한 핵심 기록으로 삭제할 수 없습니다.
-               완료/미완료 상태 변경만 가능하며, 습관 타입 변경은 수정 API를 이용해주세요.
+               **서브 습관 기록 삭제:**
+               - 해당 서브 기록만 삭제됩니다.
+               
+               **메인 습관 기록 삭제:**
+               - **메인+서브 상황**: 메인 기록 삭제 시 서브 기록 중 하나가 자동으로 메인으로 전환됩니다.
+               - **메인만 상황**: 메인 기록 삭제 시 **목표 기간 전체(시작일~종료일)의 해당 습관 모든 기록**이 삭제됩니다.
+               
+               **⚠️ 중요한 삭제 동작:**
+               - 서브→메인 전환 시 목표 기간까지의 모든 기록이 새 메인 습관으로 업데이트됩니다.
+               - 메인만 삭제 시 **습관 포기로 간주**하여 목표기간 전체의 해당 습관 모든 기록이 삭제됩니다.
+               - **되돌릴 수 없는 작업**이므로 신중하게 사용해주세요.
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-            description = "서브 습관기록 삭제 성공",
+            description = "습관기록 삭제 성공",
             content = @io.swagger.v3.oas.annotations.media.Content(
                 mediaType = "application/json",
-                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                    name = "서브 습관기록 삭제 성공",
-                    summary = "서브 습관기록 삭제 성공",
-                    value = """
-                        {
-                            "statusCode": 200,
-                            "code": "S20000",
-                            "message": "정상적으로 처리되었습니다.",
-                            "data": null
-                        }
-                        """
-                )
+                examples = {
+                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        name = "서브 기록 삭제",
+                        summary = "서브 습관기록 삭제 성공",
+                        value = """
+                            {
+                                "statusCode": 200,
+                                "code": "S20000",
+                                "message": "정상적으로 처리되었습니다.",
+                                "data": null
+                            }
+                            """
+                    ),
+                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        name = "메인+서브 상황 메인 삭제",
+                        summary = "메인 기록 삭제 시 서브→메인 자동 전환",
+                        value = """
+                            {
+                                "statusCode": 200,
+                                "code": "S20000",
+                                "message": "정상적으로 처리되었습니다.",
+                                "data": null
+                            }
+                            
+                            ℹ️ 자동 처리 결과:
+                            - 메인 습관 기록 삭제됨
+                            - 서브 기록 중 하나가 메인으로 전환됨
+                            - 목표 기간까지 모든 메인 기록이 새 습관으로 업데이트됨
+                            """
+                    ),
+                    @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        name = "메인만 상황 메인 삭제",
+                        summary = "메인 기록만 있을 때 삭제 - 습관 포기로 전체 기간 삭제",
+                        value = """
+                            {
+                                "statusCode": 200,
+                                "code": "S20000",
+                                "message": "정상적으로 처리되었습니다.",
+                                "data": null
+                            }
+                            
+                            ℹ️ 자동 처리 결과:
+                            - 메인 습관 기록 삭제됨 (습관 포기로 간주)
+                            - 목표 기간 전체(10/19~10/30)의 해당 습관 모든 기록 삭제됨
+                            - 과거 기록(10/19~10/21) + 미래 기록(10/23~10/30) 모두 삭제
+                            """
+                    )
+                }
             )
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "400",
-            description = "메인 습관기록 삭제 시도 - 삭제 불가",
+            responseCode = "404",
+            description = "습관기록을 찾을 수 없음",
             content = @io.swagger.v3.oas.annotations.media.Content(
                 mediaType = "application/json",
                 examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                    name = "메인 습관기록 삭제 실패",
-                    summary = "메인 습관기록 삭제 불가 에러",
+                    name = "기록 없음",
+                    summary = "해당 ID의 습관기록이 존재하지 않음",
                     value = """
                         {
-                            "statusCode": 400,
-                            "code": "E40413",
-                            "message": "메인 습관 기록은 삭제할 수 없습니다. 서브 습관 기록만 삭제 가능합니다.",
+                            "statusCode": 404,
+                            "code": "E40406",
+                            "message": "존재하지 않는 기록입니다.",
                             "data": null
                         }
                         """
