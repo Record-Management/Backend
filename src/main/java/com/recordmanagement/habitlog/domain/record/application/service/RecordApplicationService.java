@@ -334,6 +334,8 @@ public class RecordApplicationService {
      * 메인 습관 기록 자동 생성 로직 (캘린더 조회용)
      * 사용자의 메인 기록 타입이 HABIT인 경우, 습관 시작일부터 목표 날짜까지의 기간 중
      * 실제 기록이 없는 날짜에 대해 플레이스홀더 메인 습관 기록을 생성
+     * 
+     * 단, 사용자가 모든 습관 기록을 삭제한 경우에는 플레이스홀더를 생성하지 않음
      */
     private void generatePlaceholderMainHabitRecords(UserId userId, LocalDate startDate, LocalDate endDate, 
                                                    List<UnifiedRecordResponse> allRecords) {
@@ -354,6 +356,17 @@ public class RecordApplicationService {
         // 습관 기간 범위 계산
         LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
+        
+        // 사용자가 모든 습관을 포기했는지 확인 (전체 습관 기간에 습관 기록이 하나도 없는 경우)
+        boolean hasAnyHabitRecord = habitRecordRepository.findByUserIdAndRecordDateBetween(
+            userId, habitStartDate, habitEndDate
+        ).size() > 0;
+        
+        if (!hasAnyHabitRecord) {
+            log.info("전체 습관 기간에 습관 기록이 없어 플레이스홀더 생성 생략: userId={}, habitPeriod=[{} ~ {}]", 
+                    userId.getValue(), habitStartDate, habitEndDate);
+            return;
+        }
         
         // 캘린더 조회 범위와 습관 기간의 교집합 계산
         LocalDate rangeStart = habitStartDate.isAfter(startDate) ? habitStartDate : startDate;

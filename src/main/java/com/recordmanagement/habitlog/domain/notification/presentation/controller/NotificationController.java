@@ -40,8 +40,8 @@ import jakarta.validation.Valid;
  * 
  * 지원하는 알림 타입:
  * - dailyRecordNotification: 메인 기록 미등록 알림
- * - exerciseNotification: 운동 기록 알림
- * - habitNotification: 습관 기록 알림
+ * - exerciseNotification: 운동 기록 미등록 알림
+ * - habitNotification: 습관 기록 미등록 알림
  * - goalSettingNotification: 목표 미설정 알림
  * 
  * 자동 알림 시스템:
@@ -161,8 +161,8 @@ public class NotificationController {
             
             ### 업데이트 가능한 설정
             - dailyRecordNotificationEnabled: 메인 기록 미등록 알림
-            - exerciseNotificationEnabled: 운동 기록 알림
-            - habitNotificationEnabled: 습관 기록 알림
+            - exerciseNotificationEnabled: 운동 기록 미등록 알림
+            - habitNotificationEnabled: 습관 기록 미등록 알림
             - goalSettingNotificationEnabled: 목표 미설정 알림
             
             ### 선택적 업데이트

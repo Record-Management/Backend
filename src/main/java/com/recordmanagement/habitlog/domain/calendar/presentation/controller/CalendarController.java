@@ -34,11 +34,15 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
-            ### 🆕 자동 메인 습관 기록 시스템 (v1.4.0)
+            ### 🆕 자동 메인 습관 기록 시스템 (v1.5.0)
             - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 메인 습관 기록이 자동 생성됩니다
             - 사용자가 메인 습관을 등록하거나 HABIT 타입으로 목표를 변경하면 남은 기간에 실제 DB 기록이 생성됩니다
             - 자동 생성된 기록은 isMainRecord: true, isCompleted: false로 시작하며 사용자가 완료 처리 가능합니다
             - 메인 습관 기록 수정시 남은 기간의 모든 메인 기록이 동일한 습관 타입으로 자동 업데이트됩니다
+            
+            ### 🔧 습관 포기 지원 (v1.5.0)
+            - 모든 습관 기록을 삭제하면 캘린더에서 플레이스홀더 습관 기록이 완전히 제거됩니다
+            - 습관을 다시 시작하고 싶으면 새로운 습관 기록을 등록하면 자동으로 플레이스홀더가 다시 생성됩니다
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -107,6 +111,7 @@ public class CalendarController {
                 - 목표 기간(11/01~11/10) 전체에 메인 습관 기록이 자동 생성됨
                 - 사용자가 완료 처리하면 isCompleted가 true로 변경
                 - 메인 습관 수정시 남은 기간의 모든 기록이 동기화됨
+                - 모든 습관 기록 삭제시 플레이스홀더가 완전히 제거됨 (습관 포기)
                 """)
         )
     )

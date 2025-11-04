@@ -70,7 +70,7 @@ public class DailyNotificationScheduler {
                     
                     // 1. 목표 설정 안 한 사용자 체크
                     if (user.getMainRecordType() == null) {
-                        if (isNoGoalNotificationEnabled(user.getId())) {
+                        if (isGoalSettingNotificationEnabled(user.getId())) {
                             shouldSendNotification = true;
                             notificationMessage = "목표를 설정해서 습관을 시작해보세요! 🎯";
                         }
@@ -161,9 +161,9 @@ public class DailyNotificationScheduler {
     /**
      * 목표 미설정 알림 활성화 여부 확인
      */
-    private boolean isNoGoalNotificationEnabled(UserId userId) {
+    private boolean isGoalSettingNotificationEnabled(UserId userId) {
         try {
-            return notificationApplicationService.isNoGoalNotificationEnabled(userId);
+            return notificationApplicationService.isGoalSettingNotificationEnabled(userId);
         } catch (Exception e) {
             log.warn("목표 미설정 알림 설정 확인 실패: userId={}, error={}", userId.getValue(), e.getMessage());
             return false;

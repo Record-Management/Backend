@@ -79,8 +79,8 @@ public class NotificationApplicationService implements NotificationReadStatusSer
         if (command.getHabitNotificationEnabled() != null) {
             settings.updateHabitNotification(command.getHabitNotificationEnabled());
         }
-        if (command.getNoGoalNotificationEnabled() != null) {
-            settings.updateNoGoalNotification(command.getNoGoalNotificationEnabled());
+        if (command.getGoalSettingNotificationEnabled() != null) {
+            settings.updateGoalSettingNotification(command.getGoalSettingNotificationEnabled());
         }
 
         NotificationSettings savedSettings = notificationSettingsRepository.save(settings);
