@@ -43,6 +43,12 @@ public class CalendarController {
             ### 🔧 습관 포기 지원 (v1.5.0)
             - 모든 습관 기록을 삭제하면 캘린더에서 플레이스홀더 습관 기록이 완전히 제거됩니다
             - 습관을 다시 시작하고 싶으면 새로운 습관 기록을 등록하면 자동으로 플레이스홀더가 다시 생성됩니다
+            
+            ### 📋 HABIT 타입 사용자의 캘린더 특징
+            - 목표 기간 전체에 메인 습관 기록이 자동 생성됨
+            - 사용자가 완료 처리하면 isCompleted가 true로 변경
+            - 메인 습관 수정시 남은 기간의 모든 기록이 동기화됨
+            - 모든 습관 기록 삭제시 플레이스홀더가 완전히 제거됨 (습관 포기)
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -106,12 +112,6 @@ public class CalendarController {
                         ]
                     }
                 }
-                
-                ℹ️ HABIT 타입 사용자의 캘린더 특징:
-                - 목표 기간(11/01~11/10) 전체에 메인 습관 기록이 자동 생성됨
-                - 사용자가 완료 처리하면 isCompleted가 true로 변경
-                - 메인 습관 수정시 남은 기간의 모든 기록이 동기화됨
-                - 모든 습관 기록 삭제시 플레이스홀더가 완전히 제거됨 (습관 포기)
                 """)
         )
     )

@@ -82,8 +82,8 @@ public class ExerciseRecordController {
                             "weight": 70.5,
                             "dailyNote": "오늘 농구 경기 정말 재밌었다! 팀워크가 좋았어요.",
                             "imageUrls": [
-                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...",
-                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."
+                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600",
+                                "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"
                             ],
                             "recordDate": "2025-10-27",
                             "recordTime": "13:30"
@@ -142,7 +142,7 @@ public class ExerciseRecordController {
                         "stepCount": 5000,
                         "weight": 70.5,
                         "dailyNote": "오늘 농구 경기 정말 재밌었다! 팀워크가 좋았어요.",
-                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
+                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/basketball-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"]
                     }
                 }
                 """)
@@ -248,7 +248,7 @@ public class ExerciseRecordController {
                             "stepCount": 6000,
                             "weight": 69.8,
                             "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
-                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/running-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
+                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/running-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"],
                             "recordTime": "07:30"
                         }
                         """

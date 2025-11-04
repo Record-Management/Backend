@@ -181,6 +181,12 @@ public class HabitRecordController {
                - isMainRecord가 설정되지 않은 경우: 자동 결정
                  • 사용자의 메인 기록 타입이 'HABIT'인 경우 → 메인 기록
                  • 사용자의 메인 기록 타입이 'DAILY' 또는 'EXERCISE'인 경우 → 서브 기록
+               
+               **자동 처리 상세:**
+               - 서브 → 메인 전환 또는 메인 습관 타입 변경시 오늘부터 목표 종료일까지 모든 메인 습관 기록이 새로운 습관 타입으로 업데이트
+               - 기존 메인 기록은 자동으로 서브 기록으로 변경
+               - 알림 설정도 동일하게 동기화됨
+               - 변경된 기록들은 캘린더 API에서 확인 가능
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -192,32 +198,26 @@ public class HabitRecordController {
                 name = "메인 습관기록 수정 성공",
                 summary = "메인 습관기록 수정 성공 - 자동 일괄 업데이트 포함",
                 value = """
-                    {
-                        "statusCode": 200,
-                        "code": "S20000",
-                        "message": "정상적으로 처리되었습니다.",
-                        "data": {
-                            "id": "habit_record_123",
-                            "type": "HABIT",
-                            "recordDate": "2025-11-01",
-                            "recordTime": null,
-                            "createdAt": "2025-11-01T14:30:00",
-                            "updatedAt": "2025-11-01T16:45:00",
-                            "habitType": "READING",
-                            "notificationEnabled": false,
-                            "notificationTime": "21:00:00",
-                            "memo": "독서로 변경!",
-                            "isCompleted": false,
-                            "isMainRecord": true
-                        }
+                {
+                    "statusCode": 200,
+                    "code": "S20000",
+                    "message": "정상적으로 처리되었습니다.",
+                    "data": {
+                        "id": "habit_record_123",
+                        "type": "HABIT",
+                        "recordDate": "2025-11-01",
+                        "recordTime": null,
+                        "createdAt": "2025-11-01T14:30:00",
+                        "updatedAt": "2025-11-01T16:45:00",
+                        "habitType": "READING",
+                        "notificationEnabled": false,
+                        "notificationTime": "21:00:00",
+                        "memo": "독서로 변경!",
+                        "isCompleted": false,
+                        "isMainRecord": true
                     }
-                    
-                    ℹ️ 서브 → 메인 전환 또는 메인 습관 타입 변경시 자동 처리:
-                    - 오늘(11/01)부터 목표 종료일(11/10)까지 모든 메인 습관 기록이 'READING'으로 업데이트
-                    - 기존 메인 기록은 자동으로 서브 기록으로 변경
-                    - 알림 설정도 동일하게 동기화됨
-                    - 변경된 기록들은 캘린더 API에서 확인 가능
-                    """
+                }
+                """
             )
         )
     )
@@ -264,6 +264,10 @@ public class HabitRecordController {
                - 서브→메인 전환 시 목표 기간까지의 모든 기록이 새 메인 습관으로 업데이트됩니다.
                - 메인만 삭제 시 **습관 포기로 간주**하여 목표기간 전체의 해당 습관 모든 기록이 삭제됩니다.
                - **되돌릴 수 없는 작업**이므로 신중하게 사용해주세요.
+               
+               **자동 처리 상세:**
+               - 메인+서브 상황: 메인 습관 기록 삭제 → 서브 기록 중 하나가 메인으로 전환 → 목표 기간까지 모든 메인 기록이 새 습관으로 업데이트
+               - 메인만 상황: 메인 습관 기록 삭제 → 습관 포기로 간주 → 목표 기간 전체의 해당 습관 모든 기록 삭제 (과거+미래 기록 모두 포함)
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -295,11 +299,6 @@ public class HabitRecordController {
                                 "message": "정상적으로 처리되었습니다.",
                                 "data": null
                             }
-                            
-                            ℹ️ 자동 처리 결과:
-                            - 메인 습관 기록 삭제됨
-                            - 서브 기록 중 하나가 메인으로 전환됨
-                            - 목표 기간까지 모든 메인 기록이 새 습관으로 업데이트됨
                             """
                     ),
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
@@ -312,11 +311,6 @@ public class HabitRecordController {
                                 "message": "정상적으로 처리되었습니다.",
                                 "data": null
                             }
-                            
-                            ℹ️ 자동 처리 결과:
-                            - 메인 습관 기록 삭제됨 (습관 포기로 간주)
-                            - 목표 기간 전체(10/19~10/30)의 해당 습관 모든 기록 삭제됨
-                            - 과거 기록(10/19~10/21) + 미래 기록(10/23~10/30) 모두 삭제
                             """
                     )
                 }

@@ -142,8 +142,8 @@ public class AuthController {
              
                               "onboardingCompleted": false
                             },
-                            "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
-                            "refreshToken": "eyJhbGciOiJIUzI1NiJ9...",
+                            "accessToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjY5MjY0NjY0LCJleHAiOjE2NjkyNjgyNjR9.abcdefghijklmnopqrstuvwxyz",
+                            "refreshToken": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjY5MjY0NjY0LCJleHAiOjE2NjkyNjgyNjR9.abcdefghijklmnopqrstuvwxyz",
                             "isNewUser": false
                           }
                         }

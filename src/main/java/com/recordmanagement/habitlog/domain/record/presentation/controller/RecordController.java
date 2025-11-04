@@ -77,7 +77,7 @@ public class RecordController {
                     "emotion": "😊",
                     "recordDate": "2025-10-27",
                     "recordTime": "15:30",
-                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
+                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"]
                 }
                 """)
         )
@@ -97,7 +97,7 @@ public class RecordController {
                         "type": "DAILY",
                         "emotion": "😊",
                         "content": "오늘은 정말 좋은 하루였다. 친구들과 맛있는 음식도 먹고 운동도 했어요.",
-                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&...", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
+                        "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid1.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600", "https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/uuid2.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"],
                         "recordDate": "2025-10-27",
                         "recordTime": "15:30:00",
                         "createdAt": "2025-09-18T15:30:00",
@@ -206,7 +206,7 @@ public class RecordController {
                 {
                     "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
                     "emotion": "😍",
-                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."]
+                    "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"]
                 }
                 """)
         )
@@ -227,7 +227,7 @@ public class RecordController {
                             "type": "DAILY",
                             "emotion": "😍",
                             "content": "수정된 하루 내용입니다. 저녁에 영화도 봤어요!",
-                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600&..."],
+                            "imageUrls": ["https://seeday-images.s3.ap-northeast-2.amazonaws.com/records/images/updated-uuid.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=3600"],
                             "recordDate": "2025-10-27",
                             "recordTime": "15:30:00",
                             "createdAt": "2025-09-18T15:30:00",
