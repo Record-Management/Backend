@@ -48,10 +48,16 @@ public class HabitRecordController {
                - memo: 메모/글쓰기
                - isMainRecord: 메인 기록 여부 (명시적 설정)
                
-               **습관 기록 특징:**
+               **🎯 습관 기록 특징:**
                - 다른 기록과 달리 미래 날짜 작성 가능 (습관 기간 내)
-               - 메인 습관 기록 작성시 남은 기간의 모든 날짜에 자동으로 메인 습관 기록 생성
+               - **메인 습관 기록 작성시 남은 기간의 모든 날짜에 자동으로 메인 습관 기록 생성**
                - 기존 메인 습관 기록이 있으면 서브 기록으로 자동 변경
+               - **목표 진행률 자동 업데이트**: 습관 기록 생성/완료 시 목표 달성률 실시간 반영
+               
+               **📋 메인 기록 자동 생성 예시:**
+               - 11/01에 메인 습관 기록 작성 → 11/02~목표종료일까지 동일 습관으로 자동 생성
+               - 기존 다른 습관의 메인 기록들 → 모두 서브 기록으로 변경
+               - 생성된 기록들은 GET /api/calendar에서 확인 가능
                
                **메인/서브 기록 결정:**
                - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
@@ -80,29 +86,24 @@ public class HabitRecordController {
                     summary = "메인 습관기록 작성 성공 - 자동 생성 포함",
                     value = """
                         {
-                            "statusCode": 200,
-                            "code": "S20000",
-                            "message": "정상적으로 처리되었습니다.",
-                            "data": {
-                                "id": "habit_record_123",
-                                "type": "HABIT",
-                                "recordDate": "2025-11-01",
-                                "recordTime": null,
-                                "createdAt": "2025-11-01T14:30:00",
-                                "updatedAt": "2025-11-01T14:30:00",
-                                "habitType": "WATER_DRINKING",
-                                "notificationEnabled": true,
-                                "notificationTime": "09:00:00",
-                                "memo": "물 마시기 시작!",
-                                "isCompleted": false,
-                                "isMainRecord": true
-                            }
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "id": "550e8400-e29b-41d4-a716-446655440000",
+                            "type": "HABIT",
+                            "recordDate": "2025-11-01",
+                            "recordTime": null,
+                            "createdAt": "2025-11-01T14:30:00",
+                            "updatedAt": "2025-11-01T14:30:00",
+                            "habitType": "WATER_DRINKING",
+                            "notificationEnabled": true,
+                            "notificationTime": "09:00:00",
+                            "memo": "물을 꾸준히 마시기 시작!",
+                            "isCompleted": false,
+                            "isMainRecord": true
+                          }
                         }
-                        
-                        ℹ️ 메인 습관 기록 작성시 자동으로 다음 작업이 수행됩니다:
-                        - 남은 목표 기간(11/02~11/10)에 동일한 습관의 메인 기록들이 자동 생성
-                        - 기존 메인 습관 기록들은 서브 기록으로 변경
-                        - 생성된 기록들은 캘린더 API에서 확인 가능
                         """
                 )
             )
