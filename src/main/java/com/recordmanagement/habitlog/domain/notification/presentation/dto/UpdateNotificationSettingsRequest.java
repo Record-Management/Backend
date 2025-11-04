@@ -26,14 +26,14 @@ public class UpdateNotificationSettingsRequest {
     private Boolean dailyRecordNotificationEnabled;
 
     @Schema(
-        description = "운동 기록 알림 활성화 여부",
+        description = "운동 기록 미등록 알림 활성화 여부",
         example = "true",
         nullable = true
     )
     private Boolean exerciseNotificationEnabled;
 
     @Schema(
-        description = "습관 기록 알림 활성화 여부",
+        description = "습관 기록 미등록 알림 활성화 여부",
         example = "false",
         nullable = true
     )
@@ -44,5 +44,5 @@ public class UpdateNotificationSettingsRequest {
         example = "true",
         nullable = true
     )
-    private Boolean noGoalNotificationEnabled;
+    private Boolean goalSettingNotificationEnabled;
 }

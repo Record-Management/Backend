@@ -23,14 +23,19 @@ public enum NotificationType {
     DAILY_RECORD_REMINDER("메인 기록 미등록 알림"),
 
     /**
-     * 운동 기록 알림
+     * 운동 기록 미등록 알림
      */
-    EXERCISE_REMINDER("운동 기록 알림"),
+    EXERCISE_REMINDER("운동 기록 미등록 알림"),
 
     /**
-     * 습관 기록 알림
+     * 습관 기록 미등록 알림
      */
-    HABIT_REMINDER("습관 기록 알림"),
+    HABIT_REMINDER("습관 기록 미등록 알림"),
+
+    /**
+     * 목표 미설정 알림
+     */
+    GOAL_SETTING_REMINDER("목표 미설정 알림"),
 
     /**
      * 시스템 공지사항

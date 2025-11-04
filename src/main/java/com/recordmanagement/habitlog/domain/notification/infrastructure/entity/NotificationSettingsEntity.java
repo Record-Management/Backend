@@ -43,8 +43,8 @@ public class NotificationSettingsEntity extends BaseEntity {
     @Column(name = "habit_notification_enabled", nullable = false)
     private boolean habitNotificationEnabled;
 
-    @Column(name = "no_goal_notification_enabled", nullable = false)
-    private boolean noGoalNotificationEnabled;
+    @Column(name = "goal_setting_notification_enabled", nullable = false)
+    private boolean goalSettingNotificationEnabled;
 
     @Column(name = "last_checked_at")
     private LocalDateTime lastCheckedAt;
@@ -60,7 +60,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         this.dailyRecordNotificationEnabled = notificationSettings.isDailyRecordNotificationEnabled();
         this.exerciseNotificationEnabled = notificationSettings.isExerciseNotificationEnabled();
         this.habitNotificationEnabled = notificationSettings.isHabitNotificationEnabled();
-        this.noGoalNotificationEnabled = notificationSettings.isNoGoalNotificationEnabled();
+        this.goalSettingNotificationEnabled = notificationSettings.isGoalSettingNotificationEnabled();
         this.lastCheckedAt = notificationSettings.getLastCheckedAt();
         this.setCreatedAt(notificationSettings.getCreatedAt());
         this.setUpdatedAt(notificationSettings.getUpdatedAt());
@@ -77,7 +77,7 @@ public class NotificationSettingsEntity extends BaseEntity {
             this.dailyRecordNotificationEnabled,
             this.exerciseNotificationEnabled,
             this.habitNotificationEnabled,
-            this.noGoalNotificationEnabled
+            this.goalSettingNotificationEnabled
         );
 
         // 리플렉션을 사용하여 private 필드 설정
@@ -102,7 +102,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         this.dailyRecordNotificationEnabled = notificationSettings.isDailyRecordNotificationEnabled();
         this.exerciseNotificationEnabled = notificationSettings.isExerciseNotificationEnabled();
         this.habitNotificationEnabled = notificationSettings.isHabitNotificationEnabled();
-        this.noGoalNotificationEnabled = notificationSettings.isNoGoalNotificationEnabled();
+        this.goalSettingNotificationEnabled = notificationSettings.isGoalSettingNotificationEnabled();
         this.setUpdatedAt(notificationSettings.getUpdatedAt());
     }
 

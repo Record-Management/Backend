@@ -203,9 +203,9 @@ public class NotificationApplicationService implements NotificationReadStatusSer
      * @return 목표 미설정 알림 활성화 여부
      */
     @Transactional
-    public boolean isNoGoalNotificationEnabled(UserId userId) {
+    public boolean isGoalSettingNotificationEnabled(UserId userId) {
         return notificationSettingsRepository.findByUserId(userId)
-                .map(NotificationSettings::isNoGoalNotificationEnabled)
+                .map(NotificationSettings::isGoalSettingNotificationEnabled)
                 .orElseGet(() -> {
                     log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
                     NotificationSettings newSettings = new NotificationSettings(userId);

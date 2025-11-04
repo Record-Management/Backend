@@ -44,14 +44,14 @@ public class NotificationSettings {
     @Schema(description = "메인 기록 미등록 알림 활성화 여부", example = "true")
     private boolean dailyRecordNotificationEnabled;
 
-    @Schema(description = "운동 기록 알림 활성화 여부", example = "true")
+    @Schema(description = "운동 기록 미등록 알림 활성화 여부", example = "true")
     private boolean exerciseNotificationEnabled;
 
-    @Schema(description = "습관 기록 알림 활성화 여부", example = "true")
+    @Schema(description = "습관 기록 미등록 알림 활성화 여부", example = "true")
     private boolean habitNotificationEnabled;
 
     @Schema(description = "목표 미설정 알림 활성화 여부", example = "true")
-    private boolean noGoalNotificationEnabled;
+    private boolean goalSettingNotificationEnabled;
 
     @Schema(description = "설정 생성 시간", example = "2025-10-23T12:34:56")
     private LocalDateTime createdAt;
@@ -76,7 +76,7 @@ public class NotificationSettings {
         this.dailyRecordNotificationEnabled = true;
         this.exerciseNotificationEnabled = true;
         this.habitNotificationEnabled = true;
-        this.noGoalNotificationEnabled = true;
+        this.goalSettingNotificationEnabled = true;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -95,7 +95,7 @@ public class NotificationSettings {
         this.dailyRecordNotificationEnabled = dailyRecordEnabled;
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
-        this.noGoalNotificationEnabled = true; // 기본값 true
+        this.goalSettingNotificationEnabled = true; // 기본값 true
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -107,15 +107,15 @@ public class NotificationSettings {
      * @param dailyRecordEnabled 메인 기록 알림 활성화 여부
      * @param exerciseEnabled 운동 기록 알림 활성화 여부
      * @param habitEnabled 습관 기록 알림 활성화 여부
-     * @param noGoalEnabled 목표 미설정 알림 활성화 여부
+     * @param goalSettingEnabled 목표 미설정 알림 활성화 여부
      */
-    public NotificationSettings(UserId userId, boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean noGoalEnabled) {
+    public NotificationSettings(UserId userId, boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean goalSettingEnabled) {
         this.id = NotificationSettingsId.generate();
         this.userId = userId;
         this.dailyRecordNotificationEnabled = dailyRecordEnabled;
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
-        this.noGoalNotificationEnabled = noGoalEnabled;
+        this.goalSettingNotificationEnabled = goalSettingEnabled;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -155,8 +155,8 @@ public class NotificationSettings {
      *
      * @param enabled 활성화 여부
      */
-    public void updateNoGoalNotification(boolean enabled) {
-        this.noGoalNotificationEnabled = enabled;
+    public void updateGoalSettingNotification(boolean enabled) {
+        this.goalSettingNotificationEnabled = enabled;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -180,13 +180,13 @@ public class NotificationSettings {
      * @param dailyRecordEnabled 메인 기록 알림 활성화 여부
      * @param exerciseEnabled 운동 기록 알림 활성화 여부
      * @param habitEnabled 습관 기록 알림 활성화 여부
-     * @param noGoalEnabled 목표 미설정 알림 활성화 여부
+     * @param goalSettingEnabled 목표 미설정 알림 활성화 여부
      */
-    public void updateAllNotifications(boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean noGoalEnabled) {
+    public void updateAllNotifications(boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean goalSettingEnabled) {
         this.dailyRecordNotificationEnabled = dailyRecordEnabled;
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
-        this.noGoalNotificationEnabled = noGoalEnabled;
+        this.goalSettingNotificationEnabled = goalSettingEnabled;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -211,6 +211,15 @@ public class NotificationSettings {
     }
 
     /**
+     * 목표 설정 알림 활성화 여부 조회
+     *
+     * @return 목표 설정 알림 활성화 여부
+     */
+    public boolean isGoalSettingNotificationEnabled() {
+        return goalSettingNotificationEnabled;
+    }
+
+    /**
      * 모든 알림이 비활성화되어 있는지 확인
      *
      * @return true 모든 알림 비활성화, false 하나 이상 활성화
@@ -219,6 +228,6 @@ public class NotificationSettings {
         return !dailyRecordNotificationEnabled && 
                !exerciseNotificationEnabled && 
                !habitNotificationEnabled &&
-               !noGoalNotificationEnabled;
+               !goalSettingNotificationEnabled;
     }
 }

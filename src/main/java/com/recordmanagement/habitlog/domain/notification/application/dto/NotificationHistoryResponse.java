@@ -24,6 +24,9 @@ import java.time.LocalDateTime;
 @Schema(description = "알림 히스토리 간소화 응답")
 public class NotificationHistoryResponse {
 
+    @Schema(description = "알림 타입", example = "EXERCISE_REMINDER")
+    private final String notificationType;
+
     @Schema(description = "메인 기록 타입", example = "EXERCISE")
     private final String mainRecordType;
 
@@ -40,6 +43,9 @@ public class NotificationHistoryResponse {
      * @return 간소화된 응답 DTO
      */
     public static NotificationHistoryResponse from(NotificationHistory history) {
+        // 알림 타입
+        String notificationType = history.getType().name();
+        
         // 알림 타입에 따른 메인 기록 타입 매핑
         String mainRecordType = mapNotificationTypeToRecordType(history.getType());
         
@@ -47,6 +53,7 @@ public class NotificationHistoryResponse {
         String description = history.getMessage();
         
         return new NotificationHistoryResponse(
+            notificationType,
             mainRecordType,
             description,
             history.getSentAt()
@@ -64,6 +71,7 @@ public class NotificationHistoryResponse {
             case DAILY_RECORD_REMINDER -> "DAILY";
             case EXERCISE_REMINDER -> "EXERCISE";  
             case HABIT_REMINDER -> "HABIT";
+            case GOAL_SETTING_REMINDER -> "GOAL";
             case SYSTEM_ANNOUNCEMENT, TEST -> "SYSTEM";
         };
     }

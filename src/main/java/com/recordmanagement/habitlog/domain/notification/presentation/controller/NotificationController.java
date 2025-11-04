@@ -42,7 +42,7 @@ import jakarta.validation.Valid;
  * - dailyRecordNotification: 메인 기록 미등록 알림
  * - exerciseNotification: 운동 기록 알림
  * - habitNotification: 습관 기록 알림
- * - noGoalNotification: 목표 미설정 알림
+ * - goalSettingNotification: 목표 미설정 알림
  * 
  * 자동 알림 시스템:
  * - 매일 오후 7시(한국시간) 자동 발송
@@ -119,7 +119,7 @@ public class NotificationController {
                             "dailyRecordNotificationEnabled": true,
                             "exerciseNotificationEnabled": true,
                             "habitNotificationEnabled": false,
-                            "noGoalNotificationEnabled": true
+                            "goalSettingNotificationEnabled": true
                           }
                         }
                         """
@@ -163,7 +163,7 @@ public class NotificationController {
             - dailyRecordNotificationEnabled: 메인 기록 미등록 알림
             - exerciseNotificationEnabled: 운동 기록 알림
             - habitNotificationEnabled: 습관 기록 알림
-            - noGoalNotificationEnabled: 목표 미설정 알림
+            - goalSettingNotificationEnabled: 목표 미설정 알림
             
             ### 선택적 업데이트
             - null이 아닌 값만 업데이트됩니다
@@ -195,7 +195,7 @@ public class NotificationController {
                             "dailyRecordNotificationEnabled": false,
                             "exerciseNotificationEnabled": true,
                             "habitNotificationEnabled": true,
-                            "noGoalNotificationEnabled": false
+                            "goalSettingNotificationEnabled": false
                           }
                         }
                         """
@@ -226,7 +226,7 @@ public class NotificationController {
                 request.getDailyRecordNotificationEnabled(),
                 request.getExerciseNotificationEnabled(),
                 request.getHabitNotificationEnabled(),
-                request.getNoGoalNotificationEnabled()
+                request.getGoalSettingNotificationEnabled()
         );
 
         NotificationSettingsResponse updatedSettings = notificationApplicationService.updateNotificationSettings(command);
@@ -292,20 +292,28 @@ public class NotificationController {
                             "notifications": {
                               "items": [
                                 {
+                                  "notificationType": "EXERCISE_REMINDER",
                                   "mainRecordType": "EXERCISE",
                                   "description": "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!",
                                   "sentAt": [2025, 10, 23, 20, 0, 0]
                                 },
                                 {
+                                  "notificationType": "DAILY_RECORD_REMINDER",
                                   "mainRecordType": "DAILY",
                                   "description": "오늘의 소중한 순간을 기록으로 남겨보세요!",
                                   "sentAt": [2025, 10, 23, 19, 0, 0]
+                                },
+                                {
+                                  "notificationType": "GOAL_SETTING_REMINDER",
+                                  "mainRecordType": "GOAL",
+                                  "description": "아직 목표를 설정하지 않으신어요! 지금 바로 새로운 목표를 만들어볼까요?",
+                                  "sentAt": [2025, 10, 23, 18, 0, 0]
                                 }
                               ],
                               "pageInfo": {
                                 "page": 0,
                                 "size": 20,
-                                "totalElements": 2,
+                                "totalElements": 3,
                                 "totalPages": 1
                               }
                             },
