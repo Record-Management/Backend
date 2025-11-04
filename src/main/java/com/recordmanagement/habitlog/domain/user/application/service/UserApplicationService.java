@@ -94,6 +94,24 @@ public class UserApplicationService {
             }
         }
         
+        // 온보딩 완료 시 새로운 목표 생성
+        try {
+            var goalApplicationService = applicationContext.getBean("goalApplicationService", 
+                com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService.class);
+            goalApplicationService.createGoal(
+                UserId.of(command.userId()),
+                command.mainRecordType(),
+                command.goalDays(),
+                java.time.LocalDate.now()
+            );
+            log.info("온보딩 완료로 새로운 목표 생성 완료: userId=[{}], recordType=[{}], goalDays=[{}]", 
+                    command.userId(), command.mainRecordType(), command.goalDays());
+        } catch (Exception e) {
+            log.error("온보딩 완료 후 목표 생성 중 오류 발생: userId=[{}], error={}", 
+                    command.userId(), e.getMessage(), e);
+            // 목표 생성 실패가 온보딩 완료 자체를 실패시키지 않도록 함
+        }
+        
         return result;
     }
 

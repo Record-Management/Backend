@@ -11,6 +11,7 @@ import com.recordmanagement.habitlog.domain.record.application.strategy.RecordTy
 import com.recordmanagement.habitlog.domain.record.domain.service.MainRecordDeterminationService;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
+import org.springframework.context.ApplicationContext;
 import com.recordmanagement.habitlog.domain.record.domain.model.Record;
 import com.recordmanagement.habitlog.domain.record.domain.model.RecordId;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
@@ -68,6 +69,7 @@ public class RecordApplicationService {
     private final S3FileService s3FileService;
     private final MainRecordDeterminationService mainRecordDeterminationService;
     private final RecordTypeValidationStrategyFactory validationStrategyFactory;
+    private final ApplicationContext applicationContext;
     
     public RecordApplicationService(RecordRepository recordRepository, 
                                    ExerciseRecordQueryRepository exerciseRecordQueryRepository,
@@ -76,7 +78,8 @@ public class RecordApplicationService {
                                    UserRepository userRepository,
                                    S3FileService s3FileService,
                                    MainRecordDeterminationService mainRecordDeterminationService,
-                                   RecordTypeValidationStrategyFactory validationStrategyFactory) {
+                                   RecordTypeValidationStrategyFactory validationStrategyFactory,
+                                   ApplicationContext applicationContext) {
         this.recordRepository = recordRepository;
         this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
         this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
@@ -85,6 +88,7 @@ public class RecordApplicationService {
         this.s3FileService = s3FileService;
         this.mainRecordDeterminationService = mainRecordDeterminationService;
         this.validationStrategyFactory = validationStrategyFactory;
+        this.applicationContext = applicationContext;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -130,6 +134,10 @@ public class RecordApplicationService {
         // record = record.updateMainRecordStatus(isMainRecord);
         
         Record savedRecord = recordRepository.save(record);
+        
+        // 기록 생성 후 목표 진행률 업데이트
+        updateGoalProgress(command.userId());
+        
         return RecordResponse.from(savedRecord);
     }
     
@@ -165,6 +173,7 @@ public class RecordApplicationService {
         // }
         
         Record savedRecord = recordRepository.save(updatedRecord);
+        
         return RecordResponse.from(savedRecord);
     }
     
@@ -545,5 +554,85 @@ public class RecordApplicationService {
         if (hasNewType && recordTypeCount >= 2) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
+    }
+    
+    /**
+     * 목표 진행률 업데이트
+     * 사용자의 현재 진행중인 목표에 대해 완료일수를 계산하여 업데이트
+     */
+    private void updateGoalProgress(UserId userId) {
+        try {
+            var goalApplicationService = applicationContext.getBean("goalApplicationService", 
+                com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService.class);
+            
+            // 현재 진행중인 목표 조회
+            var currentGoalOpt = goalApplicationService.getCurrentGoal(userId);
+            if (currentGoalOpt.isEmpty()) {
+                log.debug("진행중인 목표가 없어 진행률 업데이트를 건너뜁니다: userId={}", userId.getValue());
+                return;
+            }
+            
+            var currentGoal = currentGoalOpt.get();
+            
+            // 목표 시작일부터 현재까지의 완료일수 계산
+            int completedDays = calculateCompletedDays(userId, currentGoal.getRecordType(), 
+                currentGoal.getStartDate(), java.time.LocalDate.now());
+            
+            // 목표 진행률 업데이트
+            goalApplicationService.updateGoalProgress(userId, completedDays);
+            
+            log.debug("목표 진행률 업데이트 완료: userId={}, completedDays={}", 
+                userId.getValue(), completedDays);
+                
+        } catch (Exception e) {
+            log.error("목표 진행률 업데이트 중 오류 발생: userId={}, error={}", 
+                userId.getValue(), e.getMessage(), e);
+            // 목표 진행률 업데이트 실패가 기록 생성/삭제를 실패시키지 않도록 함
+        }
+    }
+    
+    /**
+     * 특정 기간 동안의 완료일수 계산
+     * 하루에 해당 기록 타입의 기록이 하나라도 있으면 완료로 간주
+     */
+    private int calculateCompletedDays(UserId userId, RecordType recordType, 
+                                      java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        int completedDays = 0;
+        java.time.LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            boolean hasRecord = false;
+            
+            // 기록 타입에 따라 완료 여부 판단
+            switch (recordType) {
+                case DAILY -> {
+                    // 일상 기록: 해당 날짜에 일상 기록이 있으면 완료
+                    int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
+                        userId, currentDate, RecordType.DAILY);
+                    hasRecord = dailyRecordCount > 0;
+                }
+                case EXERCISE -> {
+                    // 운동 기록: 해당 날짜에 운동 기록이 있으면 완료
+                    var exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDate(
+                        userId, currentDate);
+                    hasRecord = !exerciseRecords.isEmpty();
+                }
+                case HABIT -> {
+                    // 습관 기록: 해당 날짜에 완료된 습관 기록이 있으면 완료
+                    var habitRecords = habitRecordRepository.findByUserIdAndRecordDate(
+                        userId, currentDate);
+                    hasRecord = habitRecords.stream().anyMatch(
+                        habit -> habit.isCompleted());
+                }
+            }
+            
+            if (hasRecord) {
+                completedDays++;
+            }
+            
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return completedDays;
     }
 }

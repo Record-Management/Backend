@@ -17,6 +17,7 @@ import com.recordmanagement.habitlog.domain.user.exception.UserException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,7 @@ public class HabitRecordApplicationService {
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final MainRecordDeterminationService mainRecordDeterminationService;
     private final UserRepository userRepository;
+    private final ApplicationContext applicationContext;
     
     @CacheEvict(value = "calendar", allEntries = true)
     public HabitRecordResponse createHabitRecord(CreateHabitRecordCommand command) {
@@ -126,6 +128,9 @@ public class HabitRecordApplicationService {
         if (isMainRecord) {
             createMainHabitRecordsForRemainingPeriod(user, savedHabitRecord);
         }
+        
+        // 습관 기록 생성 후 목표 진행률 업데이트
+        updateGoalProgress(command.userId());
         
         log.info("습관기록 생성 완료: habitRecordId=[{}]", savedHabitRecord.getId().getValue());
         
@@ -325,6 +330,9 @@ public class HabitRecordApplicationService {
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);
         
+        // 습관 기록 완료 상태 변경 후 목표 진행률 업데이트
+        updateGoalProgress(userId);
+        
         log.info("습관기록 완료 상태 변경 완료: habitRecordId=[{}], isCompleted=[{}]", habitRecordId, isCompleted);
         
         return toResponse(savedRecord);
@@ -519,5 +527,72 @@ public class HabitRecordApplicationService {
         
         log.info("습관 포기로 인한 전체 기록 삭제 완료: userId={}, 삭제된 기록 수={}, 습관타입={}, 기간=[{} ~ {}]", 
                 userId.getValue(), deletedCount, deletedMainRecord.getHabitType(), habitStartDate, habitEndDate);
+    }
+    
+    /**
+     * 목표 진행률 업데이트
+     * 현재 진행중인 목표에 대해 완료일수를 재계산하여 업데이트
+     */
+    private void updateGoalProgress(UserId userId) {
+        try {
+            var goalApplicationService = applicationContext.getBean("goalApplicationService", 
+                com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService.class);
+            
+            // 현재 진행중인 목표 조회
+            var currentGoalOpt = goalApplicationService.getCurrentGoal(userId);
+            if (currentGoalOpt.isEmpty()) {
+                log.debug("진행중인 목표가 없어 진행률 업데이트를 건너뜁니다: userId={}", userId.getValue());
+                return;
+            }
+            
+            var currentGoal = currentGoalOpt.get();
+            
+            // 목표의 기록 타입이 HABIT인 경우만 업데이트
+            if (currentGoal.getRecordType() != RecordType.HABIT) {
+                log.debug("습관 목표가 아니어서 진행률 업데이트를 건너뜁니다: userId={}, recordType={}", 
+                    userId.getValue(), currentGoal.getRecordType());
+                return;
+            }
+            
+            // 목표 시작일부터 현재까지의 완료일수 계산
+            int completedDays = calculateCompletedDaysForHabit(userId, 
+                currentGoal.getStartDate(), java.time.LocalDate.now());
+            
+            // 목표 진행률 업데이트
+            goalApplicationService.updateGoalProgress(userId, completedDays);
+            
+            log.debug("목표 진행률 업데이트 완료: userId={}, completedDays={}", 
+                userId.getValue(), completedDays);
+                
+        } catch (Exception e) {
+            log.error("목표 진행률 업데이트 중 오류 발생: userId={}, error={}", 
+                userId.getValue(), e.getMessage(), e);
+            // 목표 진행률 업데이트 실패가 습관 기록 처리를 실패시키지 않도록 함
+        }
+    }
+    
+    /**
+     * 습관 목표의 완료일수 계산
+     * 하루에 완료된 습관 기록이 하나라도 있으면 완료로 간주
+     */
+    private int calculateCompletedDaysForHabit(UserId userId, 
+                                              java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        int completedDays = 0;
+        java.time.LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            // 해당 날짜에 완료된 습관 기록이 있는지 확인
+            var habitRecords = habitRecordRepository.findByUserIdAndRecordDate(userId, currentDate);
+            boolean hasCompletedRecord = habitRecords.stream()
+                .anyMatch(habit -> habit.isCompleted());
+            
+            if (hasCompletedRecord) {
+                completedDays++;
+            }
+            
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return completedDays;
     }
 }

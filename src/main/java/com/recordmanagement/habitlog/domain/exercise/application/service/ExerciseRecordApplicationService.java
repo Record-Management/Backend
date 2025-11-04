@@ -15,6 +15,7 @@ import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileSe
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class ExerciseRecordApplicationService {
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
     private final MainRecordDeterminationService mainRecordDeterminationService;
+    private final ApplicationContext applicationContext;
     
     @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
@@ -80,6 +82,9 @@ public class ExerciseRecordApplicationService {
         // exerciseRecord = exerciseRecord.updateMainRecordStatus(isMainRecord);
         
         ExerciseRecord savedRecord = exerciseRecordRepository.save(exerciseRecord);
+        
+        // 운동 기록 생성 후 목표 진행률 업데이트
+        updateGoalProgress(command.userId());
         
         log.info("운동기록 생성 완료: exerciseRecordId=[{}]", savedRecord.getId().getValue());
         
@@ -228,5 +233,71 @@ public class ExerciseRecordApplicationService {
         if (recordTypeCount >= 2) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
+    }
+    
+    /**
+     * 목표 진행률 업데이트
+     * 현재 진행중인 목표에 대해 완료일수를 재계산하여 업데이트
+     */
+    private void updateGoalProgress(UserId userId) {
+        try {
+            var goalApplicationService = applicationContext.getBean("goalApplicationService", 
+                com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService.class);
+            
+            // 현재 진행중인 목표 조회
+            var currentGoalOpt = goalApplicationService.getCurrentGoal(userId);
+            if (currentGoalOpt.isEmpty()) {
+                log.debug("진행중인 목표가 없어 진행률 업데이트를 건너뜁니다: userId={}", userId.getValue());
+                return;
+            }
+            
+            var currentGoal = currentGoalOpt.get();
+            
+            // 목표의 기록 타입이 EXERCISE인 경우만 업데이트
+            if (currentGoal.getRecordType() != RecordType.EXERCISE) {
+                log.debug("운동 목표가 아니어서 진행률 업데이트를 건너뜁니다: userId={}, recordType={}", 
+                    userId.getValue(), currentGoal.getRecordType());
+                return;
+            }
+            
+            // 목표 시작일부터 현재까지의 완료일수 계산
+            int completedDays = calculateCompletedDaysForExercise(userId, 
+                currentGoal.getStartDate(), java.time.LocalDate.now());
+            
+            // 목표 진행률 업데이트
+            goalApplicationService.updateGoalProgress(userId, completedDays);
+            
+            log.debug("목표 진행률 업데이트 완료: userId={}, completedDays={}", 
+                userId.getValue(), completedDays);
+                
+        } catch (Exception e) {
+            log.error("목표 진행률 업데이트 중 오류 발생: userId={}, error={}", 
+                userId.getValue(), e.getMessage(), e);
+            // 목표 진행률 업데이트 실패가 운동 기록 처리를 실패시키지 않도록 함
+        }
+    }
+    
+    /**
+     * 운동 목표의 완료일수 계산
+     * 하루에 운동 기록이 하나라도 있으면 완료로 간주
+     */
+    private int calculateCompletedDaysForExercise(UserId userId, 
+                                                 java.time.LocalDate startDate, java.time.LocalDate endDate) {
+        int completedDays = 0;
+        java.time.LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            // 해당 날짜에 운동 기록이 있는지 확인
+            var exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDate(userId, currentDate);
+            boolean hasRecord = !exerciseRecords.isEmpty();
+            
+            if (hasRecord) {
+                completedDays++;
+            }
+            
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return completedDays;
     }
 }
