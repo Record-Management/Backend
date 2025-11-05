@@ -8,14 +8,15 @@ import java.util.List;
 
 public record CalendarRecordResponse(
     LocalDate date,
+    RecordType mainRecordTypeForDate,
     List<RecordSummary> records
 ) {
     
-    public static CalendarRecordResponse of(LocalDate date, List<Record> records) {
+    public static CalendarRecordResponse of(LocalDate date, RecordType mainRecordTypeForDate, List<Record> records) {
         List<RecordSummary> summaries = records.stream()
             .map(RecordSummary::from)
             .toList();
-        return new CalendarRecordResponse(date, summaries);
+        return new CalendarRecordResponse(date, mainRecordTypeForDate, summaries);
     }
     
     public record RecordSummary(

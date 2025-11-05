@@ -34,6 +34,11 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
+            ### 🎯 메인 기록 타입 표시 (v1.6.0)
+            - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
+            - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
+            - 목표 설정 시점에 결정된 메인 기록 타입이 목표 기간 동안 일관되게 유지됩니다
+            
             ### 🆕 자동 메인 습관 기록 시스템 (v1.5.0)
             - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 메인 습관 기록이 자동 생성됩니다
             - 사용자가 메인 습관을 등록하거나 HABIT 타입으로 목표를 변경하면 남은 기간에 실제 DB 기록이 생성됩니다
@@ -58,7 +63,7 @@ public class CalendarController {
             mediaType = "application/json",
             examples = @ExampleObject(
                 name = "자동 생성된 메인 습관 기록 포함 캘린더",
-                summary = "HABIT 타입 사용자의 캘린더 - 자동 생성된 메인 습관 기록 포함",
+                summary = "HABIT 타입 사용자의 캘린더 - mainRecordTypeForDate 필드 포함",
                 value = """
                 {
                     "statusCode": 200,
@@ -70,42 +75,35 @@ public class CalendarController {
                         "monthlyRecords": [
                             {
                                 "date": "2025-11-01",
+                                "mainRecordTypeForDate": "HABIT",
                                 "records": [
                                     {
                                         "id": "habit_record_001",
-                                        "type": "HABIT",
-                                        "isMainRecord": true,
-                                        "isCompleted": true,
-                                        "habitType": "WATER_DRINKING"
+                                        "type": "HABIT"
                                     }
                                 ]
                             },
                             {
                                 "date": "2025-11-02",
+                                "mainRecordTypeForDate": "HABIT",
                                 "records": [
                                     {
                                         "id": "habit_record_002",
-                                        "type": "HABIT",
-                                        "isMainRecord": true,
-                                        "isCompleted": false,
-                                        "habitType": "WATER_DRINKING"
+                                        "type": "HABIT"
                                     }
                                 ]
                             },
                             {
                                 "date": "2025-11-03",
+                                "mainRecordTypeForDate": "HABIT",
                                 "records": [
                                     {
                                         "id": "daily_record_001",
-                                        "type": "DAILY",
-                                        "isMainRecord": false
+                                        "type": "DAILY"
                                     },
                                     {
                                         "id": "habit_record_003",
-                                        "type": "HABIT",
-                                        "isMainRecord": true,
-                                        "isCompleted": false,
-                                        "habitType": "WATER_DRINKING"
+                                        "type": "HABIT"
                                     }
                                 ]
                             }

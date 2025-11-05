@@ -196,6 +196,10 @@ public class RecordApplicationService {
         LocalDate endDate = yearMonth.atEndOfMonth();
         UserId userIdObj = UserId.of(userId);
         
+        // 사용자 정보 조회 (메인 기록 타입 확인용)
+        User user = userRepository.findById(userIdObj)
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        
         // 모든 타입의 기록을 통합하여 조회
         List<UnifiedRecordResponse> allRecords = new ArrayList<>();
         
@@ -242,15 +246,31 @@ public class RecordApplicationService {
         List<CalendarRecordResponse> calendarRecords = recordsByDate.entrySet()
             .stream()
             .map(entry -> {
+                LocalDate date = entry.getKey();
                 List<CalendarRecordResponse.RecordSummary> summaries = entry.getValue().stream()
                     .map(CalendarRecordResponse.RecordSummary::from)
                     .toList();
-                return new CalendarRecordResponse(entry.getKey(), summaries);
+                
+                // 해당 날짜의 메인 기록 타입 결정
+                RecordType mainRecordTypeForDate = determineMainRecordTypeForDate(user, date);
+                
+                return new CalendarRecordResponse(date, mainRecordTypeForDate, summaries);
             })
             .sorted((a, b) -> a.date().compareTo(b.date()))
             .toList();
         
         return CalendarResponse.of(yearMonth, calendarRecords);
+    }
+    
+    /**
+     * 특정 날짜의 메인 기록 타입을 결정합니다.
+     * 현재 구현: 사용자의 현재 메인 기록 타입을 반환
+     * TODO: 향후 목표 이력 기능 구현시 해당 날짜의 실제 목표 기간 메인 타입 반환
+     */
+    private RecordType determineMainRecordTypeForDate(User user, LocalDate date) {
+        // 현재는 사용자의 현재 메인 기록 타입을 반환
+        // 목표 포기 기능이 없고, 목표 재설정만 가능하므로 단순하게 처리
+        return user.getMainRecordType();
     }
     
     @Transactional(readOnly = true)
