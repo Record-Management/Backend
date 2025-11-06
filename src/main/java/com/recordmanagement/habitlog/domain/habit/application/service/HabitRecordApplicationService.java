@@ -229,11 +229,14 @@ public class HabitRecordApplicationService {
         // 메인 기록 상태 업데이트
         updatedRecord = updatedRecord.updateMainRecordStatus(finalIsMainRecord);
         
-        // 메인 기록으로 변경되는 경우 기존 메인 기록들을 서브로 변경
-        if (finalIsMainRecord && !existingRecord.isMainRecord()) {
-            // 해당 날짜의 다른 메인 습관 기록들을 서브로 변경
-            List<HabitRecord> otherMainRecords = habitRecordRepository.findByUserIdAndRecordDate(
-                command.userId(), existingRecord.getRecordDate()
+        // 메인 기록으로 변경되는 경우 전체 기간의 기존 메인 기록들을 서브로 변경
+        if (finalIsMainRecord && !existingRecord.isMainRecord() && user.getMainRecordType() == RecordType.HABIT) {
+            // 전체 습관 기간의 다른 메인 습관 기록들을 서브로 변경
+            LocalDate habitStartDate = user.getHabitStartDate();
+            LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
+            
+            List<HabitRecord> otherMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+                command.userId(), habitStartDate, habitEndDate
             ).stream()
             .filter(record -> !record.getId().equals(existingRecord.getId()))
             .filter(HabitRecord::isMainRecord)
@@ -243,7 +246,7 @@ public class HabitRecordApplicationService {
                 HabitRecord convertedToSub = otherMainRecord.updateMainRecordStatus(false);
                 habitRecordRepository.save(convertedToSub);
                 log.info("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
-                        otherMainRecord.getId().getValue(), existingRecord.getRecordDate());
+                        otherMainRecord.getId().getValue(), otherMainRecord.getRecordDate());
             }
         }
         
@@ -418,11 +421,13 @@ public class HabitRecordApplicationService {
             return;
         }
         
-        // 기존에 해당 기간에 메인 습관 기록이 있는지 확인
+        // 전체 습관 기간의 기존 메인 습관 기록을 서브로 변경 (새로 등록한 기록 제외)
+        LocalDate habitStartDate = user.getHabitStartDate();
         List<HabitRecord> existingMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            user.getId(), nextDate, habitEndDate
+            user.getId(), habitStartDate, habitEndDate
         ).stream()
         .filter(HabitRecord::isMainRecord)
+        .filter(record -> !record.getId().equals(newMainRecord.getId())) // 새로 등록한 기록 제외
         .toList();
         
         // 기존 메인 기록이 있는 날짜들을 서브 기록으로 변경
