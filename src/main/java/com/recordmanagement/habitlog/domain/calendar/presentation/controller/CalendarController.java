@@ -39,21 +39,27 @@ public class CalendarController {
             - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
             - 목표 설정 시점에 결정된 메인 기록 타입이 목표 기간 동안 일관되게 유지됩니다
             
+            ### 🔍 습관 기록 필터링 (v1.7.0)
+            - **습관 타입 사용자**: 습관 목표 기간(시작일~종료일) 내의 습관 기록만 조회
+            - **운동/일상 타입 사용자**: 모든 습관 기록 조회 (서브 기록으로 사용)
+            - **과거 데이터 제외**: 목표 기간 이전의 습관 기록은 캘린더에 표시되지 않음
+            - **정확한 아이콘 표시**: records 배열에 목표 기간 내 기록만 포함되어 올바른 메인 기록 판별
+            
             ### 🆕 자동 메인 습관 기록 시스템 (v1.5.0)
             - 메인 기록 타입이 HABIT인 사용자의 경우, 습관 목표 기간 전체에 메인 습관 기록이 자동 생성됩니다
-            - 사용자가 메인 습관을 등록하거나 HABIT 타입으로 목표를 변경하면 남은 기간에 실제 DB 기록이 생성됩니다
             - 자동 생성된 기록은 isMainRecord: true, isCompleted: false로 시작하며 사용자가 완료 처리 가능합니다
             - 메인 습관 기록 수정시 남은 기간의 모든 메인 기록이 동일한 습관 타입으로 자동 업데이트됩니다
             
-            ### 🔧 습관 포기 지원 (v1.5.0)
-            - 모든 습관 기록을 삭제하면 캘린더에서 플레이스홀더 습관 기록이 완전히 제거됩니다
-            - 습관을 다시 시작하고 싶으면 새로운 습관 기록을 등록하면 자동으로 플레이스홀더가 다시 생성됩니다
-            
-            ### 📋 HABIT 타입 사용자의 캘린더 특징
+            ### 📋 사용자 타입별 캘린더 특징
+            **습관 타입 사용자 (HABIT)**:
             - 목표 기간 전체에 메인 습관 기록이 자동 생성됨
-            - 사용자가 완료 처리하면 isCompleted가 true로 변경
             - 메인 습관 수정시 남은 기간의 모든 기록이 동기화됨
-            - 모든 습관 기록 삭제시 플레이스홀더가 완전히 제거됨 (습관 포기)
+            - 습관 포기시 플레이스홀더가 완전히 제거됨
+            
+            **운동/일상 타입 사용자 (EXERCISE/DAILY)**:
+            - 메인 기록(운동/일상) + 서브 습간 기록 조합 가능
+            - 습관 기록은 서브 기록으로만 표시됨
+            - 습관 목표 기간 제한 없이 자유로운 습관 기록 가능
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -61,56 +67,86 @@ public class CalendarController {
         description = "캘린더 조회 성공",
         content = @Content(
             mediaType = "application/json",
-            examples = @ExampleObject(
-                name = "자동 생성된 메인 습관 기록 포함 캘린더",
-                summary = "HABIT 타입 사용자의 캘린더 - mainRecordTypeForDate 필드 포함",
-                value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "캘린더가 성공적으로 조회되었습니다",
-                    "data": {
-                        "year": 2025,
-                        "month": 11,
-                        "monthlyRecords": [
-                            {
-                                "date": "2025-11-01",
-                                "mainRecordTypeForDate": "HABIT",
-                                "records": [
-                                    {
-                                        "id": "habit_record_001",
-                                        "type": "HABIT"
-                                    }
-                                ]
-                            },
-                            {
-                                "date": "2025-11-02",
-                                "mainRecordTypeForDate": "HABIT",
-                                "records": [
-                                    {
-                                        "id": "habit_record_002",
-                                        "type": "HABIT"
-                                    }
-                                ]
-                            },
-                            {
-                                "date": "2025-11-03",
-                                "mainRecordTypeForDate": "HABIT",
-                                "records": [
-                                    {
-                                        "id": "daily_record_001",
-                                        "type": "DAILY"
-                                    },
-                                    {
-                                        "id": "habit_record_003",
-                                        "type": "HABIT"
-                                    }
-                                ]
-                            }
-                        ]
+            examples = {
+                @ExampleObject(
+                    name = "습관 타입 사용자 캘린더",
+                    summary = "HABIT 타입 사용자 - 목표 기간 내 메인 습관 기록만 표시",
+                    value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "캘린더가 성공적으로 조회되었습니다",
+                        "data": {
+                            "year": 2025,
+                            "month": 11,
+                            "monthlyRecords": [
+                                {
+                                    "date": "2025-11-01",
+                                    "mainRecordTypeForDate": "HABIT",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_001",
+                                            "type": "HABIT"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "date": "2025-11-02",
+                                    "mainRecordTypeForDate": "HABIT",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_002",
+                                            "type": "HABIT"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
                     }
-                }
-                """)
+                    """
+                ),
+                @ExampleObject(
+                    name = "운동 타입 사용자 캘린더",
+                    summary = "EXERCISE 타입 사용자 - 메인 운동 + 서브 습관 조합, 과거 습관 기록 제외",
+                    value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "캘린더가 성공적으로 조회되었습니다",
+                        "data": {
+                            "year": 2025,
+                            "month": 11,
+                            "monthlyRecords": [
+                                {
+                                    "date": "2025-11-05",
+                                    "mainRecordTypeForDate": "EXERCISE",
+                                    "records": [
+                                        {
+                                            "id": "exercise_record_001",
+                                            "type": "EXERCISE"
+                                        },
+                                        {
+                                            "id": "habit_record_001",
+                                            "type": "HABIT"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "date": "2025-11-06",
+                                    "mainRecordTypeForDate": "EXERCISE",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_002",
+                                            "type": "HABIT"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                    """
+                )
+            }
         )
     )
     @GetMapping("/{year}/{month}")

@@ -225,9 +225,8 @@ public class RecordApplicationService {
         
         // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
         if (type == null || type == RecordType.HABIT) {
-            List<HabitRecord> habitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-                userIdObj, startDate, endDate
-            );
+            // 습관 기록은 습관 목표 기간 내에서만 조회
+            List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
             allRecords.addAll(habitRecords.stream()
                 .map(UnifiedRecordResponse::fromHabitRecord)
                 .toList());
@@ -292,8 +291,8 @@ public class RecordApplicationService {
             .map(UnifiedRecordResponse::fromExerciseRecord)
             .toList());
         
-        // 3. 습관 기록 조회
-        List<HabitRecord> habitRecords = habitRecordRepository.findByUserIdAndRecordDate(userIdObj, date);
+        // 3. 습관 기록 조회 (습관 목표 기간 내만)
+        List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, date, date);
         allRecords.addAll(habitRecords.stream()
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList());
@@ -654,5 +653,49 @@ public class RecordApplicationService {
         }
         
         return completedDays;
+    }
+    
+    /**
+     * 습관 목표 기간 내에 있는 습관 기록만 조회
+     * 목표 기간 이전의 과거 데이터는 제외하여 메인 기록 아이콘 표시 오류 방지
+     */
+    private List<HabitRecord> getHabitRecordsInGoalPeriod(UserId userId, LocalDate startDate, LocalDate endDate) {
+        // 사용자 정보 조회
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 메인 기록 타입이 HABIT이 아닌 사용자의 경우, 습관 기간 제한 없이 모든 습관 기록 조회
+        if (user.getMainRecordType() != RecordType.HABIT) {
+            return habitRecordRepository.findByUserIdAndRecordDateBetween(userId, startDate, endDate);
+        }
+        
+        // 습관 시작일이 설정되지 않은 경우, 모든 습관 기록 조회
+        if (user.getHabitStartDate() == null) {
+            return habitRecordRepository.findByUserIdAndRecordDateBetween(userId, startDate, endDate);
+        }
+        
+        // 습관 목표 기간 계산
+        LocalDate habitStartDate = user.getHabitStartDate();
+        LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
+        
+        // 조회 범위와 습관 기간의 교집합 계산
+        LocalDate rangeStart = habitStartDate.isAfter(startDate) ? habitStartDate : startDate;
+        LocalDate rangeEnd = habitEndDate.isBefore(endDate) ? habitEndDate : endDate;
+        
+        // 교집합이 없는 경우 빈 리스트 반환
+        if (rangeStart.isAfter(rangeEnd)) {
+            log.debug("습관 목표 기간과 조회 범위의 교집합이 없음: userId={}, habitPeriod=[{} ~ {}], queryRange=[{} ~ {}]", 
+                    userId.getValue(), habitStartDate, habitEndDate, startDate, endDate);
+            return new ArrayList<>();
+        }
+        
+        // 습관 목표 기간 내의 습관 기록만 조회
+        List<HabitRecord> habitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+            userId, rangeStart, rangeEnd);
+        
+        log.debug("습관 목표 기간 내 습관 기록 조회 완료: userId={}, 조회범위=[{} ~ {}], 기록수={}", 
+                userId.getValue(), rangeStart, rangeEnd, habitRecords.size());
+        
+        return habitRecords;
     }
 }
