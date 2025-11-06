@@ -401,14 +401,15 @@ public class HabitRecordApplicationService {
     }
     
     /**
-     * 메인 습관 기록 등록시 남은 목표 기간에 대해 메인 습관 기록을 자동 생성
+     * 메인 습관 기록 등록시 오늘부터 목표 종료일까지 메인 습관 기록을 자동 생성
      */
     private void createMainHabitRecordsForRemainingPeriod(User user, HabitRecord newMainRecord) {
         LocalDate recordDate = newMainRecord.getRecordDate();
         LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
+        LocalDate today = LocalDate.now();
         
-        // 생성된 기록 날짜 다음날부터 목표 종료일까지 메인 습관 기록 생성
-        LocalDate nextDate = recordDate.plusDays(1);
+        // 오늘부터 목표 종료일까지 메인 습관 기록 생성 (과거 날짜는 자동 생성하지 않음)
+        LocalDate nextDate = today.isAfter(recordDate) ? today : recordDate.plusDays(1);
         
         if (nextDate.isAfter(habitEndDate)) {
             // 이미 목표 기간이 끝난 경우
@@ -441,7 +442,7 @@ public class HabitRecordApplicationService {
         
         int createdCount = 0;
         
-        // 다음날부터 목표 종료일까지 메인 습관 기록 생성
+        // 오늘부터 목표 종료일까지 메인 습관 기록 생성
         for (LocalDate date = nextDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
             if (!existingRecordDates.contains(date)) {
                 // 해당 날짜에 습관 기록이 없으면 새로운 메인 습관 기록 생성

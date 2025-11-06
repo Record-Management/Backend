@@ -451,10 +451,12 @@ public class RecordApplicationService {
         // 습관 기간 범위 계산
         LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
+        LocalDate today = LocalDate.now();
         
-        // 전체 습관 기간의 기존 습관 기록 조회
+        // 오늘부터 목표 종료일까지의 기존 습관 기록 조회 (과거 날짜는 생성하지 않음)
+        LocalDate startDate = today.isAfter(habitStartDate) ? today : habitStartDate;
         List<HabitRecord> existingHabitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            userId, habitStartDate, habitEndDate);
+            userId, startDate, habitEndDate);
         
         // 기존 메인 습관 기록이 있는 날짜들을 서브로 변경
         List<HabitRecord> existingMainRecords = existingHabitRecords.stream()
@@ -475,8 +477,8 @@ public class RecordApplicationService {
         
         int createdCount = 0;
         
-        // 전체 습관 기간에 대해 실제 메인 습관 기록을 DB에 생성
-        for (LocalDate date = habitStartDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
+        // 오늘부터 목표 종료일까지 실제 메인 습관 기록을 DB에 생성
+        for (LocalDate date = startDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
             // 이미 습관 기록이 있는 날짜는 스킵
             if (!existingHabitDates.contains(date)) {
                 // 기본 메인 습관 기록 생성
@@ -497,8 +499,8 @@ public class RecordApplicationService {
             }
         }
         
-        log.info("전체 습관 기간 메인 습관 기록 생성 완료: userId={}, habitPeriod=[{} ~ {}], createdCount={}", 
-                userId.getValue(), habitStartDate, habitEndDate, createdCount);
+        log.info("오늘부터 목표 종료일까지 메인 습관 기록 생성 완료: userId={}, generationPeriod=[{} ~ {}], createdCount={}", 
+                userId.getValue(), startDate, habitEndDate, createdCount);
     }
     
     /**
