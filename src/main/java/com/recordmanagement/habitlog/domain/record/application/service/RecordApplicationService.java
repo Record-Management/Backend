@@ -666,11 +666,6 @@ public class RecordApplicationService {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        // 메인 기록 타입이 HABIT이 아닌 사용자의 경우, 습관 기간 제한 없이 모든 습관 기록 조회
-        if (user.getMainRecordType() != RecordType.HABIT) {
-            return habitRecordRepository.findByUserIdAndRecordDateBetween(userId, startDate, endDate);
-        }
-        
         // 습관 시작일이 설정되지 않은 경우, 모든 습관 기록 조회
         if (user.getHabitStartDate() == null) {
             return habitRecordRepository.findByUserIdAndRecordDateBetween(userId, startDate, endDate);
