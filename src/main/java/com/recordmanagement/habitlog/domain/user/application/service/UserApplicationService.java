@@ -78,20 +78,10 @@ public class UserApplicationService {
         // UserRegistrationService에 온보딩 완료 위임
         UserResponse result = userRegistrationService.completeOnboarding(command);
         
-        // 메인 기록 타입이 HABIT인 경우 플레이스홀더 생성
+        // 메인 기록 타입이 HABIT로 설정되어도 자동 생성하지 않음 - 일상/운동과 동일한 UX 제공
         if (command.mainRecordType() == RecordType.HABIT) {
-            try {
-                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
-                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
-                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
-                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(UserId.of(command.userId()));
-                log.info("온보딩 완료로 메인 기록 타입이 HABIT로 설정되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
-                        command.userId());
-            } catch (Exception e) {
-                log.error("온보딩 완료 후 플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
-                        command.userId(), e.getMessage(), e);
-                // 플레이스홀더 생성 실패가 온보딩 완료 자체를 실패시키지 않도록 함
-            }
+            log.info("온보딩 완료로 메인 기록 타입이 HABIT로 설정됨. 사용자 실제 행동 시에만 기록 생성: userId=[{}]", 
+                    command.userId());
         }
         
         // 온보딩 완료 시 새로운 목표 생성
@@ -130,20 +120,10 @@ public class UserApplicationService {
         // UserRegistrationService에 온보딩 재설정 위임
         UserResponse result = userRegistrationService.resetOnboarding(command);
         
-        // 메인 기록 타입이 HABIT로 변경된 경우 플레이스홀더 생성
+        // 메인 기록 타입이 HABIT로 변경되어도 자동 생성하지 않음 - 일상/운동과 동일한 UX 제공
         if (command.mainRecordType() == RecordType.HABIT && previousMainRecordType != RecordType.HABIT) {
-            try {
-                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
-                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
-                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
-                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(UserId.of(command.userId()));
-                log.info("온보딩 재설정으로 메인 기록 타입이 HABIT로 변경되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
-                        command.userId());
-            } catch (Exception e) {
-                log.error("온보딩 재설정 후 플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
-                        command.userId(), e.getMessage(), e);
-                // 플레이스홀더 생성 실패가 온보딩 재설정 자체를 실패시키지 않도록 함
-            }
+            log.info("온보딩 재설정으로 메인 기록 타입이 HABIT로 변경됨. 사용자 실제 행동 시에만 기록 생성: userId=[{}]", 
+                    command.userId());
         }
         
         return result;
@@ -166,20 +146,10 @@ public class UserApplicationService {
         user.resetGoal(command.mainRecordType(), command.goalDays());
         User updatedUser = userRepository.save(user);
         
-        // 메인 기록 타입이 HABIT로 변경된 경우 플레이스홀더 생성
+        // 메인 기록 타입이 HABIT로 변경되어도 자동 생성하지 않음 - 일상/운동과 동일한 UX 제공
         if (command.mainRecordType() == RecordType.HABIT && previousMainRecordType != RecordType.HABIT) {
-            try {
-                // ApplicationContext를 통해 RecordApplicationService를 지연 로딩하여 순환 의존성 방지
-                var recordApplicationService = applicationContext.getBean("recordApplicationService", 
-                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
-                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(updatedUser.getId());
-                log.info("메인 기록 타입이 HABIT로 변경되어 전체 기간 플레이스홀더 생성 완료: userId=[{}]", 
-                        updatedUser.getId().getValue());
-            } catch (Exception e) {
-                log.error("플레이스홀더 생성 중 오류 발생: userId=[{}], error={}", 
-                        updatedUser.getId().getValue(), e.getMessage(), e);
-                // 플레이스홀더 생성 실패가 목표 재설정 자체를 실패시키지 않도록 함
-            }
+            log.info("목표 재설정으로 메인 기록 타입이 HABIT로 변경됨. 사용자 실제 행동 시에만 기록 생성: userId=[{}]", 
+                    updatedUser.getId().getValue());
         }
         
         log.info("목표 재설정 완료: userId=[{}]", updatedUser.getId().getValue());

@@ -231,8 +231,7 @@ public class RecordApplicationService {
                 .map(UnifiedRecordResponse::fromHabitRecord)
                 .toList());
             
-            // 메인 습관 기록 자동 생성 로직 추가
-            generatePlaceholderMainHabitRecords(userIdObj, startDate, endDate, allRecords);
+            // 플레이스홀더 자동 생성 제거 - 일상/운동과 동일한 UX 제공
         }
         
         // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
