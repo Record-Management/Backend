@@ -51,6 +51,11 @@ public class CalendarController {
             - **완료 체크 시**: 해당 날짜에 불 아이콘 표시
             - **자정 넘김 시**: 미완료 기록 자동 생성하여 회색 아이콘 표시
             
+            ### 📋 isCompleted 필드 (v1.8.0)
+            - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
+            - **습관 기록**: 실제 완료 체크 여부 (true/false)
+            - **일상/운동 기록**: 기록 존재 자체가 완료 (항상 true)
+            
             ### 📋 사용자 타입별 캘린더 특징
             **모든 사용자 타입 (HABIT/EXERCISE/DAILY)**:
             - 실제 기록 작성/완료 체크 시에만 캘린더 표시
@@ -87,7 +92,8 @@ public class CalendarController {
                                     "records": [
                                         {
                                             "id": "habit_record_001",
-                                            "type": "HABIT"
+                                            "type": "HABIT",
+                                            "isCompleted": true
                                         }
                                     ]
                                 },
@@ -97,7 +103,8 @@ public class CalendarController {
                                     "records": [
                                         {
                                             "id": "habit_record_002",
-                                            "type": "HABIT"
+                                            "type": "HABIT",
+                                            "isCompleted": false
                                         }
                                     ]
                                 }
@@ -124,11 +131,13 @@ public class CalendarController {
                                     "records": [
                                         {
                                             "id": "exercise_record_001",
-                                            "type": "EXERCISE"
+                                            "type": "EXERCISE",
+                                            "isCompleted": true
                                         },
                                         {
                                             "id": "habit_record_001",
-                                            "type": "HABIT"
+                                            "type": "HABIT",
+                                            "isCompleted": true
                                         }
                                     ]
                                 },
@@ -138,7 +147,8 @@ public class CalendarController {
                                     "records": [
                                         {
                                             "id": "habit_record_002",
-                                            "type": "HABIT"
+                                            "type": "HABIT",
+                                            "isCompleted": false
                                         }
                                     ]
                                 }

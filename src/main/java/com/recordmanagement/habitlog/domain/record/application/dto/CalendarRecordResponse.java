@@ -21,19 +21,22 @@ public record CalendarRecordResponse(
     
     public record RecordSummary(
         String id,
-        RecordType type
+        RecordType type,
+        Boolean isCompleted
     ) {
         public static RecordSummary from(Record record) {
             return new RecordSummary(
                 record.getId().value(),
-                record.getType()
+                record.getType(),
+                true // 일상 기록 존재 자체가 완료
             );
         }
         
         public static RecordSummary from(UnifiedRecordResponse unified) {
             return new RecordSummary(
                 unified.id(),
-                unified.type()
+                unified.type(),
+                unified.isCompleted()
             );
         }
     }
