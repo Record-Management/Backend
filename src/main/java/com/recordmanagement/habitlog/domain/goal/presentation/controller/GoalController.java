@@ -53,21 +53,26 @@ public class GoalController {
                     description = "현재 목표 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = CurrentGoalResponse.class),
+                            schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = {
                                     @ExampleObject(
                                             name = "진행중인 습관 목표 (20일)",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440000",
-                                                      "recordType": "HABIT",
-                                                      "goalDays": 20,
-                                                      "startDate": "2025-11-01",
-                                                      "endDate": "2025-11-20",
-                                                      "completedDays": 7,
-                                                      "achievementRate": 35.0,
-                                                      "treeStage": "STAGE_2",
-                                                      "canCreateNew": false
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "현재 목표 조회가 성공적으로 완료되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440000",
+                                                        "recordType": "HABIT",
+                                                        "goalDays": 20,
+                                                        "startDate": "2025-11-01",
+                                                        "endDate": "2025-11-20",
+                                                        "completedDays": 7,
+                                                        "achievementRate": 35.0,
+                                                        "treeStage": "STAGE_2",
+                                                        "canCreateNew": false
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -75,15 +80,20 @@ public class GoalController {
                                             name = "진행중인 운동 목표 (30일)",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440001",
-                                                      "recordType": "EXERCISE",
-                                                      "goalDays": 30,
-                                                      "startDate": "2025-11-01",
-                                                      "endDate": "2025-11-30",
-                                                      "completedDays": 15,
-                                                      "achievementRate": 50.0,
-                                                      "treeStage": "STAGE_2",
-                                                      "canCreateNew": false
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "현재 목표 조회가 성공적으로 완료되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440001",
+                                                        "recordType": "EXERCISE",
+                                                        "goalDays": 30,
+                                                        "startDate": "2025-11-01",
+                                                        "endDate": "2025-11-30",
+                                                        "completedDays": 15,
+                                                        "achievementRate": 50.0,
+                                                        "treeStage": "STAGE_2",
+                                                        "canCreateNew": false
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -91,15 +101,20 @@ public class GoalController {
                                             name = "진행중인 일상 목표 (10일)",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440002",
-                                                      "recordType": "DAILY",
-                                                      "goalDays": 10,
-                                                      "startDate": "2025-11-01",
-                                                      "endDate": "2025-11-10",
-                                                      "completedDays": 9,
-                                                      "achievementRate": 90.0,
-                                                      "treeStage": "STAGE_4",
-                                                      "canCreateNew": false
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "현재 목표 조회가 성공적으로 완료되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440002",
+                                                        "recordType": "DAILY",
+                                                        "goalDays": 10,
+                                                        "startDate": "2025-11-01",
+                                                        "endDate": "2025-11-10",
+                                                        "completedDays": 9,
+                                                        "achievementRate": 90.0,
+                                                        "treeStage": "STAGE_4",
+                                                        "canCreateNew": false
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -107,15 +122,20 @@ public class GoalController {
                                             name = "진행중인 목표가 없는 경우",
                                             value = """
                                                     {
-                                                      "goalId": null,
-                                                      "recordType": null,
-                                                      "goalDays": 0,
-                                                      "startDate": null,
-                                                      "endDate": null,
-                                                      "completedDays": 0,
-                                                      "achievementRate": 0.0,
-                                                      "treeStage": null,
-                                                      "canCreateNew": true
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "현재 목표 조회가 성공적으로 완료되었습니다",
+                                                      "data": {
+                                                        "goalId": null,
+                                                        "recordType": null,
+                                                        "goalDays": 0,
+                                                        "startDate": null,
+                                                        "endDate": null,
+                                                        "completedDays": 0,
+                                                        "achievementRate": 0.0,
+                                                        "treeStage": null,
+                                                        "canCreateNew": true
+                                                      }
                                                     }
                                                     """
                                     )
@@ -123,7 +143,7 @@ public class GoalController {
                     )
             )
     })
-    public ResponseEntity<CurrentGoalResponse> getCurrentGoal(
+    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CurrentGoalResponse>> getCurrentGoal(
             @Parameter(description = "사용자 ID", required = true)
             @RequestHeader("userId") String userId) {
 
@@ -136,7 +156,7 @@ public class GoalController {
                 .map(goal -> CurrentGoalResponse.from(goal, canCreateNew))
                 .orElse(CurrentGoalResponse.empty());
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("현재 목표 조회가 성공적으로 완료되었습니다", response));
     }
 
     /**
@@ -156,25 +176,29 @@ public class GoalController {
                     description = "달성 보고서 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = GoalAchievementReportResponse.class),
+                            schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = {
                                     @ExampleObject(
                                             name = "현재 진행중인 목표가 있는 경우",
                                             value = """
                                                     {
-                                                      "currentPeriod": {
-                                                        "goalId": "550e8400-e29b-41d4-a716-446655440000",
-                                                        "recordType": "HABIT",
-                                                        "goalDays": 20,
-                                                        "startDate": "2025-11-01",
-                                                        "endDate": "2025-11-20",
-                                                        "completedDays": 7,
-                                                        "achievementRate": 35.0,
-                                                        "treeStage": "STAGE_2",
-                                                        "isInProgress": true
-                                                      },
-                                                      "cumulativeAchievementCount": 3,
-                                                      "recentHistory": [
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "목표 달성 보고서 조회가 성공적으로 완료되었습니다",
+                                                      "data": {
+                                                        "currentPeriod": {
+                                                          "goalId": "550e8400-e29b-41d4-a716-446655440000",
+                                                          "recordType": "HABIT",
+                                                          "goalDays": 20,
+                                                          "startDate": "2025-11-01",
+                                                          "endDate": "2025-11-20",
+                                                          "completedDays": 7,
+                                                          "achievementRate": 35.0,
+                                                          "treeStage": "STAGE_2",
+                                                          "isInProgress": true
+                                                        },
+                                                        "cumulativeAchievementCount": 3,
+                                                        "recentHistory": [
                                                         {
                                                           "goalId": "550e8400-e29b-41d4-a716-446655440003",
                                                           "recordType": "EXERCISE",
@@ -197,7 +221,8 @@ public class GoalController {
                                                           "finalTreeStage": "STAGE_4",
                                                           "status": "완료"
                                                         }
-                                                      ]
+                                                        ]
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -227,7 +252,7 @@ public class GoalController {
                     )
             )
     })
-    public ResponseEntity<GoalAchievementReportResponse> getAchievementReport(
+    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<GoalAchievementReportResponse>> getAchievementReport(
             @Parameter(description = "사용자 ID", required = true)
             @RequestHeader("userId") String userId) {
 
@@ -240,7 +265,7 @@ public class GoalController {
         GoalAchievementReportResponse response = GoalAchievementReportResponse.from(
                 currentGoal.orElse(null), cumulativeCount, recentHistory);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("목표 달성 보고서 조회가 성공적으로 완료되었습니다", response));
     }
 
     /**
@@ -260,7 +285,7 @@ public class GoalController {
                     description = "달성 이력 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = GoalAchievementHistoryResponse.class),
+                            schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = @ExampleObject(
                                     value = """
                                             {
@@ -300,7 +325,7 @@ public class GoalController {
                     )
             )
     })
-    public ResponseEntity<GoalAchievementHistoryResponse> getAchievementHistory(
+    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<GoalAchievementHistoryResponse>> getAchievementHistory(
             @Parameter(description = "사용자 ID", required = true)
             @RequestHeader("userId") String userId) {
 
@@ -311,7 +336,7 @@ public class GoalController {
 
         GoalAchievementHistoryResponse response = GoalAchievementHistoryResponse.from(allGoals, completedGoals);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("목표 달성 이력 조회가 성공적으로 완료되었습니다", response));
     }
 
     /**
@@ -332,7 +357,7 @@ public class GoalController {
                     description = "목표 생성 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = CreateGoalResponse.class),
+                            schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = {
                                     @ExampleObject(
                                             name = "습관 목표 생성 성공",
@@ -381,7 +406,7 @@ public class GoalController {
                     description = "잘못된 요청 (이미 진행중인 목표 존재, 유효하지 않은 파라미터 등)"
             )
     })
-    public ResponseEntity<CreateGoalResponse> createNewGoal(
+    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CreateGoalResponse>> createNewGoal(
             @Parameter(description = "사용자 ID", required = true)
             @RequestHeader("userId") String userId,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -439,7 +464,7 @@ public class GoalController {
 
         CreateGoalResponse response = CreateGoalResponse.from(createdGoal);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("새로운 목표가 성공적으로 생성되었습니다", response));
     }
 
 }
