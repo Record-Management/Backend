@@ -152,6 +152,12 @@ public class GoalApplicationService {
      */
     public boolean canCreateNewGoal(UserId userId) {
         Optional<Goal> currentGoal = goalRepository.findCurrentGoalByUserId(userId);
-        return currentGoal.isEmpty();
+        if (currentGoal.isEmpty()) {
+            return true;
+        }
+        
+        // 목표 기간이 끝났으면 새 목표 생성 가능
+        Goal goal = currentGoal.get();
+        return goal.isPeriodEnded();
     }
 }
