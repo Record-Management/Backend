@@ -54,27 +54,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = resolveToken(request);
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+        if (StringUtils.hasText(token)) {
             try {
-                // 블랙리스트 확인
-                if (tokenBlacklistService.isTokenBlacklisted(token)) {
-                    log.debug("블랙리스트된 토큰 접근 시도");
-                    SecurityContextHolder.clearContext();
+                if (jwtTokenProvider.validateToken(token)) {
+                    // 블랙리스트 확인
+                    if (tokenBlacklistService.isTokenBlacklisted(token)) {
+                        log.debug("블랙리스트된 토큰 접근 시도");
+                        SecurityContextHolder.clearContext();
+                    } else {
+                        String userId = jwtTokenProvider.getUserIdAsStringFromToken(token);
+
+                        // 인증 객체 생성 (권한 정보는 빈 리스트로 처리)
+                        UsernamePasswordAuthenticationToken authentication =
+                                new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
+
+                        // SecurityContext에 인증 정보 저장
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                        log.debug("JWT 토큰 인증 성공 - userId={}", userId);
+                    }
                 } else {
-                    String userId = jwtTokenProvider.getUserIdAsStringFromToken(token);
-
-                    // 인증 객체 생성 (권한 정보는 빈 리스트로 처리)
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
-
-                    // SecurityContext에 인증 정보 저장
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                    log.debug("JWT 토큰 인증 성공 - userId={}", userId);
+                    // 토큰이 유효하지 않음 (만료 등) - 401 응답
+                    log.debug("유효하지 않은 JWT 토큰 - 401 응답");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\":\"토큰이 만료되었거나 유효하지 않습니다.\"}");
+                    return;
                 }
             } catch (Exception e) {
                 log.error("JWT 토큰 인증 중 오류 발생", e);
                 SecurityContextHolder.clearContext();
+                // 토큰 파싱 오류 시에도 401 응답
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"error\":\"토큰이 만료되었거나 유효하지 않습니다.\"}");
+                return;
             }
         }
 
