@@ -414,12 +414,17 @@ public class GoalController {
                                             name = "습관 목표 생성 성공",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440010",
-                                                      "recordType": "HABIT",
-                                                      "goalDays": 30,
-                                                      "startDate": "2025-11-05",
-                                                      "endDate": "2025-12-04",
-                                                      "message": "목표가 성공적으로 생성되었습니다."
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "새로운 목표가 성공적으로 생성되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440010",
+                                                        "recordType": "HABIT",
+                                                        "goalDays": 30,
+                                                        "startDate": "2025-11-10",
+                                                        "endDate": "2025-12-09",
+                                                        "message": "목표가 성공적으로 생성되었습니다."
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -427,12 +432,17 @@ public class GoalController {
                                             name = "운동 목표 생성 성공",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440011",
-                                                      "recordType": "EXERCISE",
-                                                      "goalDays": 20,
-                                                      "startDate": "2025-11-05",
-                                                      "endDate": "2025-11-24",
-                                                      "message": "목표가 성공적으로 생성되었습니다."
+                                                      "statusCode": 200,
+                                                      "code": "S200", 
+                                                      "message": "새로운 목표가 성공적으로 생성되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440011",
+                                                        "recordType": "EXERCISE",
+                                                        "goalDays": 20,
+                                                        "startDate": "2025-11-10",
+                                                        "endDate": "2025-11-29",
+                                                        "message": "목표가 성공적으로 생성되었습니다."
+                                                      }
                                                     }
                                                     """
                                     ),
@@ -440,12 +450,17 @@ public class GoalController {
                                             name = "일상 목표 생성 성공",
                                             value = """
                                                     {
-                                                      "goalId": "550e8400-e29b-41d4-a716-446655440012",
-                                                      "recordType": "DAILY",
-                                                      "goalDays": 10,
-                                                      "startDate": "2025-11-05",
-                                                      "endDate": "2025-11-14",
-                                                      "message": "목표가 성공적으로 생성되었습니다."
+                                                      "statusCode": 200,
+                                                      "code": "S200",
+                                                      "message": "새로운 목표가 성공적으로 생성되었습니다",
+                                                      "data": {
+                                                        "goalId": "550e8400-e29b-41d4-a716-446655440012",
+                                                        "recordType": "DAILY", 
+                                                        "goalDays": 10,
+                                                        "startDate": "2025-11-10",
+                                                        "endDate": "2025-11-19",
+                                                        "message": "목표가 성공적으로 생성되었습니다."
+                                                      }
                                                     }
                                                     """
                                     )
@@ -486,8 +501,7 @@ public class GoalController {
                                             value = """
                                                     {
                                                       "recordType": "HABIT",
-                                                      "goalDays": 30,
-                                                      "startDate": "2025-11-05"
+                                                      "goalDays": 30
                                                     }
                                                     """
                                     ),
@@ -496,8 +510,7 @@ public class GoalController {
                                             value = """
                                                     {
                                                       "recordType": "EXERCISE",
-                                                      "goalDays": 20,
-                                                      "startDate": "2025-11-05"
+                                                      "goalDays": 20
                                                     }
                                                     """
                                     ),
@@ -506,8 +519,7 @@ public class GoalController {
                                             value = """
                                                     {
                                                       "recordType": "DAILY",
-                                                      "goalDays": 10,
-                                                      "startDate": "2025-11-05"
+                                                      "goalDays": 10
                                                     }
                                                     """
                                     )
@@ -524,8 +536,7 @@ public class GoalController {
         Goal createdGoal = goalApplicationService.createGoal(
                 UserId.from(userId),
                 request.getRecordType(),
-                request.getGoalDays(),
-                request.getStartDate()
+                request.getGoalDays()
         );
 
         CreateGoalResponse response = CreateGoalResponse.from(createdGoal);

@@ -36,11 +36,11 @@ public class GoalApplicationService {
      * @param userId 사용자 ID
      * @param recordType 기록 타입
      * @param goalDays 목표일수 (10, 20, 30)
-     * @param startDate 시작일
      * @return 생성된 목표
      */
     @Transactional
-    public Goal createGoal(UserId userId, RecordType recordType, int goalDays, LocalDate startDate) {
+    public Goal createGoal(UserId userId, RecordType recordType, int goalDays) {
+        LocalDate startDate = LocalDate.now(); // 목표 설정 당일부터 시작
         log.info("Creating new goal for user: {}, recordType: {}, goalDays: {}, startDate: {}",
                 userId.getValue(), recordType, goalDays, startDate);
 

@@ -91,8 +91,7 @@ public class UserApplicationService {
             goalApplicationService.createGoal(
                 UserId.of(command.userId()),
                 command.mainRecordType(),
-                command.goalDays(),
-                java.time.LocalDate.now()
+                command.goalDays()
             );
             log.info("온보딩 완료로 새로운 목표 생성 완료: userId=[{}], recordType=[{}], goalDays=[{}]", 
                     command.userId(), command.mainRecordType(), command.goalDays());
