@@ -181,6 +181,20 @@ public class ExerciseRecordController {
                     )
                 }
             )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
     })
     @PostMapping
@@ -268,35 +282,51 @@ public class ExerciseRecordController {
             }
         )
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "운동기록 수정 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "code": "S200",
-                    "statusCode": 200,
-                    "message": "운동기록이 성공적으로 수정되었습니다",
-                    "data": {
-                        "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
-                        "type": "EXERCISE",
-                        "recordDate": "2025-10-27",
-                        "recordTime": "13:30:00",
-                        "createdAt": "2025-09-18T15:30:00",
-                        "updatedAt": "2025-09-18T16:15:00",
-                        "exerciseType": "RUNNING",
-                        "caloriesBurned": 400,
-                        "exerciseTimeMinutes": 45,
-                        "stepCount": 6000,
-                        "weight": 69.8,
-                        "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
-                        "imageUrls": ["https://example.com/running-track.jpg"]
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "운동기록 수정 성공",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "code": "S200",
+                        "statusCode": 200,
+                        "message": "운동기록이 성공적으로 수정되었습니다",
+                        "data": {
+                            "id": "b6e1b665-e1f3-4e2b-b6c1-efb9b32c7be8",
+                            "type": "EXERCISE",
+                            "recordDate": "2025-10-27",
+                            "recordTime": "13:30:00",
+                            "createdAt": "2025-09-18T15:30:00",
+                            "updatedAt": "2025-09-18T16:15:00",
+                            "exerciseType": "RUNNING",
+                            "caloriesBurned": 400,
+                            "exerciseTimeMinutes": 45,
+                            "stepCount": 6000,
+                            "weight": 69.8,
+                            "dailyNote": "수정된 운동 내용입니다. 오늘은 달리기를 했어요!",
+                            "imageUrls": ["https://example.com/running-track.jpg"]
+                        }
                     }
-                }
-                """)
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
-    )
+    })
     @PutMapping("/{exerciseRecordId}")
     public ResponseEntity<ApiResponse<ExerciseRecordResponse>> updateExerciseRecord(
             @PathVariable String exerciseRecordId,
@@ -334,22 +364,37 @@ public class ExerciseRecordController {
     @Operation(summary = "운동기록 삭제", 
                description = "운동기록을 삭제합니다. 삭제된 운동기록은 복구할 수 없습니다.",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "운동기록 삭제 성공",
-        content = @Content(
-
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "code": "S200",
-                    "statusCode": 200,
-                    "message": "운동기록이 성공적으로 삭제되었습니다",
-                    "data": null
-                }
-                """)
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "운동기록 삭제 성공",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "code": "S200",
+                        "statusCode": 200,
+                        "message": "운동기록이 성공적으로 삭제되었습니다",
+                        "data": null
+                    }
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
-    )
+    })
     @DeleteMapping("/{exerciseRecordId}")
     public ResponseEntity<ApiResponse<Void>> deleteExerciseRecord(
             @PathVariable String exerciseRecordId,

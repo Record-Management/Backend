@@ -140,6 +140,20 @@ public class RecordController {
             }
         )
     )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패 (토큰 없음/만료/잘못됨)",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                  "error": "토큰이 만료되었거나 유효하지 않습니다."
+                }
+                """
+            )
+        )
+    )
     @PostMapping
     public ResponseEntity<ApiResponse<RecordResponse>> createDailyRecord(
             @Valid @RequestBody CreateRecordRequest request,
@@ -266,6 +280,20 @@ public class RecordController {
                     }
                     """)
             )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
     })
     @PutMapping("/{recordId}")
@@ -331,6 +359,20 @@ public class RecordController {
                     "data": null
                 }
                 """)
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패 (토큰 없음/만료/잘못됨)",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                  "error": "토큰이 만료되었거나 유효하지 않습니다."
+                }
+                """
+            )
         )
     )
     @DeleteMapping("/{recordId}")

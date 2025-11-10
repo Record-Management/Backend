@@ -117,6 +117,20 @@ public class UserController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "404",
                 description = "사용자를 찾을 수 없음"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -193,6 +207,20 @@ public class UserController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -263,6 +291,20 @@ public class UserController {
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
+                        }
+                        """
+                    )
+                )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
                         }
                         """
                     )
@@ -362,6 +404,20 @@ public class UserController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -429,7 +485,17 @@ public class UserController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "401",
-                description = "인증 실패"
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "404",
@@ -521,7 +587,17 @@ public class UserController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "401",
-                description = "인증 실패"
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "404",
@@ -622,6 +698,20 @@ public class UserController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -697,6 +787,20 @@ public class UserController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -743,7 +847,17 @@ public class UserController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "401",
-                description = "인증 실패"
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "404",

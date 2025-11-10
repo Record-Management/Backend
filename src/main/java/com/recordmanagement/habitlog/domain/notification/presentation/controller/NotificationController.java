@@ -129,6 +129,20 @@ public class NotificationController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "404",
                 description = "알림 설정을 찾을 수 없음 (기본값으로 생성됨)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -208,7 +222,17 @@ public class NotificationController {
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                 responseCode = "401",
-                description = "인증 실패"
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -323,6 +347,20 @@ public class NotificationController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -389,6 +427,20 @@ public class NotificationController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )
@@ -447,6 +499,20 @@ public class NotificationController {
                           "data": {
                             "updatedCount": 5
                           }
+                        }
+                        """
+                    )
+                )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
                         }
                         """
                     )

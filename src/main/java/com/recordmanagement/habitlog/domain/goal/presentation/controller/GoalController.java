@@ -141,6 +141,21 @@ public class GoalController {
                                     )
                             }
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "토큰 만료",
+                                    value = """
+                                            {
+                                              "error": "토큰이 만료되었거나 유효하지 않습니다."
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CurrentGoalResponse>> getCurrentGoal(

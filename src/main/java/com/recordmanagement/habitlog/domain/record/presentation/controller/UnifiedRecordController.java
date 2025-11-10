@@ -45,65 +45,81 @@ public class UnifiedRecordController {
                    - 이미지 접근이 필요할 때마다 최신 URL로 제공됩니다
                    """,
                security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
-        description = "일일 기록 통합 조회 성공",
-        content = @Content(
-            mediaType = "application/json",
-            examples = @ExampleObject(value = """
-                {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "일일 기록이 성공적으로 조회되었습니다",
-                    "data": {
-                        "date": "2025-01-07",
-                        "records": [
-                            {
-                                "id": "550e8400-e29b-41d4-a716-446655440000",
-                                "type": "DAILY",
-                                "recordDate": "2025-10-27",
-                                "recordTime": "15:21",
-                                "createdAt": "2025-01-07T15:21:00",
-                                "updatedAt": "2025-01-07T15:21:00",
-                                "imageUrls": ["https://example.com/image1.jpg"],
-                                "emotion": "😊",
-                                "content": "오늘은 정말 좋은 하루였습니다."
-                            },
-                            {
-                                "id": "660e8400-e29b-41d4-a716-446655440001",
-                                "type": "EXERCISE",
-                                "recordDate": "2025-10-27",
-                                "recordTime": "16:30",
-                                "createdAt": "2025-01-07T16:30:00",
-                                "updatedAt": "2025-01-07T16:30:00",
-                                "imageUrls": [],
-                                "exerciseType": "CARDIO",
-                                "caloriesBurned": 300,
-                                "exerciseTimeMinutes": 30,
-                                "stepCount": 5000,
-                                "weight": 70.5,
-                                "dailyNote": "오늘 운동 너무 힘들었지만 뿌듯해요!"
-                            },
-                            {
-                                "id": "770e8400-e29b-41d4-a716-446655440002",
-                                "type": "HABIT",
-                                "recordDate": "2025-10-27",
-                                "recordTime": null,
-                                "createdAt": "2025-01-07T09:00:00",
-                                "updatedAt": "2025-01-07T09:00:00",
-                                "imageUrls": null,
-                                "habitType": "WATER",
-                                "notificationEnabled": true,
-                                "notificationTime": "09:00:00",
-                                "memo": "물 2L 달성!",
-                                "isCompleted": true
-                            }
-                        ]
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "일일 기록 통합 조회 성공",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "일일 기록이 성공적으로 조회되었습니다",
+                        "data": {
+                            "date": "2025-01-07",
+                            "records": [
+                                {
+                                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                                    "type": "DAILY",
+                                    "recordDate": "2025-10-27",
+                                    "recordTime": "15:21",
+                                    "createdAt": "2025-01-07T15:21:00",
+                                    "updatedAt": "2025-01-07T15:21:00",
+                                    "imageUrls": ["https://example.com/image1.jpg"],
+                                    "emotion": "😊",
+                                    "content": "오늘은 정말 좋은 하루였습니다."
+                                },
+                                {
+                                    "id": "660e8400-e29b-41d4-a716-446655440001",
+                                    "type": "EXERCISE",
+                                    "recordDate": "2025-10-27",
+                                    "recordTime": "16:30",
+                                    "createdAt": "2025-01-07T16:30:00",
+                                    "updatedAt": "2025-01-07T16:30:00",
+                                    "imageUrls": [],
+                                    "exerciseType": "CARDIO",
+                                    "caloriesBurned": 300,
+                                    "exerciseTimeMinutes": 30,
+                                    "stepCount": 5000,
+                                    "weight": 70.5,
+                                    "dailyNote": "오늘 운동 너무 힘들었지만 뿌듯해요!"
+                                },
+                                {
+                                    "id": "770e8400-e29b-41d4-a716-446655440002",
+                                    "type": "HABIT",
+                                    "recordDate": "2025-10-27",
+                                    "recordTime": null,
+                                    "createdAt": "2025-01-07T09:00:00",
+                                    "updatedAt": "2025-01-07T09:00:00",
+                                    "imageUrls": null,
+                                    "habitType": "WATER",
+                                    "notificationEnabled": true,
+                                    "notificationTime": "09:00:00",
+                                    "memo": "물 2L 달성!",
+                                    "isCompleted": true
+                                }
+                            ]
+                        }
                     }
-                }
-                """)
+                    """)
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
-    )
+    })
     @GetMapping("/date/{date}")
     public ResponseEntity<ApiResponse<DailyRecordResponse>> getRecordsByDate(
             @PathVariable LocalDate date,
@@ -158,17 +174,16 @@ public class UnifiedRecordController {
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "401",
-            description = "인증 실패",
-            content = @Content(
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
                 mediaType = "application/json",
-                examples = @ExampleObject(value = """
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
                     {
-                        "statusCode": 401,
-                        "code": "E40101",
-                        "message": "인증이 필요합니다",
-                        "data": null
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
                     }
-                    """)
+                    """
+                )
             )
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

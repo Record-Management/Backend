@@ -72,6 +72,20 @@ public class TestNotificationController {
                         """
                     )
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                content = @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                        value = """
+                        {
+                          "error": "토큰이 만료되었거나 유효하지 않습니다."
+                        }
+                        """
+                    )
+                )
             )
         }
     )

@@ -134,6 +134,20 @@ public class HabitRecordController {
             )
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "400",
             description = "습관기록 등록 제한 초과",
             content = @io.swagger.v3.oas.annotations.media.Content(
@@ -217,8 +231,9 @@ public class HabitRecordController {
                - 운동/일상 타입 사용자: 자동 일괄 업데이트 없음 (해당 기록만 수정)
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
         description = "습관기록 수정 성공 (습관 타입 사용자의 메인 기록 변경시 자동 일괄 업데이트 포함)",
         content = @io.swagger.v3.oas.annotations.media.Content(
             mediaType = "application/json",
@@ -247,8 +262,22 @@ public class HabitRecordController {
                 }
                 """
             )
+        )),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
-    )
+    })
     public ResponseEntity<ApiResponse<HabitRecordResponse>> updateHabitRecord(
             @PathVariable String habitRecordId,
             @Valid @RequestBody UpdateHabitRecordRequest request,
@@ -362,6 +391,20 @@ public class HabitRecordController {
                         """
                 )
             )
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
     })
     public ResponseEntity<ApiResponse<Void>> deleteHabitRecord(
@@ -383,8 +426,9 @@ public class HabitRecordController {
     @Operation(summary = "습관기록 완료 상태 변경", 
                description = "습관기록의 완료 상태를 토글합니다. 홈 화면에서 간단하게 완료/미완료 상태를 변경할 때 사용합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-        responseCode = "200",
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
         description = "완료 상태 변경 성공",
         content = @io.swagger.v3.oas.annotations.media.Content(
             mediaType = "application/json",
@@ -413,8 +457,22 @@ public class HabitRecordController {
                     }
                     """
             )
+        )),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "인증 실패 (토큰 없음/만료/잘못됨)",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                      "error": "토큰이 만료되었거나 유효하지 않습니다."
+                    }
+                    """
+                )
+            )
         )
-    )
+    })
     public ResponseEntity<ApiResponse<HabitRecordResponse>> updateCompletionStatus(
             @PathVariable String habitRecordId,
             @Valid @RequestBody UpdateCompletionStatusRequest request,
