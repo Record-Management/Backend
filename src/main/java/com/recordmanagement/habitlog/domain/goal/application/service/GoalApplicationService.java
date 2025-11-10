@@ -151,13 +151,9 @@ public class GoalApplicationService {
      * @return true: 설정 가능, false: 설정 불가
      */
     public boolean canCreateNewGoal(UserId userId) {
+        // findCurrentGoalByUserId가 이미 기간 내 + 진행중인 목표만 반환하므로
+        // 목표가 없으면 새 목표 생성 가능
         Optional<Goal> currentGoal = goalRepository.findCurrentGoalByUserId(userId);
-        if (currentGoal.isEmpty()) {
-            return true;
-        }
-        
-        // 목표 기간이 끝났으면 새 목표 생성 가능
-        Goal goal = currentGoal.get();
-        return goal.isPeriodEnded();
+        return currentGoal.isEmpty();
     }
 }

@@ -43,10 +43,10 @@ public interface GoalRepository {
     Optional<Goal> findByIdAndUserId(GoalId goalId, UserId userId);
 
     /**
-     * 사용자의 현재 진행중인 목표 조회
+     * 사용자의 현재 유효한 목표 조회 (진행중이면서 기간 내)
      *
      * @param userId 사용자 ID
-     * @return 진행중인 목표
+     * @return 현재 유효한 목표 (기간 지난 목표는 제외)
      */
     Optional<Goal> findCurrentGoalByUserId(UserId userId);
 

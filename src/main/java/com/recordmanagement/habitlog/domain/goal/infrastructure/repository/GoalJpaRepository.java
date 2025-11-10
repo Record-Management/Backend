@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,19 @@ public interface GoalJpaRepository extends JpaRepository<GoalEntity, String> {
      * @return 진행중인 목표
      */
     Optional<GoalEntity> findByUserIdAndStatus(String userId, GoalStatus status);
+
+    /**
+     * 사용자의 현재 유효한 목표 조회 (진행중이면서 기간 내)
+     *
+     * @param userId 사용자 ID
+     * @param status 진행중 상태
+     * @param currentDate 현재 날짜
+     * @return 현재 유효한 목표
+     */
+    @Query("SELECT g FROM GoalEntity g WHERE g.userId = :userId AND g.status = :status AND g.endDate >= :currentDate")
+    Optional<GoalEntity> findCurrentValidGoalByUserId(@Param("userId") String userId, 
+                                                     @Param("status") GoalStatus status, 
+                                                     @Param("currentDate") LocalDate currentDate);
 
     /**
      * 사용자의 목표 이력 조회 (최신순)

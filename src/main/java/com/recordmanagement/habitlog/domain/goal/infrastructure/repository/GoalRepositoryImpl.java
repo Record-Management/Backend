@@ -9,6 +9,7 @@ import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,7 +47,10 @@ public class GoalRepositoryImpl implements GoalRepository {
 
     @Override
     public Optional<Goal> findCurrentGoalByUserId(UserId userId) {
-        return goalJpaRepository.findByUserIdAndStatus(userId.getValue(), GoalStatus.IN_PROGRESS)
+        return goalJpaRepository.findCurrentValidGoalByUserId(
+                userId.getValue(), 
+                GoalStatus.IN_PROGRESS, 
+                LocalDate.now())
                 .map(GoalEntity::toDomain);
     }
 
