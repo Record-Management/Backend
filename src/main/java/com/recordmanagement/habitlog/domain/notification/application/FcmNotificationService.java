@@ -113,6 +113,71 @@ public class FcmNotificationService {
     }
 
     /**
+     * 목표 설정 미완료 알림 발송
+     * 목표를 설정하지 않은 사용자에게 목표 설정을 유도하는 알림 발송
+     *
+     * @param userId 사용자 ID
+     */
+    public void sendGoalSettingReminderNotification(UserId userId) {
+        log.info("목표 설정 미완료 알림 발송 시작: userId={}", userId.getValue());
+
+        // 사용자 정보 조회
+        User user = userRepository.findById(userId)
+                .filter(u -> !u.isWithdrawn()) // 탈퇴한 사용자 제외
+                .orElse(null);
+
+        if (user == null) {
+            log.warn("사용자를 찾을 수 없거나 탈퇴한 사용자입니다: userId={}", userId.getValue());
+            return;
+        }
+
+        // FCM 토큰 확인
+        if (user.getFcmToken() == null || user.getFcmToken().trim().isEmpty()) {
+            log.warn("FCM 토큰이 없어 알림을 발송할 수 없습니다: userId={}", userId.getValue());
+            return;
+        }
+
+        // 목표 설정 알림 설정 확인
+        boolean isNotificationEnabled = notificationApplicationService.isGoalSettingNotificationEnabled(userId);
+
+        if (!isNotificationEnabled) {
+            log.info("목표 설정 알림이 비활성화되어 있습니다: userId={}", userId.getValue());
+            return;
+        }
+
+        // 목표 설정 알림 메시지
+        String title = "HabitLog";
+        String body = "목표를 설정해서 습관을 시작해보세요! 🎯";
+
+        // 추가 데이터 설정
+        Map<String, String> data = new HashMap<>();
+        data.put("notificationType", "GOAL_SETTING_REMINDER");
+
+        // 알림 히스토리 저장 (FCM 발송 전에 저장)
+        NotificationHistory history = new NotificationHistory(
+                userId, 
+                NotificationType.GOAL_SETTING_REMINDER, 
+                title, 
+                body
+        );
+        notificationHistoryApplicationService.saveNotificationHistory(history);
+
+        // 알림 발송 (DIP 적용: 추상화된 NotificationSender 사용)
+        boolean success = notificationSender.sendNotification(
+                user.getFcmToken(),
+                title,
+                body,
+                data
+        );
+
+        if (success) {
+            log.info("목표 설정 미완료 알림 발송 성공: userId={}", userId.getValue());
+        } else {
+            log.error("목표 설정 미완료 알림 발송 실패: userId={}", userId.getValue());
+        }
+    }
+
+    /**
      * 여러 사용자에게 메인 기록 미등록 알림 일괄 발송
      *
      * @param userIds 사용자 ID 목록

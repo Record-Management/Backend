@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,13 +41,14 @@ public class GoalController {
     /**
      * 현재 목표 조회
      *
-     * @param userId 사용자 ID
+     * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
      * @return 현재 목표 정보
      */
     @GetMapping("/current")
     @Operation(
             summary = "현재 목표 조회",
-            description = "사용자의 현재 진행중인 목표를 조회합니다. 목표가 없으면 빈 응답을 반환합니다."
+            description = "사용자의 현재 진행중인 목표를 조회합니다. 목표가 없으면 빈 응답을 반환합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
@@ -159,9 +162,9 @@ public class GoalController {
             )
     })
     public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CurrentGoalResponse>> getCurrentGoal(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("userId") String userId) {
+            Authentication authentication) {
 
+        String userId = authentication.getName();
         log.info("Getting current goal for user: {}", userId);
 
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.from(userId));
@@ -177,13 +180,14 @@ public class GoalController {
     /**
      * 목표 달성 보고서 조회
      *
-     * @param userId 사용자 ID
+     * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
      * @return 목표 달성 보고서
      */
     @GetMapping("/achievement/report")
     @Operation(
             summary = "목표 달성 보고서 조회",
-            description = "현재 목표 진행상황과 누적 달성 횟수, 최근 이력을 포함한 보고서를 조회합니다."
+            description = "현재 목표 진행상황과 누적 달성 횟수, 최근 이력을 포함한 보고서를 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
@@ -265,12 +269,27 @@ public class GoalController {
                                     )
                             }
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "토큰 만료",
+                                    value = """
+                                            {
+                                              "error": "토큰이 만료되었거나 유효하지 않습니다."
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<GoalAchievementReportResponse>> getAchievementReport(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("userId") String userId) {
+            Authentication authentication) {
 
+        String userId = authentication.getName();
         log.info("Getting achievement report for user: {}", userId);
 
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.from(userId));
@@ -286,13 +305,14 @@ public class GoalController {
     /**
      * 목표 달성 이력 조회
      *
-     * @param userId 사용자 ID
+     * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
      * @return 목표 달성 이력
      */
     @GetMapping("/achievement/history")
     @Operation(
             summary = "목표 달성 이력 조회",
-            description = "사용자의 모든 목표 이력을 최신순으로 조회합니다."
+            description = "사용자의 모든 목표 이력을 최신순으로 조회합니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
@@ -338,12 +358,27 @@ public class GoalController {
                                             """
                             )
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "토큰 만료",
+                                    value = """
+                                            {
+                                              "error": "토큰이 만료되었거나 유효하지 않습니다."
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<GoalAchievementHistoryResponse>> getAchievementHistory(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("userId") String userId) {
+            Authentication authentication) {
 
+        String userId = authentication.getName();
         log.info("Getting achievement history for user: {}", userId);
 
         List<Goal> allGoals = goalApplicationService.getGoalHistory(UserId.from(userId));
@@ -357,14 +392,15 @@ public class GoalController {
     /**
      * 새로운 목표 생성
      *
-     * @param userId 사용자 ID
+     * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
      * @param request 목표 생성 요청
      * @return 생성된 목표 정보
      */
     @PostMapping("/new")
     @Operation(
             summary = "새로운 목표 생성",
-            description = "새로운 목표를 생성합니다. 진행중인 목표가 있으면 생성할 수 없습니다."
+            description = "새로운 목표를 생성합니다. 진행중인 목표가 있으면 생성할 수 없습니다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
@@ -419,11 +455,25 @@ public class GoalController {
             @ApiResponse(
                     responseCode = "400",
                     description = "잘못된 요청 (이미 진행중인 목표 존재, 유효하지 않은 파라미터 등)"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 실패 (토큰 없음/만료/잘못됨)",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "토큰 만료",
+                                    value = """
+                                            {
+                                              "error": "토큰이 만료되었거나 유효하지 않습니다."
+                                            }
+                                            """
+                            )
+                    )
             )
     })
     public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CreateGoalResponse>> createNewGoal(
-            @Parameter(description = "사용자 ID", required = true)
-            @RequestHeader("userId") String userId,
+            Authentication authentication,
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     description = "목표 생성 요청",
                     required = true,
@@ -466,6 +516,7 @@ public class GoalController {
             )
             @RequestBody CreateGoalRequest request) {
 
+        String userId = authentication.getName();
         log.info("Creating new goal for user: {}, request: {}", userId, request);
 
         request.validate();

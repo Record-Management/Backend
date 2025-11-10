@@ -306,8 +306,10 @@ public class NotificationController {
                 description = "알림 히스토리 조회 성공",
                 content = @io.swagger.v3.oas.annotations.media.Content(
                     mediaType = "application/json",
-                    examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
-                        value = """
+                    examples = {
+                        @io.swagger.v3.oas.annotations.media.ExampleObject(
+                            name = "알림 히스토리가 있는 경우",
+                            value = """
                         {
                           "statusCode": 200,
                           "code": "SUCCESS",
@@ -316,36 +318,65 @@ public class NotificationController {
                             "notifications": {
                               "items": [
                                 {
-                                  "notificationType": "EXERCISE_REMINDER",
-                                  "mainRecordType": "EXERCISE",
-                                  "description": "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!",
-                                  "sentAt": [2025, 10, 23, 20, 0, 0]
+                                  "id": "notification-123",
+                                  "type": "DAILY_RECORD_REMINDER",
+                                  "title": "HabitLog",
+                                  "message": "오늘 습관 실천은 어떠셨나요? 기록해보세요! ✨",
+                                  "sentAt": "2025-11-10T19:00:00",
+                                  "isRead": false
                                 },
                                 {
-                                  "notificationType": "DAILY_RECORD_REMINDER",
-                                  "mainRecordType": "DAILY",
-                                  "description": "오늘의 소중한 순간을 기록으로 남겨보세요!",
-                                  "sentAt": [2025, 10, 23, 19, 0, 0]
+                                  "id": "notification-122",
+                                  "type": "EXERCISE_REMINDER",
+                                  "title": "HabitLog",
+                                  "message": "오늘 운동은 어떠셨나요? 기록해보세요! 💪",
+                                  "sentAt": "2025-11-09T19:00:00",
+                                  "isRead": true
                                 },
                                 {
-                                  "notificationType": "GOAL_SETTING_REMINDER",
-                                  "mainRecordType": "GOAL",
-                                  "description": "아직 목표를 설정하지 않으신어요! 지금 바로 새로운 목표를 만들어볼까요?",
-                                  "sentAt": [2025, 10, 23, 18, 0, 0]
+                                  "id": "notification-121",
+                                  "type": "GOAL_SETTING_REMINDER",
+                                  "title": "HabitLog",
+                                  "message": "목표를 설정해서 습관을 시작해보세요! 🎯",
+                                  "sentAt": "2025-11-08T19:00:00",
+                                  "isRead": true
                                 }
                               ],
                               "pageInfo": {
                                 "page": 0,
                                 "size": 20,
-                                "totalElements": 3,
+                                "totalElements": 15,
                                 "totalPages": 1
                               }
                             },
-                            "recentCheckedAt": [2025, 10, 25, 16, 45, 30]
+                            "recentCheckedAt": "2025-11-09T20:30:00"
                           }
                         }
                         """
-                    )
+                        ),
+                        @io.swagger.v3.oas.annotations.media.ExampleObject(
+                            name = "알림 히스토리가 없는 경우",
+                            value = """
+                        {
+                          "statusCode": 200,
+                          "code": "SUCCESS",
+                          "message": "요청이 성공적으로 처리되었습니다.",
+                          "data": {
+                            "notifications": {
+                              "items": [],
+                              "pageInfo": {
+                                "page": 0,
+                                "size": 20,
+                                "totalElements": 0,
+                                "totalPages": 0
+                              }
+                            },
+                            "recentCheckedAt": null
+                          }
+                        }
+                        """
+                        )
+                    }
                 )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(

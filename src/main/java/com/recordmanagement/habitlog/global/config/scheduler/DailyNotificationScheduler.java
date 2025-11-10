@@ -8,7 +8,7 @@ import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepos
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordQueryRepository;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.notification.application.service.NotificationApplicationService;
-import com.recordmanagement.habitlog.domain.notification.infrastructure.service.PushNotificationService;
+import com.recordmanagement.habitlog.domain.notification.application.FcmNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -39,7 +39,7 @@ public class DailyNotificationScheduler {
     private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final NotificationApplicationService notificationApplicationService;
-    private final PushNotificationService pushNotificationService;
+    private final FcmNotificationService fcmNotificationService;
     
     /**
      * 매일 오후 7시에 알림 발송
@@ -85,17 +85,18 @@ public class DailyNotificationScheduler {
                     
                     // 알림 발송
                     if (shouldSendNotification) {
-                        boolean sent = pushNotificationService.sendNotification(
-                            user.getFcmToken(),
-                            "HabitLog",
-                            notificationMessage,
-                            Map.of("type", "daily_reminder")
-                        );
-                        
-                        if (sent) {
+                        try {
+                            if (user.getMainRecordType() == null) {
+                                // 목표 미설정 알림
+                                fcmNotificationService.sendGoalSettingReminderNotification(user.getId());
+                            } else {
+                                // 메인 기록 미등록 알림
+                                fcmNotificationService.sendDailyRecordReminderNotification(user.getId());
+                            }
                             notificationSentCount++;
-                            log.debug("알림 발송 성공: userId={}, message={}", 
-                                    user.getId().getValue(), notificationMessage);
+                            log.debug("알림 발송 성공: userId={}", user.getId().getValue());
+                        } catch (Exception e) {
+                            log.error("알림 발송 실패: userId={}, error={}", user.getId().getValue(), e.getMessage(), e);
                         }
                     }
                     
