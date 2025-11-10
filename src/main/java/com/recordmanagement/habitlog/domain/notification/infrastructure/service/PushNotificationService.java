@@ -52,6 +52,9 @@ public class PushNotificationService {
                                             .setBody(body)
                                             .build())
                                     .setSound("default")
+                                    .setBadge(1)
+                                    .setContentAvailable(true)
+                                    .setMutableContent(true)
                                     .build())
                             .build());
 
@@ -108,6 +111,9 @@ public class PushNotificationService {
                                             .setBody(body)
                                             .build())
                                     .setSound("default")
+                                    .setBadge(1)
+                                    .setContentAvailable(true)
+                                    .setMutableContent(true)
                                     .build())
                             .build());
 
