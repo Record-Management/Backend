@@ -50,22 +50,4 @@ public class CurrentGoalResponse {
         );
     }
 
-    /**
-     * 목표가 없을 때의 응답 DTO 생성
-     *
-     * @return 빈 응답 DTO
-     */
-    public static CurrentGoalResponse empty() {
-        return new CurrentGoalResponse(
-                null,
-                null,
-                0,
-                null,
-                null,
-                0,
-                0.0,
-                null,
-                true
-        );
-    }
 }

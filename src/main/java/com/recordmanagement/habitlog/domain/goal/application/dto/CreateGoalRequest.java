@@ -1,22 +1,31 @@
 package com.recordmanagement.habitlog.domain.goal.application.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 /**
  * 목표 생성 요청 DTO
  *
  * @author 전우선
  * @since 2025.11.04
- * @version 1.0.1
+ * @version 1.0.2
  */
 @Getter
-@RequiredArgsConstructor
 public class CreateGoalRequest {
 
     private final RecordType recordType;
     private final int goalDays;
+
+    @JsonCreator
+    public CreateGoalRequest(
+            @JsonProperty("recordType") RecordType recordType,
+            @JsonProperty("goalDays") int goalDays
+    ) {
+        this.recordType = recordType;
+        this.goalDays = goalDays;
+    }
 
     /**
      * 요청 데이터 유효성 검증

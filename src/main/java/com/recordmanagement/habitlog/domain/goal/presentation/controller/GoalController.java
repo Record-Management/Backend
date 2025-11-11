@@ -128,17 +128,7 @@ public class GoalController {
                                                       "statusCode": 200,
                                                       "code": "S200",
                                                       "message": "현재 목표 조회가 성공적으로 완료되었습니다",
-                                                      "data": {
-                                                        "goalId": null,
-                                                        "recordType": null,
-                                                        "goalDays": 0,
-                                                        "startDate": null,
-                                                        "endDate": null,
-                                                        "completedDays": 0,
-                                                        "achievementRate": 0.0,
-                                                        "treeStage": null,
-                                                        "canCreateNew": true
-                                                      }
+                                                      "data": null
                                                     }
                                                     """
                                     )
@@ -172,7 +162,7 @@ public class GoalController {
 
         CurrentGoalResponse response = currentGoal
                 .map(goal -> CurrentGoalResponse.from(goal, canCreateNew))
-                .orElse(CurrentGoalResponse.empty());
+                .orElse(null);
 
         return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("현재 목표 조회가 성공적으로 완료되었습니다", response));
     }
