@@ -459,7 +459,24 @@ public class GoalController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "잘못된 요청 (이미 진행중인 목표 존재, 유효하지 않은 파라미터 등)"
+                    description = "잘못된 요청 (유효하지 않은 파라미터 등)"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 진행중인 목표가 존재",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject(
+                                    name = "목표 중복 생성 시도",
+                                    value = """
+                                            {
+                                              "statusCode": 409,
+                                              "code": "E40904",
+                                              "message": "이미 진행중인 목표가 존재합니다."
+                                            }
+                                            """
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",

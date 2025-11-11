@@ -6,6 +6,8 @@ import com.recordmanagement.habitlog.domain.goal.domain.model.GoalStatus;
 import com.recordmanagement.habitlog.domain.goal.domain.repository.GoalRepository;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import com.recordmanagement.habitlog.global.config.exception.CustomException;
+import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,7 +49,7 @@ public class GoalApplicationService {
         // 기존 진행중인 목표가 있는지 확인
         Optional<Goal> existingGoal = goalRepository.findCurrentGoalByUserId(userId);
         if (existingGoal.isPresent()) {
-            throw new IllegalStateException("이미 진행중인 목표가 존재합니다.");
+            throw new CustomException(ErrorCode.GOAL_ALREADY_IN_PROGRESS);
         }
 
         // 목표일수 유효성 검증
