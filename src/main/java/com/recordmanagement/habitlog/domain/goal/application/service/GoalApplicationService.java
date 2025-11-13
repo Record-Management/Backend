@@ -5,7 +5,9 @@ import com.recordmanagement.habitlog.domain.goal.domain.model.GoalId;
 import com.recordmanagement.habitlog.domain.goal.domain.model.GoalStatus;
 import com.recordmanagement.habitlog.domain.goal.domain.repository.GoalRepository;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
+import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
+import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.util.Optional;
 public class GoalApplicationService {
 
     private final GoalRepository goalRepository;
+    private final UserRepository userRepository;
 
     /**
      * 새로운 목표 생성
@@ -58,7 +61,18 @@ public class GoalApplicationService {
         }
 
         Goal goal = new Goal(userId, recordType, goalDays, startDate);
-        return goalRepository.save(goal);
+        Goal savedGoal = goalRepository.save(goal);
+        
+        // User 정보와 동기화: 목표 생성 시 사용자 정보 업데이트
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        user.updateGoalSettings(recordType, goalDays);
+        userRepository.save(user);
+        
+        log.info("User goal settings updated: userId={}, recordType={}, goalDays={}", 
+                userId.getValue(), recordType, goalDays);
+        
+        return savedGoal;
     }
 
     /**
@@ -93,7 +107,14 @@ public class GoalApplicationService {
         // 목표 기간이 종료되었다면 완료 처리
         if (goal.isPeriodEnded()) {
             goal.complete();
-            log.info("Goal period ended and completed for user: {}", userId.getValue());
+            
+            // User 정보와 동기화: 목표 완료 시 사용자 정보 초기화
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            user.clearGoalSettings();
+            userRepository.save(user);
+            
+            log.info("Goal period ended and completed for user: {}, user settings cleared", userId.getValue());
         }
 
         goalRepository.save(goal);
@@ -144,6 +165,14 @@ public class GoalApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 목표를 찾을 수 없습니다."));
 
         goalRepository.deleteById(goalId);
+        
+        // User 정보와 동기화: 목표 삭제 시 사용자 정보 초기화
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        user.clearGoalSettings();
+        userRepository.save(user);
+        
+        log.info("Goal deleted and user settings cleared for user: {}", userId.getValue());
     }
 
     /**

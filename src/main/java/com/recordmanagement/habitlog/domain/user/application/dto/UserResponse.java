@@ -35,7 +35,12 @@ import java.time.LocalDate;
         ### 포함 정보
         - 사용자 식별자 및 기본 프로필
         - 소셜 로그인 플랫폼 정보
+        - 목표 설정 정보 및 현재 나무 성장 단계
         - 계정 생성 시간
+        
+        ### 목표 상태별 응답
+        - **목표 있음**: mainRecordType, goalDays, currentTreeStage 값 존재
+        - **목표 없음**: mainRecordType, goalDays, currentTreeStage 모두 null
         
         ### 개인정보 보호
         - 민감한 정보(비밀번호, 내부 ID 등)는 제외
@@ -47,7 +52,13 @@ import java.time.LocalDate;
           "name": "홍길동",
           "email": "hong@example.com", 
           "socialType": "KAKAO",
-          "createdAt": "2024-05-01T12:34:56"
+          "createdAt": "2024-05-01T12:34:56",
+          "onboardingCompleted": true,
+          "nickname": "홍길동",
+          "mainRecordType": "HABIT",
+          "goalDays": 10,
+          "currentTreeStage": 2,
+          "habitStartDate": [2025, 11, 13]
         }
         """
 )
@@ -158,14 +169,42 @@ public class UserResponse {
     @Schema(description = "사용자 닉네임", example = "홍길동")
     private final String nickname;
 
-    @Schema(description = "메인 기록 타입", example = "EXERCISE")
+    @Schema(
+        description = """
+            메인 기록 타입
+            
+            ### 상태별 값
+            - **목표 있음**: "DAILY", "EXERCISE", "HABIT" 중 하나
+            - **목표 없음**: null
+            
+            ### 활용
+            - 목표 설정 배너 표시 조건 (null이면 배너 표시)
+            - 사용자의 주력 기록 타입 식별
+            """, 
+        example = "HABIT",
+        nullable = true
+    )
     private final RecordType mainRecordType;
 
     @Schema(description = "생년월일", example = "[1998, 6, 2]")
     @JsonSerialize(using = LocalDateArraySerializer.class)
     private final LocalDate birthDate;
 
-    @Schema(description = "목표 일수", example = "20")
+    @Schema(
+        description = """
+            목표 일수
+            
+            ### 상태별 값
+            - **목표 있음**: 10, 20, 30 중 하나
+            - **목표 없음**: null
+            
+            ### 활용
+            - 목표 설정 배너 표시 조건 (null이면 배너 표시)
+            - 목표 기간 계산 및 진행률 표시
+            """,
+        example = "10",
+        nullable = true
+    )
     private final Integer goalDays;
 
     @Schema(description = "습관 시작일 (습관 기록 타입인 경우)", example = "[2025, 10, 20]", nullable = true)
@@ -184,15 +223,34 @@ public class UserResponse {
     @Schema(description = "회원 탈퇴 사유", example = "서비스 불만족", nullable = true)
     private final String withdrawalReason;
 
+    @Schema(
+        description = """
+            현재 목표의 나무 성장 단계
+            
+            ### 값 범위
+            - null: 현재 진행중인 목표가 없음
+            - 1~4: 나무 성장 단계 (1=씨앗, 2=새싹, 3=어린나무, 4=큰나무)
+            
+            ### 활용
+            - 메인 화면 나무 이미지 표시
+            - 목표 진행률 시각화
+            - 성장 단계별 메시지 표시
+            """,
+        example = "2",
+        nullable = true
+    )
+    private final Integer currentTreeStage;
+
     /**
-     * 도메인 User 객체를 UserResponse DTO로 변환
+     * 도메인 User 객체를 UserResponse DTO로 변환 (currentTreeStage 포함)
      * VO 타입들을 기본 타입으로 변환 후 안전하게 매핑
      * 클라이언트에 불필요하거나 민감한 정보는 제외
      *
      * @param user 도메인 사용자 객체
+     * @param currentTreeStage 현재 목표의 나무 성장 단계 (목표 없으면 null)
      * @return UserResponse DTO
      */
-    public static UserResponse from(User user) {
+    public static UserResponse from(User user, Integer currentTreeStage) {
         return UserResponse.builder()
                 .id(user.getId().getValue())
                 .name(user.getName())
@@ -210,7 +268,20 @@ public class UserResponse {
                 .deletedAt(user.getDeletedAt())
                 .deletionScheduledAt(user.getDeletionScheduledAt())
                 .withdrawalReason(user.getWithdrawalReason())
+                .currentTreeStage(currentTreeStage)
                 .build();
+    }
+
+    /**
+     * 기존 호환성을 위한 from 메서드 (currentTreeStage 없음)
+     * 
+     * @param user 도메인 사용자 객체
+     * @return UserResponse DTO
+     * @deprecated UserApplicationService에서 from(user, currentTreeStage) 사용 권장
+     */
+    @Deprecated
+    public static UserResponse from(User user) {
+        return from(user, null);
     }
 
     /**
@@ -228,6 +299,7 @@ public class UserResponse {
                 .socialType(user.getSocialType())
                 .createdAt(user.getCreatedAt())
                 .onboardingCompleted(user.isOnboardingCompleted())
+                .currentTreeStage(null)  // 소셜 로그인 시에는 null
                 .build();
     }
 
@@ -244,6 +316,7 @@ public class UserResponse {
                 .name(user.getName())
                 .email(user.getEmail() != null ? user.getEmail().getValue() : null)
                 .onboardingCompleted(user.isOnboardingCompleted())
+                .currentTreeStage(null)  // 토큰 갱신 시에는 null
                 .build();
     }
 

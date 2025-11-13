@@ -1,5 +1,7 @@
 package com.recordmanagement.habitlog.domain.user.application.service;
 
+import com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService;
+import com.recordmanagement.habitlog.domain.goal.domain.model.Goal;
 import com.recordmanagement.habitlog.domain.user.application.dto.FcmTokenUpdateCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
@@ -34,6 +36,7 @@ import java.util.Optional;
 public class UserProfileService {
 
     private final UserRepository userRepository;
+    private final GoalApplicationService goalApplicationService;
 
     /**
      * 사용자 프로필 업데이트
@@ -55,7 +58,10 @@ public class UserProfileService {
         log.info("프로필 업데이트 완료: userId={}, nickname={}", 
                 updatedUser.getId().getValue(), command.nickname());
         
-        return UserResponse.from(updatedUser);
+        // 프로필 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
+        Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
+        Integer currentTreeStage = currentGoal.map(Goal::getCurrentTreeStage).orElse(null);
+        return UserResponse.from(updatedUser, currentTreeStage);
     }
 
     /**
@@ -76,22 +82,35 @@ public class UserProfileService {
         
         log.info("FCM 토큰 업데이트 완료: userId={}", updatedUser.getId().getValue());
         
-        return UserResponse.from(updatedUser);
+        // FCM 토큰 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
+        Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
+        Integer currentTreeStage = currentGoal.map(Goal::getCurrentTreeStage).orElse(null);
+        return UserResponse.from(updatedUser, currentTreeStage);
     }
 
     /**
-     * 사용자 ID로 사용자 조회
-     * UserId VO로 변환 후 Repository 조회
+     * 사용자 정보 조회 (ID 기반) - currentTreeStage 포함
+     * Goal 정보도 함께 조회하여 현재 나무 성장 단계까지 포함한 완전한 사용자 정보 제공
      * 
      * @param userId 사용자 고유 ID 문자열
-     * @return 사용자 정보 Optional
+     * @return 사용자 정보 Optional (currentTreeStage 포함)
      */
     @Transactional(readOnly = true)
     public Optional<UserResponse> findById(String userId) {
         log.debug("사용자 조회: userId={}", userId);
 
         return userRepository.findById(UserId.of(userId))
-                .map(UserResponse::from);
+                .map(user -> {
+                    // 현재 진행중인 목표 조회
+                    Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.of(userId));
+                    
+                    // 목표가 있으면 treeStage 설정, 없으면 null
+                    Integer currentTreeStage = currentGoal
+                            .map(Goal::getCurrentTreeStage)
+                            .orElse(null);
+                    
+                    return UserResponse.from(user, currentTreeStage);
+                });
     }
 
     /**

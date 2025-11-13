@@ -59,7 +59,8 @@ public class UserRegistrationService {
         User savedUser = userRepository.save(user);
         
         log.info("사용자 등록 완료: userId={}", savedUser.getId().getValue());
-        return UserResponse.from(savedUser);
+        // 사용자 등록 시에는 아직 목표가 없으므로 currentTreeStage = null
+        return UserResponse.from(savedUser, null);
     }
 
     /**
@@ -110,7 +111,8 @@ public class UserRegistrationService {
         User updatedUser = userRepository.save(user);
         
         log.info("온보딩 완료: userId={}", updatedUser.getId().getValue());
-        return UserResponse.from(updatedUser);
+        // 온보딩 완료 시 목표가 설정되므로 currentTreeStage = 1 (초기 단계)
+        return UserResponse.from(updatedUser, 1);
     }
 
     /**
@@ -137,7 +139,8 @@ public class UserRegistrationService {
         User updatedUser = userRepository.save(user);
         
         log.info("온보딩 재설정 완료: userId={}", updatedUser.getId().getValue());
-        return UserResponse.from(updatedUser);
+        // 온보딩 재설정 시 목표가 설정되므로 currentTreeStage = 1 (초기 단계)
+        return UserResponse.from(updatedUser, 1);
     }
 
     /**

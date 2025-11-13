@@ -152,7 +152,8 @@ public class UserApplicationService {
         }
         
         log.info("목표 재설정 완료: userId=[{}]", updatedUser.getId().getValue());
-        return UserResponse.from(updatedUser);
+        // 목표 재설정 시 목표가 새로 설정되므로 currentTreeStage = 1 (초기 단계)
+        return UserResponse.from(updatedUser, 1);
     }
 
     /**
@@ -309,7 +310,8 @@ public class UserApplicationService {
         User restoredUser = userRepository.save(user);
         
         log.info("탈퇴 사용자 복구 완료: userId={}", userId);
-        return UserResponse.from(restoredUser);
+        // 탈퇴 복구 시에는 아직 목표가 없으므로 currentTreeStage = null
+        return UserResponse.from(restoredUser, null);
     }
 
     /**

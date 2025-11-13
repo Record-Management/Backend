@@ -105,7 +105,8 @@ public class UserLifecycleService {
         log.info("회원탈퇴 처리 완료: userId={}, withdrawnAt={}", 
                 withdrawnUser.getId().getValue(), withdrawnUser.getDeletedAt());
 
-        return UserResponse.from(withdrawnUser);
+        // 회원탈퇴 시에는 모든 정보가 초기화되므로 currentTreeStage = null
+        return UserResponse.from(withdrawnUser, null);
     }
 
     /**

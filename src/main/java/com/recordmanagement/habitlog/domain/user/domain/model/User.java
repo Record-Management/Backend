@@ -382,6 +382,48 @@ public class User {
 
 
     /**
+     * 목표 설정 정보 초기화
+     * 
+     * 목표 완료/만료 시 호출하여 사용자 정보를 초기화합니다.
+     * - goalDays를 null로 설정
+     * - mainRecordType을 null로 설정  
+     * - habitStartDate를 null로 설정 (습관 기록 기간도 초기화)
+     * - updatedAt 자동 갱신
+     */
+    public void clearGoalSettings() {
+        this.goalDays = null;
+        this.mainRecordType = null;
+        this.habitStartDate = null;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 목표 설정 정보 업데이트
+     * 
+     * 새로운 목표 생성 시 호출하여 사용자 정보를 동기화합니다.
+     * - mainRecordType 업데이트
+     * - goalDays 업데이트
+     * - 습관 타입인 경우 habitStartDate 설정
+     * - updatedAt 자동 갱신
+     * 
+     * @param recordType 기록 타입
+     * @param goalDays 목표 일수
+     */
+    public void updateGoalSettings(RecordType recordType, Integer goalDays) {
+        this.mainRecordType = recordType;
+        this.goalDays = goalDays;
+        
+        // 습관 타입인 경우 시작일 설정
+        if (recordType == RecordType.HABIT) {
+            this.habitStartDate = LocalDate.now();
+        } else {
+            this.habitStartDate = null;
+        }
+        
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
      * 동일 사용자 여부 확인
      *
      * - 비교 기준은 UserId 값
