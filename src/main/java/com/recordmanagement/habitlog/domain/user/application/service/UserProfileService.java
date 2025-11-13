@@ -60,7 +60,9 @@ public class UserProfileService {
         
         // 프로필 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
-        Integer currentTreeStage = currentGoal.map(Goal::getCurrentTreeStage).orElse(null);
+        Integer currentTreeStage = currentGoal
+                .map(goal -> goal.getCurrentTreeStage().getStage())
+                .orElse(null);
         return UserResponse.from(updatedUser, currentTreeStage);
     }
 
@@ -84,7 +86,9 @@ public class UserProfileService {
         
         // FCM 토큰 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
-        Integer currentTreeStage = currentGoal.map(Goal::getCurrentTreeStage).orElse(null);
+        Integer currentTreeStage = currentGoal
+                .map(goal -> goal.getCurrentTreeStage().getStage())
+                .orElse(null);
         return UserResponse.from(updatedUser, currentTreeStage);
     }
 
@@ -106,7 +110,7 @@ public class UserProfileService {
                     
                     // 목표가 있으면 treeStage 설정, 없으면 null
                     Integer currentTreeStage = currentGoal
-                            .map(Goal::getCurrentTreeStage)
+                            .map(goal -> goal.getCurrentTreeStage().getStage())
                             .orElse(null);
                     
                     return UserResponse.from(user, currentTreeStage);
