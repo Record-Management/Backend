@@ -2,6 +2,7 @@ package com.recordmanagement.habitlog.domain.notification.application;
 
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationMessage;
 import com.recordmanagement.habitlog.domain.notification.application.strategy.NotificationMessageStrategyFactory;
+import com.recordmanagement.habitlog.domain.notification.application.util.NotificationImageUtil;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationHistory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationType;
 import com.recordmanagement.habitlog.domain.notification.application.service.NotificationApplicationService;
@@ -86,6 +87,7 @@ public class FcmNotificationService {
         Map<String, String> data = new HashMap<>();
         data.put("mainType", user.getMainRecordType().name());
         data.put("notificationType", "DAILY_RECORD_REMINDER");
+        data.put("imageUrl", NotificationImageUtil.getImageUrl(user.getMainRecordType()));
 
         // 알림 히스토리 저장 (FCM 발송 전에 저장)
         NotificationHistory history = new NotificationHistory(
@@ -152,6 +154,7 @@ public class FcmNotificationService {
         // 추가 데이터 설정
         Map<String, String> data = new HashMap<>();
         data.put("notificationType", "GOAL_SETTING_REMINDER");
+        data.put("imageUrl", NotificationImageUtil.getGoalSettingImageUrl());
 
         // 알림 히스토리 저장 (FCM 발송 전에 저장)
         NotificationHistory history = new NotificationHistory(
