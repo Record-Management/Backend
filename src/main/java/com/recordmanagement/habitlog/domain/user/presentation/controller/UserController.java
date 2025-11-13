@@ -291,6 +291,7 @@ public class UserController {
             1. **목표 자동 생성**: 선택한 기록 타입과 목표일수로 새로운 목표 자동 생성
             2. **나무 성장 시작**: 4단계 나무 성장 시스템 활성화 (STAGE_1부터 시작)
             3. **진행률 추적**: 기록 생성 시마다 자동으로 목표 진행률 업데이트
+            4. **자동 완료**: 목표 기간 종료 시 매일 자정 스케줄러가 자동 완료 처리
             
             ### HABIT 타입 추가 처리
             - 메인 기록 타입을 HABIT로 설정해도 자동 생성하지 않음 (일상/운동과 동일한 UX)
@@ -300,6 +301,8 @@ public class UserController {
             ### 목표 시스템 연동
             - `/api/goals/current`에서 생성된 목표 정보 확인 가능
             - 기록 생성 시 자동으로 목표 진행률 업데이트
+            - 목표 기간 만료 시 매일 자정 스케줄러가 자동 완료 처리
+            - 목표 완료 후 User 정보 자동 동기화 (mainRecordType, goalDays → null)
             - 목표 완료 시 새로운 목표 생성 가능
             """,
         security = @SecurityRequirement(name = "bearerAuth"),

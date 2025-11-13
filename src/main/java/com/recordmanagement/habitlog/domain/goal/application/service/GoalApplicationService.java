@@ -21,10 +21,21 @@ import java.util.Optional;
 
 /**
  * 목표 Application Service
+ * 
+ * ### 🎯 목표 생명주기 관리
+ * 1. 목표 생성 → User 정보 동기화 (mainRecordType, goalDays 설정)
+ * 2. 진행률 업데이트 → 기록 생성 시마다 completedDays 증가
+ * 3. 기간 만료 시 자동 완료 → GoalExpirationScheduler가 매일 자정에 처리
+ * 4. 목표 완료/삭제 → User 정보 동기화 (mainRecordType, goalDays → null)
+ * 
+ * ### ⚙️ 자동화 기능
+ * - **스케줄러 연동**: 만료된 목표 자동 완료 처리
+ * - **User 동기화**: 목표 상태 변경 시 사용자 정보 자동 업데이트
+ * - **진행률 추적**: 기록 생성과 연동된 실시간 진행률 계산
  *
  * @author 전우선
  * @since 2025.11.04
- * @version 1.0.0
+ * @version 1.1.0 (스케줄러 연동)
  */
 @Service
 @RequiredArgsConstructor

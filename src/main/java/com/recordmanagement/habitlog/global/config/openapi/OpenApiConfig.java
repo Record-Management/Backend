@@ -65,6 +65,11 @@ public class OpenApiConfig {
                         
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
                         
+                        ### 🆕 v1.4.1 업데이트 (2025.11.13)
+                        - ⏰ **자동 목표 완료**: 매일 자정 스케줄러가 만료된 목표를 자동 완료 처리
+                        - 🔄 **User-Goal 동기화**: 목표 완료 시 사용자 정보 자동 동기화 (mainRecordType, goalDays → null)
+                        - 📅 **기간 기반 목표**: 사용자가 기록 안 써도 목표 기간은 달력에 따라 진행
+                        
                         ### 🆕 v1.4.0 업데이트 (2025.11.04)
                         - 🎯 **목표 달성 시스템**: 4단계 나무 성장과 함께하는 목표 관리
                         - 📊 **실시간 진행률 추적**: 기록 생성 시 자동 목표 진행률 업데이트
@@ -89,16 +94,18 @@ public class OpenApiConfig {
                         2. **온보딩 완료** → 자동 목표 생성 (기록 타입, 목표일수)
                         3. **기록 생성** → 자동 목표 진행률 업데이트
                         4. **목표 조회** → 현재 진행률, 나무 단계, 달성 이력 확인
-                        5. **목표 완료/포기** → 새로운 목표 생성 가능
-                        6. **FCM 토큰 등록** → 푸시 알림 수신을 위한 토큰 등록
-                        7. **알림 설정** → 개인화된 알림 수신 설정 관리
+                        5. **목표 기간 만료** → 매일 자정 스케줄러가 자동 완료 처리
+                        6. **User 정보 동기화** → 목표 완료 시 사용자 정보 자동 초기화
+                        7. **목표 완료/포기** → 새로운 목표 생성 가능
+                        8. **FCM 토큰 등록** → 푸시 알림 수신을 위한 토큰 등록
+                        9. **알림 설정** → 개인화된 알림 수신 설정 관리
                         
                         ### 🔗 관련 링크
                         - **프론트엔드 iOS** 📱: [HabitLog iOS App](https://github.com/Record-Management/IOS)
                         - **프론트엔드 Android** 🤖: [HabitLog Android App](https://github.com/Record-Management/Android)
                         - **문의사항**: 💬Discord - jws0602
                         """)
-                .version("v1.4.0")
+                .version("v1.4.1")
                 .contact(new Contact()
                         .name("전우선 (Jeon Woo Seon)")
                         .email("wooxexn@gmail.com")

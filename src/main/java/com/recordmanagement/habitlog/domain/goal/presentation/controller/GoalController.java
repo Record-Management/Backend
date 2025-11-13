@@ -33,7 +33,20 @@ import java.util.Optional;
 @RequestMapping("/api/goals")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Goal", description = "목표 관리 API")
+@Tag(name = "Goal", description = """
+    목표 관리 API
+    
+    ### 🎯 목표 시스템 특징
+    - **자동 완료**: 목표 기간이 끝나면 매일 자정에 자동으로 완료 처리
+    - **User 동기화**: 목표 완료 시 사용자 정보 자동 동기화 (mainRecordType, goalDays → null)
+    - **진행률 추적**: 기록 생성 시마다 자동으로 목표 진행률 업데이트
+    
+    ### 📅 목표 생명주기
+    1. 목표 생성 → IN_PROGRESS 상태
+    2. 기간 중 기록 작성으로 진행률 업데이트
+    3. 기간 만료 시 자동 COMPLETED 처리 (매일 00:00 스케줄러)
+    4. 사용자 정보 동기화 및 새 목표 생성 가능
+    """)
 public class GoalController {
 
     private final GoalApplicationService goalApplicationService;
@@ -47,7 +60,18 @@ public class GoalController {
     @GetMapping("/current")
     @Operation(
             summary = "현재 목표 조회",
-            description = "사용자의 현재 진행중인 목표를 조회합니다. 목표가 없으면 빈 응답을 반환합니다.",
+            description = """
+                사용자의 현재 진행중인 목표를 조회합니다.
+                
+                ### 🔍 조회 조건
+                - 기간 내 (startDate ≤ 오늘 ≤ endDate)
+                - 상태가 IN_PROGRESS
+                - 기간이 지난 목표는 매일 자정 스케줄러가 자동 완료 처리
+                
+                ### 📋 응답 방식
+                - **목표 있음**: 목표 상세 정보 반환 (goalId, recordType, 진행률 등)
+                - **목표 없음**: data: null 반환 (목표 설정 배너 표시 조건)
+                """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -389,7 +413,23 @@ public class GoalController {
     @PostMapping("/new")
     @Operation(
             summary = "새로운 목표 생성",
-            description = "새로운 목표를 생성합니다. 진행중인 목표가 있으면 생성할 수 없습니다.",
+            description = """
+                새로운 목표를 생성합니다.
+                
+                ### ✅ 생성 조건
+                - 현재 진행중인 목표가 없어야 함
+                - 목표일수는 10, 20, 30일만 가능
+                - 목표 시작일은 생성 당일부터 자동 설정
+                
+                ### ⚙️ 자동 처리
+                1. **User 정보 동기화**: mainRecordType, goalDays 자동 업데이트
+                2. **기간 자동 완료**: endDate 도달 시 매일 자정 스케줄러가 자동 완료
+                3. **나무 성장**: 기록 작성 시마다 treeStage 자동 업데이트
+                
+                ### 🚫 중복 생성 방지
+                - 이미 진행중인 목표가 있으면 409 에러 반환
+                - 기존 목표 완료 후에만 새 목표 생성 가능
+                """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
