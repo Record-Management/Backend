@@ -321,7 +321,7 @@ public class NotificationController {
                                   "id": "notification-123",
                                   "type": "DAILY_RECORD_REMINDER",
                                   "title": "HabitLog",
-                                  "message": "오늘 습관 실천은 어떠셨나요? 기록해보세요! ✨",
+                                  "message": "오늘 습관 실천은 어떠셨나요? 기록해보세요!",
                                   "sentAt": "2025-11-10T19:00:00",
                                   "isRead": false
                                 },
@@ -329,7 +329,7 @@ public class NotificationController {
                                   "id": "notification-122",
                                   "type": "EXERCISE_REMINDER",
                                   "title": "HabitLog",
-                                  "message": "오늘 운동은 어떠셨나요? 기록해보세요! 💪",
+                                  "message": "오늘 운동은 어떠셨나요? 기록해보세요!",
                                   "sentAt": "2025-11-09T19:00:00",
                                   "isRead": true
                                 },
@@ -337,7 +337,7 @@ public class NotificationController {
                                   "id": "notification-121",
                                   "type": "GOAL_SETTING_REMINDER",
                                   "title": "HabitLog",
-                                  "message": "목표를 설정해서 습관을 시작해보세요! 🎯",
+                                  "message": "목표를 설정해서 습관을 시작해보세요!",
                                   "sentAt": "2025-11-08T19:00:00",
                                   "isRead": true
                                 }

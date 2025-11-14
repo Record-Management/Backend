@@ -26,6 +26,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * 습관 기록 Application Service
+ * 
+ * ### 실제 행동 기반 습관 관리 (v1.8.2)
+ * 1. **현재 날짜에만 생성**: 습관 등록 시 현재 날짜에만 기록 생성 (미래 날짜 미리 생성하지 않음)
+ * 2. **완료 상태 기반 표시**: isCompleted 값으로 주황색(완료)/회색(미완료) 캘린더 아이콘 구분
+ * 3. **일상/운동과 동일한 UX**: 사용자가 실제 행동할 때만 캘린더에 표시
+ * 4. **메인/서브 기록 관리**: 기존 메인 기록을 서브로 변경하는 로직만 수행
+ * 
+ * ### 주요 기능
+ * - **습관 기록 생성**: 현재 날짜 기준 단일 기록 생성
+ * - **완료 상태 관리**: isCompleted 플래그로 완료/미완료 구분
+ * - **메인 기록 관리**: 메인 습관 변경 시 기존 기록들의 상태 동기화
+ * - **목표 진행률 연동**: 습관 기록 생성/완료 시 자동 목표 진행률 업데이트
+ *
+ * @author 전우선
+ * @since 2025.10.24
+ * @version 1.2.0 (실제 행동 기반 시스템)
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -132,9 +151,9 @@ public class HabitRecordApplicationService {
         
         HabitRecord savedHabitRecord = habitRecordRepository.save(habitRecord);
         
-        // 메인 기록이고 사용자의 메인 기록 타입이 HABIT인 경우에만 남은 기간에 대해 자동으로 메인 습관 기록 생성
+        // 메인 기록이고 사용자의 메인 기록 타입이 HABIT인 경우 기존 메인 기록들을 서브로 변경
         if (isMainRecord && user.getMainRecordType() == RecordType.HABIT) {
-            createMainHabitRecordsForRemainingPeriod(user, savedHabitRecord);
+            updateExistingMainRecordsToSub(user, savedHabitRecord);
         }
         
         // 습관 기록 생성 후 목표 진행률 업데이트
@@ -404,25 +423,13 @@ public class HabitRecordApplicationService {
     }
     
     /**
-     * 메인 습관 기록 등록시 오늘부터 목표 종료일까지 메인 습관 기록을 자동 생성
+     * 메인 습관 기록 등록시 기존 메인 기록들을 서브로 변경 (미래 날짜 생성하지 않음)
      */
-    private void createMainHabitRecordsForRemainingPeriod(User user, HabitRecord newMainRecord) {
-        LocalDate recordDate = newMainRecord.getRecordDate();
+    private void updateExistingMainRecordsToSub(User user, HabitRecord newMainRecord) {
+        LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
-        LocalDate today = LocalDate.now();
-        
-        // 오늘부터 목표 종료일까지 메인 습관 기록 생성 (과거 날짜는 자동 생성하지 않음)
-        LocalDate nextDate = today.isAfter(recordDate) ? today : recordDate.plusDays(1);
-        
-        if (nextDate.isAfter(habitEndDate)) {
-            // 이미 목표 기간이 끝난 경우
-            log.info("목표 기간이 이미 완료되어 추가 메인 습관 기록 생성 불필요: userId={}, recordDate={}, habitEndDate={}", 
-                    user.getId().getValue(), recordDate, habitEndDate);
-            return;
-        }
         
         // 전체 습관 기간의 기존 메인 습관 기록을 서브로 변경 (새로 등록한 기록 제외)
-        LocalDate habitStartDate = user.getHabitStartDate();
         List<HabitRecord> existingMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
             user.getId(), habitStartDate, habitEndDate
         ).stream()
@@ -430,46 +437,19 @@ public class HabitRecordApplicationService {
         .filter(record -> !record.getId().equals(newMainRecord.getId())) // 새로 등록한 기록 제외
         .toList();
         
+        int updatedCount = 0;
+        
         // 기존 메인 기록이 있는 날짜들을 서브 기록으로 변경
         for (HabitRecord existingMainRecord : existingMainRecords) {
             HabitRecord updatedRecord = existingMainRecord.updateMainRecordStatus(false);
             habitRecordRepository.save(updatedRecord);
-            log.info("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
+            updatedCount++;
+            log.debug("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
                     existingMainRecord.getId().getValue(), existingMainRecord.getRecordDate());
         }
         
-        // 기존 습관 기록이 있는 날짜 집합 생성
-        Set<LocalDate> existingRecordDates = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            user.getId(), nextDate, habitEndDate
-        ).stream()
-        .map(HabitRecord::getRecordDate)
-        .collect(java.util.stream.Collectors.toSet());
-        
-        int createdCount = 0;
-        
-        // 오늘부터 목표 종료일까지 메인 습관 기록 생성
-        for (LocalDate date = nextDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
-            if (!existingRecordDates.contains(date)) {
-                // 해당 날짜에 습관 기록이 없으면 새로운 메인 습관 기록 생성
-                HabitRecord autoRecord = HabitRecord.create(
-                    user.getId(),
-                    newMainRecord.getHabitType(), // 동일한 습관 타입으로 생성
-                    newMainRecord.isNotificationEnabled(),
-                    newMainRecord.getNotificationTime(),
-                    "자동 생성된 메인 습관 기록", // 기본 메모
-                    date
-                ).updateMainRecordStatus(true); // 메인 기록으로 설정
-                
-                habitRecordRepository.save(autoRecord);
-                createdCount++;
-                
-                log.debug("자동 메인 습관 기록 생성: habitRecordId={}, date={}", 
-                        autoRecord.getId().getValue(), date);
-            }
-        }
-        
-        log.info("메인 습간 기록 자동 생성 완료: userId={}, 생성된 기록 수={}, 기간=[{} ~ {}]", 
-                user.getId().getValue(), createdCount, nextDate, habitEndDate);
+        log.info("기존 메인 습관 기록 서브 변경 완료: userId={}, 변경된 기록 수={}", 
+                user.getId().getValue(), updatedCount);
     }
     
     /**

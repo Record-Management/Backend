@@ -149,7 +149,7 @@ public class FcmNotificationService {
 
         // 목표 설정 알림 메시지
         String title = "HabitLog";
-        String body = "목표를 설정해서 습관을 시작해보세요! 🎯";
+        String body = "목표를 설정해서 습관을 시작해보세요!";
 
         // 추가 데이터 설정
         Map<String, String> data = new HashMap<>();

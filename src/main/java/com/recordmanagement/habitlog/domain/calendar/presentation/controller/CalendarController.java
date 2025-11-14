@@ -1,9 +1,9 @@
 package com.recordmanagement.habitlog.domain.calendar.presentation.controller;
 
-import com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService;
 import com.recordmanagement.habitlog.domain.record.application.dto.CalendarResponse;
-import com.recordmanagement.habitlog.global.common.response.ApiResponse;
+import com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
+import com.recordmanagement.habitlog.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,9 +14,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/calendar")
@@ -34,29 +36,30 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
-            ### 🎯 메인 기록 타입 표시 (v1.6.0)
+            ### 메인 기록 타입 표시 (v1.6.0)
             - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
             - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
             - 목표 설정 시점에 결정된 메인 기록 타입이 목표 기간 동안 일관되게 유지됩니다
             
-            ### 🔍 습관 기록 필터링 (v1.7.0)
+            ### 습관 기록 필터링 (v1.7.0)
             - **습관 타입 사용자**: 습관 목표 기간(시작일~종료일) 내의 습관 기록만 조회
             - **운동/일상 타입 사용자**: 모든 습관 기록 조회 (서브 기록으로 사용)
             - **과거 데이터 제외**: 목표 기간 이전의 습관 기록은 캘린더에 표시되지 않음
             - **정확한 아이콘 표시**: records 배열에 목표 기간 내 기록만 포함되어 올바른 메인 기록 판별
             
-            ### 🆕 실제 행동 기반 캘린더 시스템 (v1.6.0)
+            ### 실제 행동 기반 캘린더 시스템 (v1.8.1)
             - **일상/운동과 동일한 UX**: 사용자가 실제 행동(완료 체크 등)을 할 때만 캘린더에 표시
-            - **자동 생성 제거**: 습관 등록만으로는 캘린더에 표시되지 않음
-            - **완료 체크 시**: 해당 날짜에 불 아이콘 표시
-            - **자정 넘김 시**: 미완료 기록 자동 생성하여 회색 아이콘 표시
+            - **미래 날짜 생성 제거**: 습관 등록 시 미래 날짜까지 미리 생성하지 않음
+            - **현재 날짜만 생성**: 습관 등록은 현재 날짜에만 기록 생성
+            - **완료 체크 시**: 해당 날짜에 주황색 아이콘 표시
+            - **미완료 유지 시**: 다음 날 회색 아이콘 표시
             
-            ### 📋 isCompleted 필드 (v1.8.0)
+            ### isCompleted 필드 (v1.8.0)
             - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
             - **습관 기록**: 실제 완료 체크 여부 (true/false)
             - **일상/운동 기록**: 기록 존재 자체가 완료 (항상 true)
             
-            ### 📋 사용자 타입별 캘린더 특징
+            ### 사용자 타입별 캘린더 특징
             **모든 사용자 타입 (HABIT/EXERCISE/DAILY)**:
             - 실제 기록 작성/완료 체크 시에만 캘린더 표시
             - 완료: 불 아이콘, 미완료: 회색 아이콘

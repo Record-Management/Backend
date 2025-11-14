@@ -72,7 +72,7 @@ public class DailyNotificationScheduler {
                     if (user.getMainRecordType() == null) {
                         if (isGoalSettingNotificationEnabled(user.getId())) {
                             shouldSendNotification = true;
-                            notificationMessage = "목표를 설정해서 습관을 시작해보세요! 🎯";
+                            notificationMessage = "목표를 설정해서 습관을 시작해보세요!";
                         }
                     } 
                     // 2. 오늘 기록 안 한 사용자 체크
@@ -176,10 +176,10 @@ public class DailyNotificationScheduler {
      */
     private String getRecordReminderMessage(RecordType recordType) {
         return switch (recordType) {
-            case DAILY -> "오늘의 소중한 순간을 기록으로 남겨보세요! 📝";
-            case EXERCISE -> "오늘 운동은 어떠셨나요? 기록해보세요! 💪";
-            case HABIT -> "오늘 습관 실천은 어떠셨나요? 기록해보세요! ✨";
-            default -> "오늘 기록을 남겨보세요! 📋";
+            case DAILY -> "오늘의 소중한 순간을 기록으로 남겨보세요!";
+            case EXERCISE -> "오늘 운동은 어떠셨나요? 기록해보세요!";
+            case HABIT -> "오늘 습관 실천은 어떠셨나요? 기록해보세요!";
+            default -> "오늘 기록을 남겨보세요!";
         };
     }
 }

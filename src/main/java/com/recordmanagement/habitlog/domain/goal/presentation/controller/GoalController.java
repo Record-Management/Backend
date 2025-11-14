@@ -1,11 +1,14 @@
 package com.recordmanagement.habitlog.domain.goal.presentation.controller;
 
-import com.recordmanagement.habitlog.domain.goal.application.dto.*;
+import com.recordmanagement.habitlog.domain.goal.application.dto.CreateGoalRequest;
+import com.recordmanagement.habitlog.domain.goal.application.dto.CreateGoalResponse;
+import com.recordmanagement.habitlog.domain.goal.application.dto.CurrentGoalResponse;
+import com.recordmanagement.habitlog.domain.goal.application.dto.GoalAchievementHistoryResponse;
+import com.recordmanagement.habitlog.domain.goal.application.dto.GoalAchievementReportResponse;
 import com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService;
 import com.recordmanagement.habitlog.domain.goal.domain.model.Goal;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,14 +16,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 목표 관리 컨트롤러
@@ -36,12 +42,12 @@ import java.util.Optional;
 @Tag(name = "Goal", description = """
     목표 관리 API
     
-    ### 🎯 목표 시스템 특징
+    ### 목표 시스템 특징
     - **자동 완료**: 목표 기간이 끝나면 매일 자정에 자동으로 완료 처리
     - **User 동기화**: 목표 완료 시 사용자 정보 자동 동기화 (mainRecordType, goalDays → null)
     - **진행률 추적**: 기록 생성 시마다 자동으로 목표 진행률 업데이트
     
-    ### 📅 목표 생명주기
+    ### 목표 생명주기
     1. 목표 생성 → IN_PROGRESS 상태
     2. 기간 중 기록 작성으로 진행률 업데이트
     3. 기간 만료 시 자동 COMPLETED 처리 (매일 00:00 스케줄러)
@@ -63,12 +69,12 @@ public class GoalController {
             description = """
                 사용자의 현재 진행중인 목표를 조회합니다.
                 
-                ### 🔍 조회 조건
+                ### 조회 조건
                 - 기간 내 (startDate ≤ 오늘 ≤ endDate)
                 - 상태가 IN_PROGRESS
                 - 기간이 지난 목표는 매일 자정 스케줄러가 자동 완료 처리
                 
-                ### 📋 응답 방식
+                ### 응답 방식
                 - **목표 있음**: 목표 상세 정보 반환 (goalId, recordType, 진행률 등)
                 - **목표 없음**: data: null 반환 (목표 설정 배너 표시 조건)
                 """,
@@ -416,17 +422,17 @@ public class GoalController {
             description = """
                 새로운 목표를 생성합니다.
                 
-                ### ✅ 생성 조건
+                ### 생성 조건
                 - 현재 진행중인 목표가 없어야 함
                 - 목표일수는 10, 20, 30일만 가능
                 - 목표 시작일은 생성 당일부터 자동 설정
                 
-                ### ⚙️ 자동 처리
+                ### 자동 처리
                 1. **User 정보 동기화**: mainRecordType, goalDays 자동 업데이트
                 2. **기간 자동 완료**: endDate 도달 시 매일 자정 스케줄러가 자동 완료
                 3. **나무 성장**: 기록 작성 시마다 treeStage 자동 업데이트
                 
-                ### 🚫 중복 생성 방지
+                ### 중복 생성 방지
                 - 이미 진행중인 목표가 있으면 409 에러 반환
                 - 기존 목표 완료 후에만 새 목표 생성 가능
                 """,
