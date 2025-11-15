@@ -227,11 +227,11 @@ public class RecordApplicationService {
         if (type == null || type == RecordType.HABIT) {
             // 습관 기록은 습관 목표 기간 내에서만 조회
             List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
-            allRecords.addAll(habitRecords.stream()
-                .map(UnifiedRecordResponse::fromHabitRecord)
-                .toList());
             
-            // 플레이스홀더 자동 생성 제거 - 일상/운동과 동일한 UX 제공
+            // 습관 타입 사용자의 특별한 캘린더 표시 로직 적용
+            List<UnifiedRecordResponse> habitResponses = applyHabitTypeCalendarLogic(
+                user, habitRecords, startDate, endDate);
+            allRecords.addAll(habitResponses);
         }
         
         // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
@@ -693,5 +693,53 @@ public class RecordApplicationService {
                 userId.getValue(), rangeStart, rangeEnd, habitRecords.size());
         
         return habitRecords;
+    }
+    
+    /**
+     * 습관 타입 사용자의 특별한 캘린더 표시 로직 적용
+     * 
+     * ### 습관 타입 사용자 특별 규칙:
+     * 1. **오늘 날짜**: 작성 여부에 따라 색상/회색 표시
+     * 2. **과거 날짜**: 작성했어도 빈칸 처리 (표시 안함)
+     * 3. **미래 날짜**: 표시 안함 (생성 자체 안함)
+     * 
+     * ### 다른 타입 사용자:
+     * - 모든 습관 기록을 서브 기록으로 표시 (기존 로직 유지)
+     */
+    private List<UnifiedRecordResponse> applyHabitTypeCalendarLogic(User user, List<HabitRecord> habitRecords, 
+                                                                  LocalDate startDate, LocalDate endDate) {
+        LocalDate today = LocalDate.now();
+        
+        // 습관 타입 사용자가 아닌 경우 기존 로직 유지
+        if (user.getMainRecordType() != RecordType.HABIT) {
+            return habitRecords.stream()
+                .map(UnifiedRecordResponse::fromHabitRecord)
+                .toList();
+        }
+        
+        // 습관 타입 사용자의 특별한 로직 적용
+        List<UnifiedRecordResponse> result = new ArrayList<>();
+        
+        for (HabitRecord habitRecord : habitRecords) {
+            LocalDate recordDate = habitRecord.getRecordDate();
+            
+            // 과거 날짜 기록은 표시하지 않음 (빈칸 처리)
+            if (recordDate.isBefore(today)) {
+                log.debug("습관 타입 사용자의 과거 기록 빈칸 처리: userId={}, recordDate={}", 
+                        user.getId().getValue(), recordDate);
+                continue;
+            }
+            
+            // 오늘 날짜 기록만 표시
+            if (recordDate.equals(today)) {
+                result.add(UnifiedRecordResponse.fromHabitRecord(habitRecord));
+                log.debug("습관 타입 사용자의 오늘 기록 표시: userId={}, recordDate={}, isCompleted={}", 
+                        user.getId().getValue(), recordDate, habitRecord.isCompleted());
+            }
+            
+            // 미래 날짜는 애초에 생성되지 않으므로 처리할 필요 없음
+        }
+        
+        return result;
     }
 }

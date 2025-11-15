@@ -47,12 +47,16 @@ public class CalendarController {
             - **과거 데이터 제외**: 목표 기간 이전의 습관 기록은 캘린더에 표시되지 않음
             - **정확한 아이콘 표시**: records 배열에 목표 기간 내 기록만 포함되어 올바른 메인 기록 판별
             
-            ### 실제 행동 기반 캘린더 시스템 (v1.8.1)
+            ### 실제 행동 기반 캘린더 시스템 (v1.8.2)
             - **일상/운동과 동일한 UX**: 사용자가 실제 행동(완료 체크 등)을 할 때만 캘린더에 표시
             - **미래 날짜 생성 제거**: 습관 등록 시 미래 날짜까지 미리 생성하지 않음
             - **현재 날짜만 생성**: 습관 등록은 현재 날짜에만 기록 생성
             - **완료 체크 시**: 해당 날짜에 주황색 아이콘 표시
-            - **미완료 유지 시**: 다음 날 회색 아이콘 표시
+            
+            ### 습관 타입 사용자 특별 표시 로직 (v1.8.2)
+            - **오늘만 표시**: 오늘 날짜의 습관 기록만 캘린더에 표시
+            - **과거 빈칸 처리**: 과거 날짜 습관 기록은 작성했어도 표시하지 않음
+            - **2단계 시스템**: 습관 등록(회색) → 완료 처리(색상)
             
             ### isCompleted 필드 (v1.8.0)
             - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
@@ -60,15 +64,17 @@ public class CalendarController {
             - **일상/운동 기록**: 기록 존재 자체가 완료 (항상 true)
             
             ### 사용자 타입별 캘린더 특징
-            **모든 사용자 타입 (HABIT/EXERCISE/DAILY)**:
-            - 실제 기록 작성/완료 체크 시에만 캘린더 표시
-            - 완료: 불 아이콘, 미완료: 회색 아이콘
-            - 기록 없음: 아무것도 표시 안됨
+            **습관 타입 사용자 (HABIT)**:
+            - **오늘만 표시**: 오늘 날짜의 습관 기록만 캘린더에 표시
+            - **과거 빈칸**: 과거 습관 기록은 작성했어도 표시 안함
+            - **2단계 시스템**: 등록(회색) → 완료(색상)
+            - **미래 미생성**: 미래 날짜는 아예 생성하지 않음
             
             **운동/일상 타입 사용자 (EXERCISE/DAILY)**:
-            - 메인 기록(운동/일상) + 서브 습간 기록 조합 가능
-            - 습관 기록은 서브 기록으로만 표시됨
-            - 습관 목표 기간 제한 없이 자유로운 습관 기록 가능
+            - **모든 날짜 표시**: 과거/현재 모든 기록 표시
+            - **메인+서브 조합**: 메인 기록(운동/일상) + 서브 습관 기록 가능
+            - **자유로운 습관**: 습관 목표 기간 제한 없이 서브 기록으로 사용
+            - **완료: 색상, 미완료: 회색, 기록 없음: 표시 안함**
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -79,7 +85,7 @@ public class CalendarController {
             examples = {
                 @ExampleObject(
                     name = "습관 타입 사용자 캘린더",
-                    summary = "HABIT 타입 사용자 - 목표 기간 내 메인 습관 기록만 표시",
+                    summary = "HABIT 타입 사용자 - 오늘만 표시, 과거는 빈칸 처리",
                     value = """
                     {
                         "statusCode": 200,
@@ -90,22 +96,11 @@ public class CalendarController {
                             "month": 11,
                             "monthlyRecords": [
                                 {
-                                    "date": "2025-11-01",
+                                    "date": "2025-11-14",
                                     "mainRecordTypeForDate": "HABIT",
                                     "records": [
                                         {
-                                            "id": "habit_record_001",
-                                            "type": "HABIT",
-                                            "isCompleted": true
-                                        }
-                                    ]
-                                },
-                                {
-                                    "date": "2025-11-02",
-                                    "mainRecordTypeForDate": "HABIT",
-                                    "records": [
-                                        {
-                                            "id": "habit_record_002",
+                                            "id": "habit_record_today",
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }
