@@ -63,6 +63,14 @@ public class GoalRepositoryImpl implements GoalRepository {
     }
 
     @Override
+    public List<Goal> findByUserIdOrderByEndDateDesc(UserId userId) {
+        return goalJpaRepository.findByUserIdOrderByEndDateDesc(userId.getValue())
+                .stream()
+                .map(GoalEntity::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Goal> findByUserIdAndStatus(UserId userId, GoalStatus status) {
         return goalJpaRepository.findAllByUserIdAndStatus(userId.getValue(), status)
                 .stream()

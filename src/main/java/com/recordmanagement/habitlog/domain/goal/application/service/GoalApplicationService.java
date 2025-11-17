@@ -143,6 +143,17 @@ public class GoalApplicationService {
     }
 
     /**
+     * 사용자의 목표 이력 조회 (종료일 기준)
+     * 목표 달성 보고서에서 가장 최근 완료된 목표를 찾기 위해 사용
+     *
+     * @param userId 사용자 ID
+     * @return 목표 이력 (endDate 기준 내림차순)
+     */
+    public List<Goal> getGoalHistoryByEndDate(UserId userId) {
+        return goalRepository.findByUserIdOrderByEndDateDesc(userId);
+    }
+
+    /**
      * 사용자의 완료된 목표 목록 조회
      *
      * @param userId 사용자 ID

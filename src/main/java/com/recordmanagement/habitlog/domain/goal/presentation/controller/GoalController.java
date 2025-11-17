@@ -206,7 +206,7 @@ public class GoalController {
     @GetMapping("/achievement/report")
     @Operation(
             summary = "목표 달성 보고서 조회",
-            description = "현재 목표 진행상황과 누적 달성 횟수, 최근 이력을 포함한 보고서를 조회합니다.",
+            description = "현재 목표 진행상황과 누적 달성 횟수, 최근 이력을 포함한 보고서를 조회합니다. recentHistory는 종료일 기준 내림차순으로 정렬됩니다.",
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
@@ -267,6 +267,7 @@ public class GoalController {
                                     ),
                                     @ExampleObject(
                                             name = "진행중인 목표가 없는 경우",
+                                            summary = "currentPeriod가 null이고, recentHistory[0]이 가장 최근 종료된 목표 (종료일 기준 내림차순)",
                                             value = """
                                                     {
                                                       "currentPeriod": null,
@@ -314,7 +315,7 @@ public class GoalController {
 
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.from(userId));
         long cumulativeCount = goalApplicationService.getCumulativeAchievementCount(UserId.from(userId));
-        List<Goal> recentHistory = goalApplicationService.getGoalHistory(UserId.from(userId));
+        List<Goal> recentHistory = goalApplicationService.getGoalHistoryByEndDate(UserId.from(userId));
 
         GoalAchievementReportResponse response = GoalAchievementReportResponse.from(
                 currentGoal.orElse(null), cumulativeCount, recentHistory);

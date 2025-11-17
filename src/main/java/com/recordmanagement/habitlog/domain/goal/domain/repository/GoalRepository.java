@@ -59,6 +59,15 @@ public interface GoalRepository {
     List<Goal> findByUserIdOrderByCreatedAtDesc(UserId userId);
 
     /**
+     * 사용자의 목표 이력 조회 (종료일 기준 최신순)
+     * 목표 달성 보고서에서 가장 최근 완료된 목표를 찾기 위해 사용
+     *
+     * @param userId 사용자 ID
+     * @return 목표 이력 (endDate 기준 내림차순)
+     */
+    List<Goal> findByUserIdOrderByEndDateDesc(UserId userId);
+
+    /**
      * 사용자의 특정 상태 목표들 조회
      *
      * @param userId 사용자 ID

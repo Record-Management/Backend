@@ -65,10 +65,10 @@ public class OpenApiConfig {
                         
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
                         
-                        ### v1.4.3 업데이트 (2025.11.14)
-                        - **습관 타입 특별 캘린더**: 오늘만 표시, 과거는 빈칸 처리
-                        - **2단계 습관 시스템**: 등록(회색) → 완료(색상) 명확한 구분
-                        - **사용자 타입별 차별화**: 습관/운동/일상 타입별 다른 캘린더 표시 로직
+                        ### v1.4.4 업데이트 (2025.11.14)
+                        - **목표 달성 보고서 정렬 개선**: recentHistory를 종료일 기준으로 정렬
+                        - **프론트엔드 UX 향상**: 가장 최근 완료된 목표를 정확히 식별 가능
+                        - **API 일관성 개선**: 목표 종료 시점 기준으로 정확한 데이터 제공
                         
                         ### v1.4.1 업데이트 (2025.11.13)
                         - **자동 목표 완료**: 매일 자정 스케줄러가 만료된 목표를 자동 완료 처리
@@ -110,7 +110,7 @@ public class OpenApiConfig {
                         - **프론트엔드 Android**: [HabitLog Android App](https://github.com/Record-Management/Android)
                         - **문의사항**: Discord - jws0602
                         """)
-                .version("v1.4.3")
+                .version("v1.4.4")
                 .contact(new Contact()
                         .name("전우선 (Jeon Woo Seon)")
                         .email("wooxexn@gmail.com")
