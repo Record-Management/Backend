@@ -50,13 +50,18 @@ import jakarta.validation.Valid;
  * - 목표 설정 안 한 사용자 대상
  * - 개인별 알림 설정에 따라 발송
  * 
+ * 히스토리 저장 개선 사항 (v2.1.0):
+ * - FCM 발송 성공 후에만 히스토리 저장
+ * - 트랜잭션 보장으로 데이터 일관성 향상
+ * - 발송 실패 시 불필요한 히스토리 저장 방지
+ * 
  * 읽음 처리 기능:
  * - recentCheckedAt 필드로 읽음/안읽음 상태 판단
  * - 알림 센터 진입 시 자동 읽음 처리
  * 
  * @author 전우선
  * @since 2025.10.23
- * @version 2.0.0
+ * @version 2.1.0
  */
 @Slf4j
 @RestController
@@ -322,15 +327,15 @@ public class NotificationController {
                                   "type": "DAILY_RECORD_REMINDER",
                                   "title": "HabitLog",
                                   "message": "오늘 습관 실천은 어떠셨나요? 기록해보세요!",
-                                  "sentAt": "2025-11-10T19:00:00",
+                                  "sentAt": "2025-11-17T19:00:00",
                                   "isRead": false
                                 },
                                 {
                                   "id": "notification-122",
-                                  "type": "EXERCISE_REMINDER",
+                                  "type": "DAILY_RECORD_REMINDER",
                                   "title": "HabitLog",
                                   "message": "오늘 운동은 어떠셨나요? 기록해보세요!",
-                                  "sentAt": "2025-11-09T19:00:00",
+                                  "sentAt": "2025-11-16T19:00:00",
                                   "isRead": true
                                 },
                                 {
@@ -338,7 +343,7 @@ public class NotificationController {
                                   "type": "GOAL_SETTING_REMINDER",
                                   "title": "HabitLog",
                                   "message": "목표를 설정해서 습관을 시작해보세요!",
-                                  "sentAt": "2025-11-08T19:00:00",
+                                  "sentAt": "2025-11-15T19:00:00",
                                   "isRead": true
                                 }
                               ],
@@ -349,7 +354,7 @@ public class NotificationController {
                                 "totalPages": 1
                               }
                             },
-                            "recentCheckedAt": "2025-11-09T20:30:00"
+                            "recentCheckedAt": "2025-11-16T20:30:00"
                           }
                         }
                         """
@@ -505,6 +510,11 @@ public class NotificationController {
             ### 처리 내용
             1. 모든 미읽은 알림을 읽음 상태로 변경
             2. 알림 센터 마지막 확인 시간(lastCheckedAt) 업데이트
+            
+            ### 주요 변경 사항 (v2.0.0)
+            - 히스토리 저장 시점: FCM 발송 성공 후에만 저장됨
+            - 트랜잭션 보장: readOnly 모드에서 변경 작업이 정상 실행됨
+            - 데이터 일관성: 발송 실패 시 불필요한 히스토리 저장 방지
             
             ### 사용 시나리오
             - 알림 센터 화면 진입 시 자동 읽음 처리

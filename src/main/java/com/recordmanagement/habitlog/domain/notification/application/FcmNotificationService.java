@@ -36,7 +36,6 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class FcmNotificationService {
 
     private final NotificationSender notificationSender;
@@ -51,6 +50,7 @@ public class FcmNotificationService {
      *
      * @param userId 사용자 ID
      */
+    @Transactional
     public void sendDailyRecordReminderNotification(UserId userId) {
         log.info("메인 기록 미등록 알림 발송 시작: userId={}", userId.getValue());
 
@@ -89,15 +89,6 @@ public class FcmNotificationService {
         data.put("notificationType", "DAILY_RECORD_REMINDER");
         data.put("imageUrl", NotificationImageUtil.getImageUrl(user.getMainRecordType()));
 
-        // 알림 히스토리 저장 (FCM 발송 전에 저장)
-        NotificationHistory history = new NotificationHistory(
-                userId, 
-                NotificationType.DAILY_RECORD_REMINDER, 
-                message.getTitle(), 
-                message.getBody()
-        );
-        notificationHistoryApplicationService.saveNotificationHistory(history);
-
         // 알림 발송 (DIP 적용: 추상화된 NotificationSender 사용)
         boolean success = notificationSender.sendNotification(
                 user.getFcmToken(),
@@ -107,6 +98,15 @@ public class FcmNotificationService {
         );
 
         if (success) {
+            // 알림 발송 성공 시에만 히스토리 저장
+            NotificationHistory history = new NotificationHistory(
+                    userId, 
+                    NotificationType.DAILY_RECORD_REMINDER, 
+                    message.getTitle(), 
+                    message.getBody()
+            );
+            notificationHistoryApplicationService.saveNotificationHistory(history);
+            
             log.info("메인 기록 미등록 알림 발송 성공: userId={}, mainType={}", 
                     userId.getValue(), user.getMainRecordType());
         } else {
@@ -120,6 +120,7 @@ public class FcmNotificationService {
      *
      * @param userId 사용자 ID
      */
+    @Transactional
     public void sendGoalSettingReminderNotification(UserId userId) {
         log.info("목표 설정 미완료 알림 발송 시작: userId={}", userId.getValue());
 
@@ -156,15 +157,6 @@ public class FcmNotificationService {
         data.put("notificationType", "GOAL_SETTING_REMINDER");
         data.put("imageUrl", NotificationImageUtil.getGoalSettingImageUrl());
 
-        // 알림 히스토리 저장 (FCM 발송 전에 저장)
-        NotificationHistory history = new NotificationHistory(
-                userId, 
-                NotificationType.GOAL_SETTING_REMINDER, 
-                title, 
-                body
-        );
-        notificationHistoryApplicationService.saveNotificationHistory(history);
-
         // 알림 발송 (DIP 적용: 추상화된 NotificationSender 사용)
         boolean success = notificationSender.sendNotification(
                 user.getFcmToken(),
@@ -174,6 +166,15 @@ public class FcmNotificationService {
         );
 
         if (success) {
+            // 알림 발송 성공 시에만 히스토리 저장
+            NotificationHistory history = new NotificationHistory(
+                    userId, 
+                    NotificationType.GOAL_SETTING_REMINDER, 
+                    title, 
+                    body
+            );
+            notificationHistoryApplicationService.saveNotificationHistory(history);
+            
             log.info("목표 설정 미완료 알림 발송 성공: userId={}", userId.getValue());
         } else {
             log.error("목표 설정 미완료 알림 발송 실패: userId={}", userId.getValue());
@@ -215,6 +216,7 @@ public class FcmNotificationService {
      * @param body 알림 내용
      * @return 발송 성공 여부
      */
+    @Transactional
     public boolean sendTestNotification(UserId userId, String title, String body) {
         log.info("테스트 알림 발송: userId={}", userId.getValue());
 
@@ -224,23 +226,27 @@ public class FcmNotificationService {
             return false;
         }
 
-        // 테스트 알림 히스토리 저장
-        NotificationHistory history = new NotificationHistory(
-                userId, 
-                NotificationType.TEST, 
-                title, 
-                body
-        );
-        notificationHistoryApplicationService.saveNotificationHistory(history);
-
         Map<String, String> data = new HashMap<>();
         data.put("notificationType", "TEST");
 
-        return notificationSender.sendNotification(
+        boolean success = notificationSender.sendNotification(
                 user.getFcmToken(),
                 title,
                 body,
                 data
         );
+        
+        if (success) {
+            // 테스트 알림 발송 성공 시에만 히스토리 저장
+            NotificationHistory history = new NotificationHistory(
+                    userId, 
+                    NotificationType.TEST, 
+                    title, 
+                    body
+            );
+            notificationHistoryApplicationService.saveNotificationHistory(history);
+        }
+        
+        return success;
     }
 }

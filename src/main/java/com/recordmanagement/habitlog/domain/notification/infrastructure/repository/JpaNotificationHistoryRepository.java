@@ -1,4 +1,4 @@
-package com.recordmanagement.habitlog.domain.auth.infrastructure.notification.repository;
+package com.recordmanagement.habitlog.domain.notification.infrastructure.repository;
 
 import com.recordmanagement.habitlog.domain.notification.infrastructure.entity.NotificationHistoryEntity;
 import org.springframework.data.domain.Page;
