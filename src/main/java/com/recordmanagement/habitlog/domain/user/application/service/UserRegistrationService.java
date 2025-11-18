@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.user.application.dto.OnboardingCompl
 import com.recordmanagement.habitlog.domain.user.application.dto.UserRegistrationCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
+import com.recordmanagement.habitlog.domain.goal.domain.model.TreeStage;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
@@ -111,8 +112,8 @@ public class UserRegistrationService {
         User updatedUser = userRepository.save(user);
         
         log.info("온보딩 완료: userId={}", updatedUser.getId().getValue());
-        // 온보딩 완료 시 목표가 설정되므로 currentTreeStage = 1 (초기 단계)
-        return UserResponse.from(updatedUser, 1);
+        // 온보딩 완료 시 목표가 설정되므로 currentTreeStage = STAGE_1 (초기 단계)
+        return UserResponse.from(updatedUser, TreeStage.STAGE_1);
     }
 
     /**
@@ -139,8 +140,8 @@ public class UserRegistrationService {
         User updatedUser = userRepository.save(user);
         
         log.info("온보딩 재설정 완료: userId={}", updatedUser.getId().getValue());
-        // 온보딩 재설정 시 목표가 설정되므로 currentTreeStage = 1 (초기 단계)
-        return UserResponse.from(updatedUser, 1);
+        // 온보딩 재설정 시 목표가 설정되므로 currentTreeStage = STAGE_1 (초기 단계)
+        return UserResponse.from(updatedUser, TreeStage.STAGE_1);
     }
 
     /**

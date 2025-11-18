@@ -2,6 +2,7 @@ package com.recordmanagement.habitlog.domain.user.application.service;
 
 import com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService;
 import com.recordmanagement.habitlog.domain.goal.domain.model.Goal;
+import com.recordmanagement.habitlog.domain.goal.domain.model.TreeStage;
 import com.recordmanagement.habitlog.domain.user.application.dto.FcmTokenUpdateCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UpdateProfileCommand;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
@@ -60,8 +61,8 @@ public class UserProfileService {
         
         // 프로필 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
-        Integer currentTreeStage = currentGoal
-                .map(goal -> goal.getCurrentTreeStage().getStage())
+        TreeStage currentTreeStage = currentGoal
+                .map(Goal::getCurrentTreeStage)
                 .orElse(null);
         return UserResponse.from(updatedUser, currentTreeStage);
     }
@@ -86,8 +87,8 @@ public class UserProfileService {
         
         // FCM 토큰 업데이트는 목표와 무관하므로 currentTreeStage는 별도 조회
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(updatedUser.getId());
-        Integer currentTreeStage = currentGoal
-                .map(goal -> goal.getCurrentTreeStage().getStage())
+        TreeStage currentTreeStage = currentGoal
+                .map(Goal::getCurrentTreeStage)
                 .orElse(null);
         return UserResponse.from(updatedUser, currentTreeStage);
     }
@@ -109,8 +110,8 @@ public class UserProfileService {
                     Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.of(userId));
                     
                     // 목표가 있으면 treeStage 설정, 없으면 null
-                    Integer currentTreeStage = currentGoal
-                            .map(goal -> goal.getCurrentTreeStage().getStage())
+                    TreeStage currentTreeStage = currentGoal
+                            .map(Goal::getCurrentTreeStage)
                             .orElse(null);
                     
                     return UserResponse.from(user, currentTreeStage);

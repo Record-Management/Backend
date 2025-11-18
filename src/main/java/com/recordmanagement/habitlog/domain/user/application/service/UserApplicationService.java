@@ -9,6 +9,7 @@ import com.recordmanagement.habitlog.domain.user.application.dto.UserResponse;
 import com.recordmanagement.habitlog.domain.user.application.dto.UserWithdrawalCommand;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
+import com.recordmanagement.habitlog.domain.goal.domain.model.TreeStage;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
@@ -152,8 +153,8 @@ public class UserApplicationService {
         }
         
         log.info("목표 재설정 완료: userId=[{}]", updatedUser.getId().getValue());
-        // 목표 재설정 시 목표가 새로 설정되므로 currentTreeStage = 1 (초기 단계)
-        return UserResponse.from(updatedUser, 1);
+        // 목표 재설정 시 목표가 새로 설정되므로 currentTreeStage = STAGE_1 (초기 단계)
+        return UserResponse.from(updatedUser, TreeStage.STAGE_1);
     }
 
     /**

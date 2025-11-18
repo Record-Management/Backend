@@ -3,6 +3,7 @@ package com.recordmanagement.habitlog.domain.user.application.dto;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
+import com.recordmanagement.habitlog.domain.goal.domain.model.TreeStage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -229,17 +230,20 @@ public class UserResponse {
             
             ### 값 범위
             - null: 현재 진행중인 목표가 없음
-            - 1~4: 나무 성장 단계 (1=씨앗, 2=새싹, 3=어린나무, 4=큰나무)
+            - STAGE_1: 씨앗/새싹
+            - STAGE_2: 어린나무
+            - STAGE_3: 성숙한나무
+            - STAGE_4: 완성된나무
             
             ### 활용
             - 메인 화면 나무 이미지 표시
             - 목표 진행률 시각화
             - 성장 단계별 메시지 표시
             """,
-        example = "2",
+        example = "STAGE_2",
         nullable = true
     )
-    private final Integer currentTreeStage;
+    private final TreeStage currentTreeStage;
 
     /**
      * 도메인 User 객체를 UserResponse DTO로 변환 (currentTreeStage 포함)
@@ -250,7 +254,7 @@ public class UserResponse {
      * @param currentTreeStage 현재 목표의 나무 성장 단계 (목표 없으면 null)
      * @return UserResponse DTO
      */
-    public static UserResponse from(User user, Integer currentTreeStage) {
+    public static UserResponse from(User user, TreeStage currentTreeStage) {
         return UserResponse.builder()
                 .id(user.getId().getValue())
                 .name(user.getName())

@@ -208,7 +208,7 @@ public class UserController {
                                 "mainRecordType": "HABIT",
                                 "birthDate": [1998, 6, 2],
                                 "goalDays": 10,
-                                "currentTreeStage": 2,
+                                "currentTreeStage": "STAGE_2",
                                 "habitStartDate": [2025, 11, 13],
                                 "onboardingCompleted": true,
                                 "createdAt": "2025-09-02T02:46:41.454753"
@@ -327,6 +327,7 @@ public class UserController {
                             "mainRecordType": "EXERCISE",
                             "birthDate": "1998-06-02",
                             "goalDays": 20,
+                            "currentTreeStage": "STAGE_1",
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -436,6 +437,7 @@ public class UserController {
                             "mainRecordType": "DAILY",
                             "birthDate": "1998-06-02",
                             "goalDays": 30,
+                            "currentTreeStage": "STAGE_1",
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -612,6 +614,7 @@ public class UserController {
                             "mainRecordType": "EXERCISE",
                             "birthDate": [1990, 1, 1],
                             "goalDays": 20,
+                            "currentTreeStage": "STAGE_3",
                             "onboardingCompleted": true,
                             "createdAt": "2025-09-02T02:46:41.454753"
                           }
@@ -724,6 +727,7 @@ public class UserController {
                             "mainRecordType": "HABIT",
                             "birthDate": "1998-06-02",
                             "goalDays": 10,
+                            "currentTreeStage": "STAGE_1",
                             "habitStartDate": [2025, 11, 1],
                             "habitPeriodInfo": {
                               "startDate": [2025, 11, 1],
