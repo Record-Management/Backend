@@ -72,7 +72,7 @@ public class DailyNotificationScheduler {
                     if (user.getMainRecordType() == null) {
                         if (isGoalSettingNotificationEnabled(user.getId())) {
                             shouldSendNotification = true;
-                            notificationMessage = "목표를 설정해서 습관을 시작해보세요!";
+                            notificationMessage = "아직 목표를 설정하지 않으셨어요! 지금부터 새로운 목표를 만들어볼까요?";
                         }
                     } 
                     // 2. 오늘 기록 안 한 사용자 체크

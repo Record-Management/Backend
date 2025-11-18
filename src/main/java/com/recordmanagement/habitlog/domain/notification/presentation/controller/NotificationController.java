@@ -280,12 +280,16 @@ public class NotificationController {
             사용자의 알림 히스토리를 페이징으로 조회합니다.
             
             ### 응답 정보
-            - notifications: 알림 히스토리 목록 (페이징)
+            - notifications: 알림 히스토리 목록 (페이징) - id, type, title, message, sentAt, isRead 형태
             - recentCheckedAt: 알림 센터 마지막 확인 시간 (읽음/안읽음 판단용)
             
-            ### 날짜/시간 필드 타입
-            - sentAt: **[int, int, int, int, int, int]** (날짜시간 배열: [년, 월, 일, 시, 분, 초])
-            - recentCheckedAt: **[int, int, int, int, int, int]** (날짜시간 배열: [년, 월, 일, 시, 분, 초])
+            ### 응답 필드 상세
+            - **id**: 알림 고유 식별자 (예: "notification-123")
+            - **type**: 알림 타입 (DAILY_RECORD_REMINDER, EXERCISE_REMINDER, HABIT_REMINDER, GOAL_SETTING_REMINDER)
+            - **title**: 알림 제목 (하루 기록, 운동 기록, 습관 기록, 목표 설정)
+            - **message**: 피그마 명세에 맞는 알림 메시지
+            - **sentAt**: 발송 시간 (ISO 8601 형태: "2025-11-17T19:00:00")
+            - **isRead**: 읽음 여부 (boolean)
             
             ### 정렬 순서
             - 최신 알림부터 표시 (sentAt 역순)
@@ -325,32 +329,40 @@ public class NotificationController {
                                 {
                                   "id": "notification-123",
                                   "type": "DAILY_RECORD_REMINDER",
-                                  "title": "HabitLog",
-                                  "message": "오늘 습관 실천은 어떠셨나요? 기록해보세요!",
+                                  "title": "하루 기록",
+                                  "message": "아직 '하루 기록'을 작성하지 않았어요. 하루의 작은 순간이 쌓이면 큰 변화가 돼요.",
                                   "sentAt": "2025-11-17T19:00:00",
                                   "isRead": false
                                 },
                                 {
                                   "id": "notification-122",
-                                  "type": "DAILY_RECORD_REMINDER",
-                                  "title": "HabitLog",
-                                  "message": "오늘 운동은 어떠셨나요? 기록해보세요!",
+                                  "type": "EXERCISE_REMINDER",
+                                  "title": "운동 기록",
+                                  "message": "아직 '운동 기록'을 작성하지 않았어요. 기록이 쌓일수록 습관이 되고, 어느새 운동이 자연스러워질 거예요.",
                                   "sentAt": "2025-11-16T19:00:00",
                                   "isRead": true
                                 },
                                 {
                                   "id": "notification-121",
-                                  "type": "GOAL_SETTING_REMINDER",
-                                  "title": "HabitLog",
-                                  "message": "목표를 설정해서 습관을 시작해보세요!",
+                                  "type": "HABIT_REMINDER",
+                                  "title": "습관 기록",
+                                  "message": "아직 '습관 기록'을 작성하지 않았어요. 꾸준히 쌓이는 하루가 큰 변화를 만들 수 있어요.",
                                   "sentAt": "2025-11-15T19:00:00",
+                                  "isRead": true
+                                },
+                                {
+                                  "id": "notification-120",
+                                  "type": "GOAL_SETTING_REMINDER",
+                                  "title": "목표 설정",
+                                  "message": "아직 목표를 설정하지 않으셨어요! 지금부터 새로운 목표를 만들어볼까요?",
+                                  "sentAt": "2025-11-14T19:00:00",
                                   "isRead": true
                                 }
                               ],
                               "pageInfo": {
                                 "page": 0,
                                 "size": 20,
-                                "totalElements": 15,
+                                "totalElements": 18,
                                 "totalPages": 1
                               }
                             },

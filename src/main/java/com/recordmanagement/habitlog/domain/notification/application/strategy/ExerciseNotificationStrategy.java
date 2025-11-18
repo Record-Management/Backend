@@ -21,8 +21,8 @@ public class ExerciseNotificationStrategy implements NotificationMessageStrategy
     @Override
     public NotificationMessage createDailyRecordReminderMessage() {
         return new NotificationMessage(
-            "오늘 운동 기록을 등록하지 않았어요",
-            "꾸준한 운동 기록으로 건강한 습관을 만들어보세요!"
+            "운동 기록",
+            "아직 '운동 기록'을 작성하지 않았어요. 기록이 쌓일수록 습관이 되고, 어느새 운동이 자연스러워질 거예요."
         );
     }
 

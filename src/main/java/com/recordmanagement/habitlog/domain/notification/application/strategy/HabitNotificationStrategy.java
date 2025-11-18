@@ -21,8 +21,8 @@ public class HabitNotificationStrategy implements NotificationMessageStrategy {
     @Override
     public NotificationMessage createDailyRecordReminderMessage() {
         return new NotificationMessage(
-            "오늘 습관 기록을 확인해보세요",
-            "목표 달성을 위해 오늘의 습관을 체크해주세요!"
+            "습관 기록",
+            "아직 '습관 기록'을 작성하지 않았어요. 꾸준히 쌓이는 하루가 큰 변화를 만들 수 있어요."
         );
     }
 

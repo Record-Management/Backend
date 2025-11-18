@@ -21,8 +21,8 @@ public class DailyNotificationStrategy implements NotificationMessageStrategy {
     @Override
     public NotificationMessage createDailyRecordReminderMessage() {
         return new NotificationMessage(
-            "오늘 하루는 어떠셨나요?",
-            "오늘의 소중한 순간을 기록으로 남겨보세요!"
+            "하루 기록",
+            "아직 '하루 기록'을 작성하지 않았어요. 하루의 작은 순간이 쌓이면 큰 변화가 돼요."
         );
     }
 
