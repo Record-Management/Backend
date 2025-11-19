@@ -126,7 +126,7 @@ public class CalendarController {
                                     "mainRecordTypeForDate": "HABIT",
                                     "records": [
                                         {
-                                            "id": "habit_record_19_auto_generated",
+                                            "id": "habit_record_19_today",
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }

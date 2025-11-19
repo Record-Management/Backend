@@ -102,7 +102,7 @@ public class HabitRecordController {
                                 "habitType": "WATER_DRINKING",
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
-                                "memo": "30일 물마시기 도전 시작! (DB에는 12월 18일까지 자동 생성됨)",
+                                "memo": "30일 물마시기 도전 시작! (DB에는 목표 종료일까지 자동 생성, API는 오늘까지만 응답)",
                                 "isCompleted": false,
                                 "isMainRecord": true
                               }
@@ -127,7 +127,7 @@ public class HabitRecordController {
                                 "habitType": "READING",
                                 "notificationEnabled": false,
                                 "notificationTime": null,
-                                "memo": "운동과 함께 독서도 시작",
+                                "memo": "운동과 함께 독서도 시작 (서브 습관, 자동 생성 안됨)",
                                 "isCompleted": false,
                                 "isMainRecord": false
                               }
@@ -224,12 +224,12 @@ public class HabitRecordController {
                  • 사용자의 메인 기록 타입이 HABIT → 메인 가능성 있음
                  • 사용자의 메인 기록 타입이 EXERCISE/DAILY → 서브 기록
                
-               **자동 처리 (습관 타입 사용자만):**
-               1. **메인 습관 자동 생성**: 메인 기록 생성 시 목표 종료일까지 자동 생성
-               2. **2단계 시스템**: 생성 시 isCompleted=false (회색), 완료 API로 true 변경 (색상)
-               3. **캘린더 특별 표시**: 작성된 모든 습관 기록 표시 (오늘까지만 API 응답)
-               4. **기존 메인 기록 변경**: 새로운 메인 기록 생성 시 기존 메인 기록들을 서브로 변경
-               5. **목표 진행률 업데이트**: 습관 기록 생성 후 자동으로 목표 달성률 계산
+               **서브→메인 변경 시 자동 처리 (v1.8.5):**
+               1. **기존 메인 삭제**: 오늘부터 목표 종료일까지 기존 메인 습관 기록 삭제
+               2. **새로운 메인 생성**: 오늘부터 목표 종료일까지 새로운 메인 습관 기록 자동 생성
+               3. **2단계 시스템**: 생성 시 isCompleted=false (회색), 완료 API로 true 변경 (색상)
+               4. **캘린더 표시**: 작성된 모든 습관 기록 표시 (오늘까지만 API 응답)
+               5. **목표 진행률 업데이트**: 습관 기록 변경 후 자동으로 목표 달성률 계산
                
                **제한 사항:**
                - 운동/일상 타입 사용자: 자동 일괄 업데이트 없음 (해당 기록만 수정)
@@ -238,12 +238,12 @@ public class HabitRecordController {
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
-        description = "습관기록 수정 성공 (습관 타입 사용자의 메인 기록 변경시 자동 일괄 업데이트 포함)",
+        description = "습관기록 수정 성공 (서브→메인 변경 시 기존 메인 삭제 후 새 메인 자동 생성 포함)",
         content = @io.swagger.v3.oas.annotations.media.Content(
             mediaType = "application/json",
             examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
                 name = "메인 습관기록 수정 성공",
-                summary = "메인 습관기록 수정 성공 - 자동 일괄 업데이트 포함",
+                summary = "메인 습관기록 수정 성공 - 서브→메인 변경 시 기존 메인 삭제 후 새 메인 자동 생성",
                 value = """
                 {
                     "statusCode": 200,
@@ -259,7 +259,7 @@ public class HabitRecordController {
                         "habitType": "READING",
                         "notificationEnabled": false,
                         "notificationTime": "21:00:00",
-                        "memo": "독서로 변경!",
+                        "memo": "서브 독서가 메인으로 승격! (기존 메인 삭제 후 자동 생성됨)",
                         "isCompleted": false,
                         "isMainRecord": true
                     }
@@ -317,18 +317,18 @@ public class HabitRecordController {
                **서브 습관 기록 삭제:**
                - 해당 서브 기록만 삭제됩니다.
                
-               **메인 습관 기록 삭제:**
-               - **메인+서브 상황**: 메인 기록 삭제 시 서브 기록 중 하나가 자동으로 메인으로 전환됩니다.
+               **메인 습관 기록 삭제 (v1.8.5):**
+               - **메인+서브 상황**: 오늘부터 목표 종료일까지 기존 메인 기록 삭제 → 서브 기록 중 하나가 메인으로 전환 → 새 메인 습관으로 오늘부터 목표 종료일까지 자동 생성
                - **메인만 상황**: 메인 기록 삭제 시 **목표 기간 전체(시작일~종료일)의 해당 습관 모든 기록**이 삭제됩니다.
                
-               **중요한 삭제 동작:**
-               - 서브→메인 전환 시 목표 기간까지의 모든 기록이 새 메인 습관으로 업데이트됩니다.
-               - 메인만 삭제 시 **습관 포기로 간주**하여 목표기간 전체의 해당 습관 모든 기록이 삭제됩니다.
+               **중요한 삭제 동작 (정리본 반영):**
+               - 메인+서브 → 메인 삭제 시: 오늘부터 기존 메인 습관 완전 삭제, 서브가 메인으로 승격하여 오늘부터 목표 종료일까지 자동 생성
+               - 메인만 → 메인 삭제 시: **습관 포기로 간주**하여 목표기간 전체의 해당 습관 모든 기록이 삭제
                - **되돌릴 수 없는 작업**이므로 신중하게 사용해주세요.
                
                **자동 처리 상세:**
-               - 메인+서브 상황: 메인 습관 기록 삭제 → 서브 기록 중 하나가 메인으로 전환 → 목표 기간까지 모든 메인 기록이 새 습관으로 업데이트
-               - 메인만 상황: 메인 습관 기록 삭제 → 습관 포기로 간주 → 목표 기간 전체의 해당 습관 모든 기록 삭제 (과거+미래 기록 모두 포함)
+               - 메인+서브 상황: 메인 습관 기록 삭제 → 오늘부터 목표 종료일까지 기존 메인 기록 삭제 → 서브가 메인으로 전환 → 오늘부터 목표 종료일까지 새 메인 습관 자동 생성
+               - 메인만 상황: 메인 습관 기록 삭제 → 습관 포기로 간주 → 목표 기간 전체의 해당 습관 모든 기록 삭제 (시작일~종료일 모든 기록 포함)
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -352,7 +352,7 @@ public class HabitRecordController {
                     ),
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
                         name = "메인+서브 상황 메인 삭제",
-                        summary = "메인 기록 삭제 시 서브→메인 자동 전환",
+                        summary = "메인 기록 삭제 시 오늘부터 기존 메인 삭제 → 서브→메인 전환 → 새 메인 자동 생성",
                         value = """
                             {
                                 "statusCode": 200,
@@ -428,7 +428,15 @@ public class HabitRecordController {
     
     @PatchMapping("/{habitRecordId}/completion")
     @Operation(summary = "습관기록 완료 상태 변경", 
-               description = "습관기록의 완료 상태를 토글합니다. 홈 화면에서 간단하게 완료/미완료 상태를 변경할 때 사용합니다.",
+               description = """
+               습관기록의 완료 상태를 토글합니다. 홈 화면에서 간단하게 완료/미완료 상태를 변경할 때 사용합니다.
+               
+               ## 중요한 제한사항 (v1.8.5)
+               **오늘 날짜만 완료 가능**: 과거나 미래 날짜의 습관 기록은 완료/미완료 상태를 변경할 수 없습니다.
+               - 오늘 날짜의 습관 기록만 완료 상태 변경 가능
+               - 과거/미래 날짜 시도 시 E40413 에러 반환
+               - 목적: 실제 행동 기반 시스템, 당일 집중
+               """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -462,6 +470,23 @@ public class HabitRecordController {
                     """
             )
         )),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "오늘이 아닌 날짜의 습관 완료 상태 변경 시도",
+            content = @io.swagger.v3.oas.annotations.media.Content(
+                mediaType = "application/json",
+                examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    value = """
+                    {
+                        "statusCode": 400,
+                        "code": "E40413",
+                        "message": "습관 완료 상태는 오늘 날짜에만 변경할 수 있습니다.",
+                        "data": null
+                    }
+                    """
+                )
+            )
+        ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "401",
             description = "인증 실패 (토큰 없음/만료/잘못됨)",

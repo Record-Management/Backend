@@ -260,6 +260,9 @@ public enum ErrorCode {
 
     @Schema(description = "습관 목표 기간 외 날짜")
     HABIT_RECORD_OUT_OF_PERIOD(400, "E40412", "습관 기록은 설정된 목표 기간 내에서만 등록할 수 있습니다."),
+    
+    @Schema(description = "습관 완료는 오늘만 가능")
+    HABIT_COMPLETION_ONLY_TODAY(400, "E40413", "습관 완료 상태는 오늘 날짜에만 변경할 수 있습니다."),
 
 
     // ============================================================================
