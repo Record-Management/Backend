@@ -38,40 +38,43 @@ public class HabitRecordController {
                description = """
                새로운 습관기록을 작성합니다.
                
-               ** 모든 사용자 작성 가능:**
-               - 메인 기록 타입이 습관인 사용자: 메인 또는 서브 기록으로 작성
-               - 메인 기록 타입이 운동/일상인 사용자: 서브 기록으로 작성
+               ## 모든 사용자 작성 가능
+               - **메인 기록 타입이 습관인 사용자**: 메인 또는 서브 기록으로 작성
+               - **메인 기록 타입이 운동/일상인 사용자**: 서브 기록으로 작성
                
-               ** 필수 항목:**
-               - habitType: 습관 종류 (필수)
-               - notificationEnabled: 알림 설정 여부 (필수)
-               - recordDate: 기록 날짜 (필수)
+               ## 메인 습관 기록 자동 생성 시스템 (v1.8.5)
                
-               **선택 항목:**
-               - notificationTime: 알림 시간
-               - memo: 메모/글쓰기
-               - isMainRecord: 메인 기록 여부 (명시적 설정)
+               **자동 생성 범위**: 메인 습관 기록 작성 시 목표 종료일까지 DB에 자동 생성
+               ```
+               예시: 11월 19일에 30일 목표 메인 습관 기록 작성
+               → 11월 19일~12월 18일까지 자동 생성 (30일간)
+               ```
                
-               ** 습관 기록 특징 (v1.8.3):**
-               - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 자동 생성
-               - **2단계 시스템**: 등록(회색, isCompleted=false) → 완료(색상, isCompleted=true)
-               - **습관 타입 특별 표시**: 작성된 모든 습관 기록 캘린더 표시 (오늘까지만)
-               - **다른 타입 사용자**: 모든 날짜 습관 기록 표시 (서브 기록으로)
-               - **목표 진행률 자동 업데이트**: 습관 기록 생성/완료 시 목표 달성률 실시간 반영
+               **캘린더 표시 제한**: DB에 미래 기록이 있어도 API는 오늘까지만 응답
+               ```
+               DB: 11월 19일~12월 18일 (30개 기록)
+               API 응답: 11월 19일~11월 19일 (오늘 1개만)
+               ```
                
-               ** 메인/서브 기록 결정 로직:**
-               - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용
-               - isMainRecord가 설정되지 않은 경우: 자동 결정
-                 • 이미 메인 습관 기록이 있으면 → 서브 기록
-                 • 사용자의 메인 기록 타입이 HABIT → 메인 가능성 있음
-                 • 사용자의 메인 기록 타입이 EXERCISE/DAILY → 서브 기록
+               **2단계 시스템**: 
+               - **1단계 (등록)**: isCompleted=false → 회색 아이콘
+               - **2단계 (완료)**: isCompleted=true → 색상 아이콘
                
-               **기록 제한:**
-               - 하루 최대 2개의 습관 기록 작성 가능
-               - 하루 최대 2가지 기록 타입 작성 가능
-               - 습관 타입 사용자: 습관 목표 기간 내 날짜만 허용 (현재 날짜 위주)
+               ## 필수/선택 항목
+               **필수**: habitType, notificationEnabled, recordDate  
+               **선택**: notificationTime, memo, isMainRecord
+               
+               ## 메인/서브 기록 결정 로직
+               - **명시적 설정**: isMainRecord 값 직접 사용
+               - **자동 결정**: 
+                 - 이미 메인 습관 기록 존재 → 서브 기록
+                 - 습관 타입 사용자 → 메인 가능성 있음
+                 - 운동/일상 타입 사용자 → 서브 기록
+               
+               ## 기록 제한 사항
+               - 하루 최대 2개 습관 기록, 최대 2가지 기록 타입
+               - 습관 타입 사용자: 목표 기간 내 날짜만 허용
                - 다른 타입 사용자: 과거~오늘 날짜만 허용
-               - 메인 습관 기록: 목표 종료일까지 DB 자동 생성, API는 오늘까지만 응답
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -83,7 +86,7 @@ public class HabitRecordController {
                 examples = {
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
                         name = "습관 타입 사용자의 메인 기록",
-                        summary = "메인 기록 타입이 습관인 사용자의 메인 습관 기록 작성 + 목표 기간 자동 생성",
+                        summary = "메인 기록 타입이 습관인 사용자의 메인 습관 기록 작성 + 목표 기간 자동 생성 (DB에만, API는 오늘만)",
                         value = """
                             {
                               "statusCode": 200,
@@ -92,14 +95,14 @@ public class HabitRecordController {
                               "data": {
                                 "id": "550e8400-e29b-41d4-a716-446655440000",
                                 "type": "HABIT",
-                                "recordDate": "2025-11-06",
+                                "recordDate": "2025-11-19",
                                 "recordTime": null,
-                                "createdAt": "2025-11-06T14:30:00",
-                                "updatedAt": "2025-11-06T14:30:00",
+                                "createdAt": "2025-11-19T14:30:00",
+                                "updatedAt": "2025-11-19T14:30:00",
                                 "habitType": "WATER_DRINKING",
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
-                                "memo": "물을 꾸준히 마시기 시작!",
+                                "memo": "30일 물마시기 도전 시작! (DB에는 12월 18일까지 자동 생성됨)",
                                 "isCompleted": false,
                                 "isMainRecord": true
                               }

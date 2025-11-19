@@ -36,44 +36,49 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
+            ### 캘린더 표시 로직 (v1.8.5) - 날짜 기준 분리된 표시
+            
+            **과거 날짜**: 모든 기록 표시, 미작성 기록은 회색 아이콘으로 표시
+            - 작성된 기록: 색상 아이콘으로 표시
+            - 미작성 기록: 회색 아이콘으로 표시 (플레이스홀더)
+            - 목적: 사용자가 과거 기록 현황을 전체적으로 파악 가능
+            
+            **현재 날짜 (오늘)**: 작성된 기록만 표시, 미작성 기록은 빈 상태
+            - 작성된 기록: 색상 아이콘으로 표시
+            - 미작성 기록: 아무것도 표시하지 않음 (빈 공간)
+            - 습관 기록: 3단계 시스템 (미작성=빈공간, 작성=회색, 완료=색상)
+            - 목적: 오늘 해야할 일을 명확하게 구분
+            
+            **미래 날짜**: 아무것도 표시하지 않음 (완전 빈 상태)
+            - DB에 미래 기록이 있어도 API 응답에서 제외
+            - 목적: 실제 행동 기반 시스템, 미리 계획하지 않음
+            
             ### 메인 기록 타입 표시 (v1.6.0)
             - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
             - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
             - 목표 설정 시점에 결정된 메인 기록 타입이 목표 기간 동안 일관되게 유지됩니다
             
-            ### 습관 기록 필터링 (v1.7.0)
-            - **습관 타입 사용자**: 습관 목표 기간(시작일~종료일) 내의 습관 기록만 조회
-            - **운동/일상 타입 사용자**: 모든 습관 기록 조회 (서브 기록으로 사용)
-            - **과거 데이터 제외**: 목표 기간 이전의 습관 기록은 캘린더에 표시되지 않음
-            - **정확한 아이콘 표시**: records 배열에 목표 기간 내 기록만 포함되어 올바른 메인 기록 판별
-            
-            ### 실제 행동 기반 캘린더 시스템 (v1.8.4)
+            ### 습관 기록 특별 처리 (v1.8.5)
             - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 DB에 자동 생성
-            - **API 응답 제한**: 미래 날짜 기록은 DB에 있어도 캘린더 API에서 오늘까지만 응답
-            - **2단계 시스템**: 습관 등록(회색) → 완료 처리(색상)
-            - **완료 체크 시**: 해당 날짜에 주황색 아이콘 표시
+            - **오늘까지만 응답**: DB의 미래 기록은 API에서 제외 (실제 행동 기반)
+            - **습관 타입 사용자**: 작성된 모든 습관 기록 표시 (목표 기간 내, 오늘까지)
+            - **다른 타입 사용자**: 모든 습관 기록 표시 (서브 기록으로)
             
-            ### 습관 타입 사용자 특별 표시 로직 (v1.8.4)
-            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (오늘까지만)
-            - **자동 생성**: 메인 습관 등록 시 목표 기간 전체 자동 생성, 표시는 오늘까지
-            - **미래 기록 숨김**: DB에 미래 기록이 있어도 API에서 제외
-            
-            ### isCompleted 필드 (v1.8.0)
-            - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
-            - **습관 기록**: 실제 완료 체크 여부 (true/false)
+            ### isCompleted 필드 상태
+            - **습관 기록**: 실제 완료 체크 여부 (true=완료, false=미완료, null=미작성)
             - **일상/운동 기록**: 기록 존재 자체가 완료 (항상 true)
             
-            ### 사용자 타입별 캘린더 특징
+            ### 사용자 타입별 특징
             **습관 타입 사용자 (HABIT)**:
-            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (과거/현재)
-            - **2단계 시스템**: 등록(회색) → 완료(색상)
-            - **미래 미생성**: 미래 날짜는 아예 생성하지 않음
+            - 과거: 모든 습관 기록 + 미작성 회색 표시
+            - 현재: 작성된 습관만 표시 (3단계: 빈공간→회색→색상)
+            - 미래: 표시하지 않음
             
             **운동/일상 타입 사용자 (EXERCISE/DAILY)**:
-            - **모든 날짜 표시**: 과거/현재 모든 기록 표시
-            - **메인+서브 조합**: 메인 기록(운동/일상) + 서브 습관 기록 가능
-            - **자유로운 습관**: 습관 목표 기간 제한 없이 서브 기록으로 사용
-            - **완료: 색상, 미완료: 회색, 기록 없음: 표시 안함**
+            - 과거: 모든 기록 + 미작성 회색 표시  
+            - 현재: 작성된 기록만 표시
+            - 미래: 표시하지 않음
+            - 메인 기록 + 서브 습관 기록 조합 가능
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -84,7 +89,7 @@ public class CalendarController {
             examples = {
                 @ExampleObject(
                     name = "습관 타입 사용자 캘린더",
-                    summary = "HABIT 타입 사용자 - 자동 생성된 습관 기록, 오늘까지만 API 응답",
+                    summary = "HABIT 타입 사용자 - 날짜별 분리된 표시 로직 (과거/현재/미래)",
                     value = """
                     {
                         "statusCode": 200,
@@ -95,13 +100,24 @@ public class CalendarController {
                             "month": 11,
                             "monthlyRecords": [
                                 {
+                                    "date": "2025-11-17",
+                                    "mainRecordTypeForDate": "HABIT",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_17_completed",
+                                            "type": "HABIT",
+                                            "isCompleted": true
+                                        }
+                                    ]
+                                },
+                                {
                                     "date": "2025-11-18",
                                     "mainRecordTypeForDate": "HABIT",
                                     "records": [
                                         {
-                                            "id": "habit_record_18",
+                                            "id": "placeholder_habit_2025-11-18",
                                             "type": "HABIT",
-                                            "isCompleted": true
+                                            "isCompleted": false
                                         }
                                     ]
                                 },
@@ -115,6 +131,11 @@ public class CalendarController {
                                             "isCompleted": false
                                         }
                                     ]
+                                },
+                                {
+                                    "date": "2025-11-20",
+                                    "mainRecordTypeForDate": "HABIT",
+                                    "records": []
                                 }
                             ]
                         }
@@ -123,7 +144,7 @@ public class CalendarController {
                 ),
                 @ExampleObject(
                     name = "운동 타입 사용자 캘린더",
-                    summary = "EXERCISE 타입 사용자 - 메인 운동 + 서브 습관 조합, 과거 습관 기록 제외",
+                    summary = "EXERCISE 타입 사용자 - 날짜별 분리된 표시 + 플레이스홀더 포함",
                     value = """
                     {
                         "statusCode": 200,
@@ -134,31 +155,47 @@ public class CalendarController {
                             "month": 11,
                             "monthlyRecords": [
                                 {
-                                    "date": "2025-11-05",
+                                    "date": "2025-11-17",
                                     "mainRecordTypeForDate": "EXERCISE",
                                     "records": [
                                         {
-                                            "id": "exercise_record_001",
+                                            "id": "exercise_record_17",
                                             "type": "EXERCISE",
                                             "isCompleted": true
                                         },
                                         {
-                                            "id": "habit_record_001",
+                                            "id": "habit_record_17",
                                             "type": "HABIT",
                                             "isCompleted": true
                                         }
                                     ]
                                 },
                                 {
-                                    "date": "2025-11-06",
+                                    "date": "2025-11-18",
                                     "mainRecordTypeForDate": "EXERCISE",
                                     "records": [
                                         {
-                                            "id": "habit_record_002",
+                                            "id": "placeholder_exercise_2025-11-18",
+                                            "type": "EXERCISE",
+                                            "isCompleted": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "date": "2025-11-19",
+                                    "mainRecordTypeForDate": "EXERCISE",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_19",
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }
                                     ]
+                                },
+                                {
+                                    "date": "2025-11-20",
+                                    "mainRecordTypeForDate": "EXERCISE",
+                                    "records": []
                                 }
                             ]
                         }

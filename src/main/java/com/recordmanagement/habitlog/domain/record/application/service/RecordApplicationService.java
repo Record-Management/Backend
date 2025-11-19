@@ -240,24 +240,168 @@ public class RecordApplicationService {
         Map<LocalDate, List<UnifiedRecordResponse>> recordsByDate = allRecords.stream()
             .collect(Collectors.groupingBy(UnifiedRecordResponse::recordDate));
         
-        // 캘린더 응답 생성 - CalendarRecordResponse.RecordSummary로 변환
-        List<CalendarRecordResponse> calendarRecords = recordsByDate.entrySet()
-            .stream()
-            .map(entry -> {
-                LocalDate date = entry.getKey();
-                List<CalendarRecordResponse.RecordSummary> summaries = entry.getValue().stream()
-                    .map(CalendarRecordResponse.RecordSummary::from)
-                    .toList();
-                
-                // 해당 날짜의 메인 기록 타입 결정
-                RecordType mainRecordTypeForDate = determineMainRecordTypeForDate(user, date);
-                
-                return new CalendarRecordResponse(date, mainRecordTypeForDate, summaries);
-            })
-            .sorted((a, b) -> a.date().compareTo(b.date()))
-            .toList();
+        LocalDate today = LocalDate.now();
+        
+        // 전체 날짜 범위에 대해 캘린더 응답 생성 (요구사항에 맞는 표시 로직 적용)
+        List<CalendarRecordResponse> calendarRecords = new ArrayList<>();
+        
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            // 해당 날짜의 실제 기록들
+            List<UnifiedRecordResponse> dateRecords = recordsByDate.getOrDefault(date, new ArrayList<>());
+            
+            // 해당 날짜의 메인 기록 타입 결정
+            RecordType mainRecordTypeForDate = determineMainRecordTypeForDate(user, date);
+            
+            // 요구사항에 맞는 캘린더 레코드 생성
+            List<CalendarRecordResponse.RecordSummary> summaries = 
+                createCalendarSummariesWithDisplayLogic(user, date, dateRecords, today);
+            
+            calendarRecords.add(new CalendarRecordResponse(date, mainRecordTypeForDate, summaries));
+        }
+        
+        calendarRecords.sort((a, b) -> a.date().compareTo(b.date()));
         
         return CalendarResponse.of(yearMonth, calendarRecords);
+    }
+    
+    /**
+     * 요구사항에 맞는 캘린더 표시 로직 적용
+     * 
+     * 과거: 하루/운동 미작성 시 회색 아이콘, 습관 미완료 시 회색 아이콘
+     * 현재: 하루/운동 미작성 시 빈칸, 습관 미작성 시 빈칸/작성 시 회색/완료 시 색상
+     * 미래: 모든 기록 빈칸 (이미 상위에서 필터링됨)
+     */
+    private List<CalendarRecordResponse.RecordSummary> createCalendarSummariesWithDisplayLogic(
+            User user, LocalDate date, List<UnifiedRecordResponse> dateRecords, LocalDate today) {
+        
+        List<CalendarRecordResponse.RecordSummary> summaries = new ArrayList<>();
+        
+        // 실제 기록들을 타입별로 분류
+        Map<RecordType, List<UnifiedRecordResponse>> recordsByType = dateRecords.stream()
+            .collect(Collectors.groupingBy(UnifiedRecordResponse::type));
+        
+        if (date.isBefore(today)) {
+            // === 과거 날짜 처리 ===
+            summaries.addAll(createPastDateSummaries(recordsByType, date));
+            
+        } else if (date.equals(today)) {
+            // === 현재 날짜 처리 ===
+            summaries.addAll(createCurrentDateSummaries(user, recordsByType, date));
+            
+        }
+        // 미래 날짜는 빈 리스트 반환 (빈칸 처리)
+        
+        return summaries;
+    }
+    
+    /**
+     * 과거 날짜 캘린더 표시 로직
+     * - 하루/운동: 작성 시 색상, 미작성 시 회색 아이콘
+     * - 습관: 완료 시 색상, 미완료(미작성/작성) 시 회색 아이콘
+     */
+    private List<CalendarRecordResponse.RecordSummary> createPastDateSummaries(
+            Map<RecordType, List<UnifiedRecordResponse>> recordsByType, LocalDate date) {
+        
+        List<CalendarRecordResponse.RecordSummary> summaries = new ArrayList<>();
+        
+        // 하루 기록 처리
+        List<UnifiedRecordResponse> dailyRecords = recordsByType.getOrDefault(RecordType.DAILY, new ArrayList<>());
+        if (!dailyRecords.isEmpty()) {
+            // 작성된 경우: 색상 (isCompleted는 항상 true)
+            summaries.addAll(dailyRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        } else {
+            // 미작성인 경우: 회색 아이콘 생성
+            summaries.add(createPlaceholderSummary(RecordType.DAILY, date, false)); // 회색 표시 (미완료)
+        }
+        
+        // 운동 기록 처리
+        List<UnifiedRecordResponse> exerciseRecords = recordsByType.getOrDefault(RecordType.EXERCISE, new ArrayList<>());
+        if (!exerciseRecords.isEmpty()) {
+            // 작성된 경우: 색상 (isCompleted는 항상 true)
+            summaries.addAll(exerciseRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        } else {
+            // 미작성인 경우: 회색 아이콘 생성
+            summaries.add(createPlaceholderSummary(RecordType.EXERCISE, date, false)); // 회색 표시 (미완료)
+        }
+        
+        // 습관 기록 처리
+        List<UnifiedRecordResponse> habitRecords = recordsByType.getOrDefault(RecordType.HABIT, new ArrayList<>());
+        if (!habitRecords.isEmpty()) {
+            // 실제 기록이 있는 경우: 완료 여부에 따라 색상/회색
+            summaries.addAll(habitRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        } else {
+            // 미작성인 경우: 회색 아이콘 생성
+            summaries.add(createPlaceholderSummary(RecordType.HABIT, date, false)); // 회색 표시 (미완료)
+        }
+        
+        return summaries;
+    }
+    
+    /**
+     * 현재 날짜 캘린더 표시 로직
+     * - 하루/운동: 작성 시 색상, 미작성 시 빈칸
+     * - 습관: 완료 시 색상, 작성 시 회색, 미작성 시 빈칸
+     */
+    private List<CalendarRecordResponse.RecordSummary> createCurrentDateSummaries(
+            User user, Map<RecordType, List<UnifiedRecordResponse>> recordsByType, LocalDate date) {
+        
+        List<CalendarRecordResponse.RecordSummary> summaries = new ArrayList<>();
+        
+        // 하루 기록 처리: 작성된 것만 표시 (미작성 시 빈칸)
+        List<UnifiedRecordResponse> dailyRecords = recordsByType.getOrDefault(RecordType.DAILY, new ArrayList<>());
+        summaries.addAll(dailyRecords.stream()
+            .map(CalendarRecordResponse.RecordSummary::from)
+            .toList());
+        
+        // 운동 기록 처리: 작성된 것만 표시 (미작성 시 빈칸)  
+        List<UnifiedRecordResponse> exerciseRecords = recordsByType.getOrDefault(RecordType.EXERCISE, new ArrayList<>());
+        summaries.addAll(exerciseRecords.stream()
+            .map(CalendarRecordResponse.RecordSummary::from)
+            .toList());
+        
+        // 습관 기록 처리: 작성된 것만 표시 (미작성 시 빈칸, 자동 생성 기록도 실제 작성된 것으로 간주)
+        List<UnifiedRecordResponse> habitRecords = recordsByType.getOrDefault(RecordType.HABIT, new ArrayList<>());
+        
+        // 습관 타입 사용자의 자동 생성 기록 특별 처리
+        if (user.getMainRecordType() == RecordType.HABIT) {
+            // 자동 생성된 메인 습관 기록 중 실제 사용자가 수정한 것만 표시
+            summaries.addAll(habitRecords.stream()
+                .filter(record -> !isAutoGeneratedPlaceholder(record))
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        } else {
+            // 다른 타입 사용자는 모든 습관 기록 표시
+            summaries.addAll(habitRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        }
+        
+        return summaries;
+    }
+    
+    /**
+     * 자동 생성된 플레이스홀더 기록인지 확인
+     * (실제로는 더 정교한 로직이 필요할 수 있음)
+     */
+    private boolean isAutoGeneratedPlaceholder(UnifiedRecordResponse record) {
+        // 자동 생성된 기록은 기본 메모를 가지고 있음
+        return record.memo() != null && record.memo().contains("자동 생성된");
+    }
+    
+    /**
+     * 플레이스홀더 캘린더 아이콘 생성 (회색 표시용)
+     */
+    private CalendarRecordResponse.RecordSummary createPlaceholderSummary(
+            RecordType type, LocalDate date, boolean isCompleted) {
+        
+        String placeholderId = "placeholder-" + type.name().toLowerCase() + "-" + date.toString();
+        return new CalendarRecordResponse.RecordSummary(placeholderId, type, isCompleted);
     }
     
     /**
