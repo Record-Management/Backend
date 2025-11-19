@@ -36,22 +36,22 @@ public class CalendarController {
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
             
-            ### 캘린더 표시 로직 (v1.8.5) - 날짜 기준 분리된 표시
+            ### 캘린더 표시 로직 (v1.8.6) - 프론트 분기처리 최적화
             
-            **과거 날짜**: 모든 기록 표시, 미작성 기록은 회색 아이콘으로 표시
-            - 작성된 기록: 색상 아이콘으로 표시
-            - 미작성 기록: 회색 아이콘으로 표시 (플레이스홀더)
-            - 목적: 사용자가 과거 기록 현황을 전체적으로 파악 가능
+            **과거 날짜**: 작성된 기록만 표시, 미작성은 빈 배열
+            - 작성된 기록: `records: [실제기록객체]` → 색상 아이콘
+            - 미작성 기록: `records: []` → 프론트에서 `length === 0 && 과거날짜`로 회색 아이콘 처리
+            - 장점: 플레이스홀더 객체 없어서 타입 분기처리 불필요
             
-            **현재 날짜 (오늘)**: 작성된 기록만 표시, 미작성 기록은 빈 상태
-            - 작성된 기록: 색상 아이콘으로 표시
-            - 미작성 기록: 아무것도 표시하지 않음 (빈 공간)
-            - 습관 기록: 3단계 시스템 (미작성=빈공간, 작성=회색, 완료=색상)
-            - 목적: 오늘 해야할 일을 명확하게 구분
+            **현재 날짜 (오늘)**: 작성된 기록만 표시, 미작성은 빈 배열
+            - 작성된 기록: `records: [실제기록객체]` → 색상/회색 아이콘
+            - 미작성 기록: `records: []` → 프론트에서 `length === 0 && 현재날짜`로 빈 공간 처리
+            - 습관: 3단계 시스템 (미작성=빈공간, 작성=회색, 완료=색상)
+            - 홈 화면: `records.length >= 2`로 간단한 작성 제한 체크
             
-            **미래 날짜**: 아무것도 표시하지 않음 (완전 빈 상태)
-            - DB에 미래 기록이 있어도 API 응답에서 제외
-            - 목적: 실제 행동 기반 시스템, 미리 계획하지 않음
+            **미래 날짜**: 완전 빈 배열
+            - `records: []` → 프론트에서 `length === 0 && 미래날짜`로 빈 공간 처리
+            - DB에 미래 자동생성 기록이 있어도 API 응답에서 제외
             
             ### 메인 기록 타입 표시 (v1.6.0)
             - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
@@ -89,7 +89,7 @@ public class CalendarController {
             examples = {
                 @ExampleObject(
                     name = "습관 타입 사용자 캘린더",
-                    summary = "HABIT 타입 사용자 - 날짜별 분리된 표시 로직 (과거/현재/미래)",
+                    summary = "HABIT 타입 사용자 - 프론트 분기처리 최적화 (빈 배열 활용)",
                     value = """
                     {
                         "statusCode": 200,
@@ -113,13 +113,7 @@ public class CalendarController {
                                 {
                                     "date": "2025-11-18",
                                     "mainRecordTypeForDate": "HABIT",
-                                    "records": [
-                                        {
-                                            "id": "placeholder_habit_2025-11-18",
-                                            "type": "HABIT",
-                                            "isCompleted": false
-                                        }
-                                    ]
+                                    "records": []
                                 },
                                 {
                                     "date": "2025-11-19",
@@ -143,8 +137,8 @@ public class CalendarController {
                     """
                 ),
                 @ExampleObject(
-                    name = "운동 타입 사용자 캘린더",
-                    summary = "EXERCISE 타입 사용자 - 날짜별 분리된 표시 + 플레이스홀더 포함",
+                    name = "운동 타입 사용자 캘린더", 
+                    summary = "EXERCISE 타입 사용자 - 빈 배열로 미작성 상태 표시",
                     value = """
                     {
                         "statusCode": 200,
@@ -173,13 +167,7 @@ public class CalendarController {
                                 {
                                     "date": "2025-11-18",
                                     "mainRecordTypeForDate": "EXERCISE",
-                                    "records": [
-                                        {
-                                            "id": "placeholder_exercise_2025-11-18",
-                                            "type": "EXERCISE",
-                                            "isCompleted": false
-                                        }
-                                    ]
+                                    "records": []
                                 },
                                 {
                                     "date": "2025-11-19",

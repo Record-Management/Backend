@@ -267,7 +267,7 @@ public class RecordApplicationService {
     /**
      * 요구사항에 맞는 캘린더 표시 로직 적용
      * 
-     * 과거: 하루/운동 미작성 시 회색 아이콘, 습관 미완료 시 회색 아이콘
+     * 과거: 하루/운동 미작성 시 빈 배열(프론트에서 회색 처리), 습관 미완료 시 회색 아이콘
      * 현재: 하루/운동 미작성 시 빈칸, 습관 미작성 시 빈칸/작성 시 회색/완료 시 색상
      * 미래: 모든 기록 빈칸 (이미 상위에서 필터링됨)
      */
@@ -296,8 +296,8 @@ public class RecordApplicationService {
     
     /**
      * 과거 날짜 캘린더 표시 로직
-     * - 하루/운동: 작성 시 색상, 미작성 시 회색 아이콘
-     * - 습관: 완료 시 색상, 미완료(미작성/작성) 시 회색 아이콘
+     * - 하루/운동: 작성 시 색상, 미작성 시 빈 배열 (프론트에서 회색 처리)
+     * - 습관: 완료 시 색상, 미완료 시 회색, 미작성 시 빈 배열 (프론트에서 회색 처리)
      */
     private List<CalendarRecordResponse.RecordSummary> createPastDateSummaries(
             Map<RecordType, List<UnifiedRecordResponse>> recordsByType, LocalDate date) {
@@ -311,10 +311,8 @@ public class RecordApplicationService {
             summaries.addAll(dailyRecords.stream()
                 .map(CalendarRecordResponse.RecordSummary::from)
                 .toList());
-        } else {
-            // 미작성인 경우: 회색 아이콘 생성
-            summaries.add(createPlaceholderSummary(RecordType.DAILY, date, false)); // 회색 표시 (미완료)
         }
+        // 미작성인 경우: 아무것도 추가하지 않음 (빈 배열로 프론트에서 처리)
         
         // 운동 기록 처리
         List<UnifiedRecordResponse> exerciseRecords = recordsByType.getOrDefault(RecordType.EXERCISE, new ArrayList<>());
@@ -323,10 +321,8 @@ public class RecordApplicationService {
             summaries.addAll(exerciseRecords.stream()
                 .map(CalendarRecordResponse.RecordSummary::from)
                 .toList());
-        } else {
-            // 미작성인 경우: 회색 아이콘 생성
-            summaries.add(createPlaceholderSummary(RecordType.EXERCISE, date, false)); // 회색 표시 (미완료)
         }
+        // 미작성인 경우: 아무것도 추가하지 않음 (빈 배열로 프론트에서 처리)
         
         // 습관 기록 처리
         List<UnifiedRecordResponse> habitRecords = recordsByType.getOrDefault(RecordType.HABIT, new ArrayList<>());
@@ -335,10 +331,8 @@ public class RecordApplicationService {
             summaries.addAll(habitRecords.stream()
                 .map(CalendarRecordResponse.RecordSummary::from)
                 .toList());
-        } else {
-            // 미작성인 경우: 회색 아이콘 생성
-            summaries.add(createPlaceholderSummary(RecordType.HABIT, date, false)); // 회색 표시 (미완료)
         }
+        // 미작성인 경우: 아무것도 추가하지 않음 (빈 배열로 프론트에서 처리)
         
         return summaries;
     }
@@ -394,15 +388,6 @@ public class RecordApplicationService {
         return record.memo() != null && record.memo().contains("자동 생성된");
     }
     
-    /**
-     * 플레이스홀더 캘린더 아이콘 생성 (회색 표시용)
-     */
-    private CalendarRecordResponse.RecordSummary createPlaceholderSummary(
-            RecordType type, LocalDate date, boolean isCompleted) {
-        
-        String placeholderId = "placeholder-" + type.name().toLowerCase() + "-" + date.toString();
-        return new CalendarRecordResponse.RecordSummary(placeholderId, type, isCompleted);
-    }
     
     /**
      * 특정 날짜의 메인 기록 타입을 결정합니다.
