@@ -53,10 +53,10 @@ public class CalendarController {
             - **현재 날짜만 생성**: 습관 등록은 현재 날짜에만 기록 생성
             - **완료 체크 시**: 해당 날짜에 주황색 아이콘 표시
             
-            ### 습관 타입 사용자 특별 표시 로직 (v1.8.2)
-            - **오늘만 표시**: 오늘 날짜의 습관 기록만 캘린더에 표시
-            - **과거 빈칸 처리**: 과거 날짜 습관 기록은 작성했어도 표시하지 않음
+            ### 습관 타입 사용자 특별 표시 로직 (v1.8.3)
+            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (과거/현재)
             - **2단계 시스템**: 습관 등록(회색) → 완료 처리(색상)
+            - **미래 미생성**: 미래 날짜는 아예 생성하지 않음
             
             ### isCompleted 필드 (v1.8.0)
             - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
@@ -65,8 +65,7 @@ public class CalendarController {
             
             ### 사용자 타입별 캘린더 특징
             **습관 타입 사용자 (HABIT)**:
-            - **오늘만 표시**: 오늘 날짜의 습관 기록만 캘린더에 표시
-            - **과거 빈칸**: 과거 습관 기록은 작성했어도 표시 안함
+            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (과거/현재)
             - **2단계 시스템**: 등록(회색) → 완료(색상)
             - **미래 미생성**: 미래 날짜는 아예 생성하지 않음
             
@@ -85,7 +84,7 @@ public class CalendarController {
             examples = {
                 @ExampleObject(
                     name = "습관 타입 사용자 캘린더",
-                    summary = "HABIT 타입 사용자 - 오늘만 표시, 과거는 빈칸 처리",
+                    summary = "HABIT 타입 사용자 - 과거/현재 모든 작성된 습관 기록 표시",
                     value = """
                     {
                         "statusCode": 200,
@@ -95,6 +94,17 @@ public class CalendarController {
                             "year": 2025,
                             "month": 11,
                             "monthlyRecords": [
+                                {
+                                    "date": "2025-11-12",
+                                    "mainRecordTypeForDate": "HABIT",
+                                    "records": [
+                                        {
+                                            "id": "habit_record_past",
+                                            "type": "HABIT",
+                                            "isCompleted": true
+                                        }
+                                    ]
+                                },
                                 {
                                     "date": "2025-11-14",
                                     "mainRecordTypeForDate": "HABIT",
