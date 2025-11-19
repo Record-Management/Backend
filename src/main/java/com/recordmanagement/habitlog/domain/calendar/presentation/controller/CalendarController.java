@@ -47,16 +47,16 @@ public class CalendarController {
             - **과거 데이터 제외**: 목표 기간 이전의 습관 기록은 캘린더에 표시되지 않음
             - **정확한 아이콘 표시**: records 배열에 목표 기간 내 기록만 포함되어 올바른 메인 기록 판별
             
-            ### 실제 행동 기반 캘린더 시스템 (v1.8.2)
-            - **일상/운동과 동일한 UX**: 사용자가 실제 행동(완료 체크 등)을 할 때만 캘린더에 표시
-            - **미래 날짜 생성 제거**: 습관 등록 시 미래 날짜까지 미리 생성하지 않음
-            - **현재 날짜만 생성**: 습관 등록은 현재 날짜에만 기록 생성
+            ### 실제 행동 기반 캘린더 시스템 (v1.8.4)
+            - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 DB에 자동 생성
+            - **API 응답 제한**: 미래 날짜 기록은 DB에 있어도 캘린더 API에서 오늘까지만 응답
+            - **2단계 시스템**: 습관 등록(회색) → 완료 처리(색상)
             - **완료 체크 시**: 해당 날짜에 주황색 아이콘 표시
             
-            ### 습관 타입 사용자 특별 표시 로직 (v1.8.3)
-            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (과거/현재)
-            - **2단계 시스템**: 습관 등록(회색) → 완료 처리(색상)
-            - **미래 미생성**: 미래 날짜는 아예 생성하지 않음
+            ### 습관 타입 사용자 특별 표시 로직 (v1.8.4)
+            - **모든 날짜 표시**: 작성된 모든 습관 기록을 캘린더에 표시 (오늘까지만)
+            - **자동 생성**: 메인 습관 등록 시 목표 기간 전체 자동 생성, 표시는 오늘까지
+            - **미래 기록 숨김**: DB에 미래 기록이 있어도 API에서 제외
             
             ### isCompleted 필드 (v1.8.0)
             - **모든 기록 타입**: `isCompleted` 필드로 완료 상태 명시
@@ -84,7 +84,7 @@ public class CalendarController {
             examples = {
                 @ExampleObject(
                     name = "습관 타입 사용자 캘린더",
-                    summary = "HABIT 타입 사용자 - 과거/현재 모든 작성된 습관 기록 표시",
+                    summary = "HABIT 타입 사용자 - 자동 생성된 습관 기록, 오늘까지만 API 응답",
                     value = """
                     {
                         "statusCode": 200,
@@ -95,22 +95,22 @@ public class CalendarController {
                             "month": 11,
                             "monthlyRecords": [
                                 {
-                                    "date": "2025-11-12",
+                                    "date": "2025-11-18",
                                     "mainRecordTypeForDate": "HABIT",
                                     "records": [
                                         {
-                                            "id": "habit_record_past",
+                                            "id": "habit_record_18",
                                             "type": "HABIT",
                                             "isCompleted": true
                                         }
                                     ]
                                 },
                                 {
-                                    "date": "2025-11-14",
+                                    "date": "2025-11-19",
                                     "mainRecordTypeForDate": "HABIT",
                                     "records": [
                                         {
-                                            "id": "habit_record_today",
+                                            "id": "habit_record_19_auto_generated",
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }

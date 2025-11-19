@@ -657,8 +657,9 @@ public class RecordApplicationService {
     }
     
     /**
-     * 습관 목표 기간 내에 있는 습관 기록만 조회
-     * 목표 기간 이전의 과거 데이터는 제외하여 메인 기록 아이콘 표시 오류 방지
+     * 습관 목표 기간 내에 있는 습관 기록만 조회 (오늘까지만)
+     * - 목표 기간 이전의 과거 데이터는 제외하여 메인 기록 아이콘 표시 오류 방지
+     * - 미래 날짜 기록은 제외하여 프론트엔드에 오늘까지만 전달
      */
     private List<HabitRecord> getHabitRecordsInGoalPeriod(UserId userId, LocalDate startDate, LocalDate endDate) {
         // 사용자 정보 조회
@@ -673,15 +674,19 @@ public class RecordApplicationService {
         // 습관 목표 기간 계산
         LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
+        LocalDate today = LocalDate.now();
+        
+        // 목표 기간을 오늘까지로 제한 (미래 날짜 제외)
+        LocalDate effectiveHabitEndDate = habitEndDate.isBefore(today) ? habitEndDate : today;
         
         // 조회 범위와 습관 기간의 교집합 계산
         LocalDate rangeStart = habitStartDate.isAfter(startDate) ? habitStartDate : startDate;
-        LocalDate rangeEnd = habitEndDate.isBefore(endDate) ? habitEndDate : endDate;
+        LocalDate rangeEnd = effectiveHabitEndDate.isBefore(endDate) ? effectiveHabitEndDate : endDate;
         
         // 교집합이 없는 경우 빈 리스트 반환
         if (rangeStart.isAfter(rangeEnd)) {
-            log.debug("습관 목표 기간과 조회 범위의 교집합이 없음: userId={}, habitPeriod=[{} ~ {}], queryRange=[{} ~ {}]", 
-                    userId.getValue(), habitStartDate, habitEndDate, startDate, endDate);
+            log.debug("습관 목표 기간과 조회 범위의 교집합이 없음: userId={}, habitPeriod=[{} ~ {}], effectiveRange=[{} ~ {}], queryRange=[{} ~ {}]", 
+                    userId.getValue(), habitStartDate, effectiveHabitEndDate, startDate, endDate);
             return new ArrayList<>();
         }
         

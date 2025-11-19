@@ -52,10 +52,10 @@ public class HabitRecordController {
                - memo: 메모/글쓰기
                - isMainRecord: 메인 기록 여부 (명시적 설정)
                
-               ** 습관 기록 특징 (v1.8.2):**
-               - **현재 날짜에만 생성**: 습관 등록 시 현재 날짜에만 기록 생성 (미래 날짜 미리 생성하지 않음)
+               ** 습관 기록 특징 (v1.8.3):**
+               - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 자동 생성
                - **2단계 시스템**: 등록(회색, isCompleted=false) → 완료(색상, isCompleted=true)
-               - **습관 타입 특별 표시**: 작성된 모든 습관 기록 캘린더 표시 (과거/현재)
+               - **습관 타입 특별 표시**: 작성된 모든 습관 기록 캘린더 표시 (오늘까지만)
                - **다른 타입 사용자**: 모든 날짜 습관 기록 표시 (서브 기록으로)
                - **목표 진행률 자동 업데이트**: 습관 기록 생성/완료 시 목표 달성률 실시간 반영
                
@@ -71,7 +71,7 @@ public class HabitRecordController {
                - 하루 최대 2가지 기록 타입 작성 가능
                - 습관 타입 사용자: 습관 목표 기간 내 날짜만 허용 (현재 날짜 위주)
                - 다른 타입 사용자: 과거~오늘 날짜만 허용
-               - 미래 날짜 미리 생성 안함: 실제 작성 시점에만 기록 생성
+               - 메인 습관 기록: 목표 종료일까지 DB 자동 생성, API는 오늘까지만 응답
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
@@ -83,7 +83,7 @@ public class HabitRecordController {
                 examples = {
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
                         name = "습관 타입 사용자의 메인 기록",
-                        summary = "메인 기록 타입이 습관인 사용자의 메인 습관 기록 작성",
+                        summary = "메인 기록 타입이 습관인 사용자의 메인 습관 기록 작성 + 목표 기간 자동 생성",
                         value = """
                             {
                               "statusCode": 200,
@@ -222,9 +222,9 @@ public class HabitRecordController {
                  • 사용자의 메인 기록 타입이 EXERCISE/DAILY → 서브 기록
                
                **자동 처리 (습관 타입 사용자만):**
-               1. **오늘 기록 생성**: 현재 날짜에만 기록 생성 (미래 날짜 미리 생성하지 않음)
+               1. **메인 습관 자동 생성**: 메인 기록 생성 시 목표 종료일까지 자동 생성
                2. **2단계 시스템**: 생성 시 isCompleted=false (회색), 완료 API로 true 변경 (색상)
-               3. **캘린더 특별 표시**: 작성된 모든 습관 기록 표시 (과거/현재)
+               3. **캘린더 특별 표시**: 작성된 모든 습관 기록 표시 (오늘까지만 API 응답)
                4. **기존 메인 기록 변경**: 새로운 메인 기록 생성 시 기존 메인 기록들을 서브로 변경
                5. **목표 진행률 업데이트**: 습관 기록 생성 후 자동으로 목표 달성률 계산
                

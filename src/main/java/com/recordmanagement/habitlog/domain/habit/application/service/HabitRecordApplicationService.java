@@ -154,6 +154,19 @@ public class HabitRecordApplicationService {
         // 메인 기록이고 사용자의 메인 기록 타입이 HABIT인 경우 기존 메인 기록들을 서브로 변경
         if (isMainRecord && user.getMainRecordType() == RecordType.HABIT) {
             updateExistingMainRecordsToSub(user, savedHabitRecord);
+            
+            // 메인 습관 기록 생성 시 목표 종료일까지 자동 생성
+            try {
+                var recordApplicationService = applicationContext.getBean(
+                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
+                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(command.userId());
+                
+                log.info("메인 습관 기록 목표 기간 자동 생성 완료: userId={}", command.userId().getValue());
+            } catch (Exception e) {
+                log.error("메인 습관 기록 자동 생성 실패: userId={}, error={}", 
+                        command.userId().getValue(), e.getMessage(), e);
+                // 자동 생성 실패가 메인 기록 생성을 실패시키지 않도록 함
+            }
         }
         
         // 습관 기록 생성 후 목표 진행률 업데이트
