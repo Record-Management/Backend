@@ -26,13 +26,13 @@ public class NotificationHistoryResponse {
     @Schema(description = "알림 고유 식별자", example = "notification-123")
     private final String id;
 
-    @Schema(description = "알림 타입", example = "DAILY_RECORD_REMINDER")
+    @Schema(description = "알림 타입", example = "HABIT_REMINDER")
     private final String type;
 
-    @Schema(description = "알림 제목", example = "하루 기록")
+    @Schema(description = "알림 제목", example = "습관 기록")
     private final String title;
 
-    @Schema(description = "알림 메시지", example = "아직 '하루 기록'을 작성하지 않았어요. 하루의 작은 순간이 쌓이면 큰 변화가 돼요.")
+    @Schema(description = "알림 메시지", example = "아직 '습관 기록'을 작성하지 않았어요. 기록이 쌓일수록 습관이 되고, 어느새 습관이 자연스러워질 거예요.")
     private final String message;
 
     @Schema(description = "알림 발송 시간", example = "2025-11-17T19:00:00")

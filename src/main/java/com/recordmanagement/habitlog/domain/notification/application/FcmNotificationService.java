@@ -70,8 +70,13 @@ public class FcmNotificationService {
             return;
         }
 
-        // 알림 설정 확인 (일관성 있는 서비스 메서드 사용)
-        boolean isNotificationEnabled = notificationApplicationService.isDailyRecordNotificationEnabled(userId);
+        // 메인 기록 타입에 따른 알림 설정 확인
+        boolean isNotificationEnabled = switch (user.getMainRecordType()) {
+            case HABIT -> notificationApplicationService.isHabitNotificationEnabled(userId);
+            case EXERCISE -> notificationApplicationService.isExerciseNotificationEnabled(userId);
+            case DAILY -> notificationApplicationService.isDailyRecordNotificationEnabled(userId);
+            default -> notificationApplicationService.isDailyRecordNotificationEnabled(userId);
+        };
 
         if (!isNotificationEnabled) {
             log.info("메인 기록 알림이 비활성화되어 있습니다: userId={}", userId.getValue());
@@ -83,10 +88,18 @@ public class FcmNotificationService {
                 .getStrategy(user.getMainRecordType())
                 .createDailyRecordReminderMessage();
 
+        // 메인 기록 타입에 따른 NotificationType 결정
+        NotificationType notificationType = switch (user.getMainRecordType()) {
+            case HABIT -> NotificationType.HABIT_REMINDER;
+            case EXERCISE -> NotificationType.EXERCISE_REMINDER;
+            case DAILY -> NotificationType.DAILY_RECORD_REMINDER;
+            default -> NotificationType.DAILY_RECORD_REMINDER;
+        };
+
         // 추가 데이터 설정
         Map<String, String> data = new HashMap<>();
         data.put("mainType", user.getMainRecordType().name());
-        data.put("notificationType", "DAILY_RECORD_REMINDER");
+        data.put("notificationType", notificationType.name());
         data.put("imageUrl", NotificationImageUtil.getImageUrl(user.getMainRecordType()));
 
         // 알림 발송 (DIP 적용: 추상화된 NotificationSender 사용)
@@ -101,7 +114,7 @@ public class FcmNotificationService {
             // 알림 발송 성공 시에만 히스토리 저장
             NotificationHistory history = new NotificationHistory(
                     userId, 
-                    NotificationType.DAILY_RECORD_REMINDER, 
+                    notificationType, 
                     message.getTitle(), 
                     message.getBody()
             );

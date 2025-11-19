@@ -21,13 +21,19 @@ import java.util.Map;
 /**
  * 매일 알림 스케줄러
  * 
- * 매일 오후 7시(한국시간)에 실행되어 다음 조건에 해당하는 사용자들에게 알림을 발송합니다:
- * 1. 오늘 기록을 등록하지 않은 사용자
- * 2. 목표를 설정하지 않은 사용자
+ * 매일 오후 7시(한국시간)에 실행되어 다음 조건에 해당하는 사용자들에게 메인 기록 타입에 맞는 알림을 발송합니다:
+ * 1. 오늘 기록을 등록하지 않은 사용자 (HABIT/EXERCISE/DAILY_RECORD_REMINDER)
+ * 2. 목표를 설정하지 않은 사용자 (GOAL_SETTING_REMINDER)
+ * 
+ * 알림 타입별 발송 로직:
+ * - HABIT 타입 사용자 → HABIT_REMINDER
+ * - EXERCISE 타입 사용자 → EXERCISE_REMINDER  
+ * - DAILY 타입 사용자 → DAILY_RECORD_REMINDER
+ * - 목표 미설정 사용자 → GOAL_SETTING_REMINDER
  * 
  * @author 전우선
  * @since 2025.11.01
- * @version 1.0.0
+ * @version 1.1.0
  */
 @Slf4j
 @Component
@@ -90,7 +96,7 @@ public class DailyNotificationScheduler {
                                 // 목표 미설정 알림
                                 fcmNotificationService.sendGoalSettingReminderNotification(user.getId());
                             } else {
-                                // 메인 기록 미등록 알림
+                                // 메인 기록 미등록 알림 (메서드 내부에서 메인 기록 타입별 처리)
                                 fcmNotificationService.sendDailyRecordReminderNotification(user.getId());
                             }
                             notificationSentCount++;

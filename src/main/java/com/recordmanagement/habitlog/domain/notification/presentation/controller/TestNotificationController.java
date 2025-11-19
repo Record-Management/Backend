@@ -41,7 +41,11 @@ public class TestNotificationController {
             - 활성 사용자 조회
             - 오늘 기록 안 한 사용자 확인
             - 목표 설정 안 한 사용자 확인
-            - 조건에 맞는 사용자에게 즉시 알림 발송
+            - 메인 기록 타입에 따라 적절한 알림 발송
+              * HABIT 타입 → HABIT_REMINDER
+              * EXERCISE 타입 → EXERCISE_REMINDER  
+              * DAILY 타입 → DAILY_RECORD_REMINDER
+              * 목표 미설정 → GOAL_SETTING_REMINDER
             
             ### 사용 시나리오
             - FCM 토큰 등록 후 즉시 알림 테스트

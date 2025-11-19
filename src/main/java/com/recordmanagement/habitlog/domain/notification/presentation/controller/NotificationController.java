@@ -44,10 +44,13 @@ import jakarta.validation.Valid;
  * - habitNotification: 습관 기록 미등록 알림
  * - goalSettingNotification: 목표 미설정 알림
  * 
- * 자동 알림 시스템:
+ * 자동 알림 시스템 (v2.1.1):
  * - 매일 오후 7시(한국시간) 자동 발송
- * - 오늘 기록 안 한 사용자 대상
- * - 목표 설정 안 한 사용자 대상
+ * - 메인 기록 타입에 따른 맞춤 알림:
+ *   * HABIT 타입 → HABIT_REMINDER
+ *   * EXERCISE 타입 → EXERCISE_REMINDER
+ *   * DAILY 타입 → DAILY_RECORD_REMINDER
+ *   * 목표 미설정 → GOAL_SETTING_REMINDER
  * - 개인별 알림 설정에 따라 발송
  * 
  * 히스토리 저장 개선 사항 (v2.1.0):
