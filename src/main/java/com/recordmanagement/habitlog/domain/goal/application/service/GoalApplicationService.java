@@ -12,6 +12,7 @@ import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +56,7 @@ public class GoalApplicationService {
      * @return 생성된 목표
      */
     @Transactional
+    @CacheEvict(value = "calendar", allEntries = true)
     public Goal createGoal(UserId userId, RecordType recordType, int goalDays) {
         LocalDate startDate = LocalDate.now(); // 목표 설정 당일부터 시작
         log.info("Creating new goal for user: {}, recordType: {}, goalDays: {}, startDate: {}",
