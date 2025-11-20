@@ -343,7 +343,7 @@ public class HabitRecordApplicationService {
     
     /**
      * 메인+서브 상황에서 메인 삭제 처리
-     * 서브 중 첫 번째를 메인으로 전환하고 오늘부터 목표 종료일까지 기존 메인 기록 삭제 후 새 메인 기록 자동 생성
+     * 서브 중 첫 번째를 메인으로 전환하고 오늘부터 목표 종료일까지 기존 메인 기록 삭제 후 내일부터 새 메인 기록 자동 생성
      */
     private void handleMainWithSubDeletion(HabitRecord mainRecord, List<HabitRecord> subRecords, UserId userId) {
         User user = userRepository.findById(userId)
@@ -466,38 +466,59 @@ public class HabitRecordApplicationService {
     }
     
     /**
-     * 메인 습관 기록 등록시 기존 메인 기록들을 서브로 변경 (미래 날짜 생성하지 않음)
+     * 서브 습관을 메인 습관으로 전환 시:
+     * 1. 오늘자 기존 메인기록 → 서브로 변경  
+     * 2. 내일부터 목표종료일까지 기존 메인기록 → 삭제
      */
     private void updateExistingMainRecordsToSub(User user, HabitRecord newMainRecord) {
+        LocalDate today = LocalDate.now();
         LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
+        LocalDate tomorrow = today.plusDays(1);
         
-        // 전체 습관 기간의 기존 메인 습관 기록을 서브로 변경 (새로 등록한 기록 제외)
-        List<HabitRecord> existingMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            user.getId(), habitStartDate, habitEndDate
-        ).stream()
-        .filter(HabitRecord::isMainRecord)
-        .filter(record -> !record.getId().equals(newMainRecord.getId())) // 새로 등록한 기록 제외
-        .toList();
+        // 1. 오늘자 기존 메인 습관 기록을 서브로 변경
+        List<HabitRecord> todayMainRecords = habitRecordRepository.findByUserIdAndRecordDate(user.getId(), today)
+                .stream()
+                .filter(HabitRecord::isMainRecord)
+                .filter(record -> !record.getId().equals(newMainRecord.getId())) // 새로 등록한 기록 제외
+                .toList();
         
         int updatedCount = 0;
-        
-        // 기존 메인 기록이 있는 날짜들을 서브 기록으로 변경
-        for (HabitRecord existingMainRecord : existingMainRecords) {
+        for (HabitRecord existingMainRecord : todayMainRecords) {
             HabitRecord updatedRecord = existingMainRecord.updateMainRecordStatus(false);
             habitRecordRepository.save(updatedRecord);
             updatedCount++;
-            log.debug("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
+            log.debug("오늘자 기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
                     existingMainRecord.getId().getValue(), existingMainRecord.getRecordDate());
         }
         
-        log.info("기존 메인 습관 기록 서브 변경 완료: userId={}, 변경된 기록 수={}", 
+        // 2. 내일부터 목표종료일까지 기존 메인 습관 기록 삭제
+        if (tomorrow.isBefore(habitEndDate) || tomorrow.isEqual(habitEndDate)) {
+            List<HabitRecord> futureMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+                user.getId(), tomorrow, habitEndDate
+            ).stream()
+            .filter(HabitRecord::isMainRecord)
+            .toList();
+            
+            int deletedCount = 0;
+            for (HabitRecord futureMainRecord : futureMainRecords) {
+                habitRecordRepository.deleteById(futureMainRecord.getId());
+                deletedCount++;
+                log.debug("미래 메인 습관 기록 삭제: habitRecordId={}, recordDate={}, habitType={}", 
+                        futureMainRecord.getId().getValue(), futureMainRecord.getRecordDate(), futureMainRecord.getHabitType());
+            }
+            
+            log.info("서브→메인 전환으로 미래 메인 습관 기록 삭제 완료: userId={}, 삭제된 기록 수={}, 기간=[{} ~ {}]", 
+                    user.getId().getValue(), deletedCount, tomorrow, habitEndDate);
+        }
+        
+        log.info("서브→메인 전환 처리 완료: userId={}, 오늘자 서브 변경={}, 내일부터 삭제 완료", 
                 user.getId().getValue(), updatedCount);
     }
     
     /**
-     * 서브 습관을 메인으로 변경시 오늘부터 목표 종료일까지 새로운 메인 습관 기록 자동 생성
-     * (기존 메인 습관은 이미 삭제된 상태)
+     * 서브 습관을 메인으로 변경시 내일부터 목표 종료일까지 새로운 메인 습관 기록 자동 생성
+     * (기존 메인 습관은 이미 삭제된 상태, 오늘자 기존 메인은 서브로 변경된 상태)
      */
     private void updateMainHabitRecordsForRemainingPeriod(UserId userId, HabitRecord newMainRecord) {
         User user = userRepository.findById(userId)
@@ -514,7 +535,7 @@ public class HabitRecordApplicationService {
         
         int createdCount = 0;
         
-        // 오늘부터 목표 종료일까지 새로운 메인 습관 기록 생성 (오늘 것 제외)
+        // 내일부터 목표 종료일까지 새로운 메인 습관 기록 생성
         for (LocalDate date = today.plusDays(1); !date.isAfter(habitEndDate); date = date.plusDays(1)) {
             // 해당 날짜에 이미 메인 습관 기록이 있는지 확인
             boolean hasMainHabitRecord = habitRecordRepository.findByUserIdAndRecordDate(userId, date)
