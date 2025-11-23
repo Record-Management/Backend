@@ -53,10 +53,11 @@ public class CalendarController {
             - `records: []` → 프론트에서 `length === 0 && 미래날짜`로 빈 공간 처리
             - DB에 미래 자동생성 기록이 있어도 API 응답에서 제외
             
-            ### 메인 기록 타입 표시 (v1.6.0)
+            ### 메인 기록 타입 표시 (v1.9.0)
             - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
+            - **목표 기간 내**: 해당 목표의 메인 기록 타입 반환 (HABIT/EXERCISE/DAILY)
+            - **목표 미설정 기간**: `null` 반환 (목표가 설정되지 않은 기간)
             - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
-            - 목표 설정 시점에 결정된 메인 기록 타입이 목표 기간 동안 일관되게 유지됩니다
             
             ### 습관 기록 특별 처리 (v1.8.5)
             - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 DB에 자동 생성
@@ -184,6 +185,50 @@ public class CalendarController {
                                     "date": "2025-11-20",
                                     "mainRecordTypeForDate": "EXERCISE",
                                     "records": []
+                                }
+                            ]
+                        }
+                    }
+                    """
+                ),
+                @ExampleObject(
+                    name = "목표 미설정 기간 캘린더",
+                    summary = "목표가 설정되지 않은 기간 - mainRecordTypeForDate가 null",
+                    value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "캘린더가 성공적으로 조회되었습니다",
+                        "data": {
+                            "year": 2025,
+                            "month": 10,
+                            "monthlyRecords": [
+                                {
+                                    "date": "2025-10-22",
+                                    "mainRecordTypeForDate": null,
+                                    "records": [
+                                        {
+                                            "id": "daily_record_22",
+                                            "type": "DAILY",
+                                            "isCompleted": true
+                                        }
+                                    ]
+                                },
+                                {
+                                    "date": "2025-10-23",
+                                    "mainRecordTypeForDate": null,
+                                    "records": []
+                                },
+                                {
+                                    "date": "2025-11-08",
+                                    "mainRecordTypeForDate": null,
+                                    "records": [
+                                        {
+                                            "id": "habit_record_08",
+                                            "type": "HABIT",
+                                            "isCompleted": false
+                                        }
+                                    ]
                                 }
                             ]
                         }

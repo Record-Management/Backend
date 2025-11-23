@@ -414,9 +414,9 @@ public class RecordApplicationService {
             }
         }
         
-        // 해당 날짜가 어떤 목표 기간에도 속하지 않는 경우 현재 메인 타입 반환
-        // (목표 설정 전 데이터나 예외적 상황 처리)
-        return user.getMainRecordType() != null ? user.getMainRecordType() : RecordType.DAILY;
+        // 해당 날짜가 어떤 목표 기간에도 속하지 않는 경우 null 반환
+        // (목표가 설정되지 않은 기간은 메인 기록 타입이 없음)
+        return null;
     }
     
     @Transactional(readOnly = true)
