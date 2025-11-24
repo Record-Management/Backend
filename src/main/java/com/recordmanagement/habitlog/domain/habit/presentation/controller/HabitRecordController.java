@@ -42,7 +42,7 @@ public class HabitRecordController {
                - **메인 기록 타입이 습관인 사용자**: 메인 또는 서브 기록으로 작성
                - **메인 기록 타입이 운동/일상인 사용자**: 서브 기록으로 작성
                
-               ## 메인 습관 기록 자동 생성 시스템 (v1.8.5)
+               ## 메인 습관 기록 자동 생성 시스템 (v1.9.1)
                
                **자동 생성 범위**: 메인 습관 기록 작성 시 목표 종료일까지 DB에 자동 생성
                ```
@@ -56,9 +56,10 @@ public class HabitRecordController {
                API 응답: 11월 19일~11월 19일 (오늘 1개만)
                ```
                
-               **2단계 시스템**: 
-               - **1단계 (등록)**: isCompleted=false → 회색 아이콘
-               - **2단계 (완료)**: isCompleted=true → 색상 아이콘
+               **3단계 시스템**: 
+               - **미작성 (자동생성 그대로)**: 캘린더에 숨김 (빈 공간)
+               - **작성 (사용자 수정)**: isCompleted=false → 회색 아이콘
+               - **완료**: isCompleted=true → 색상 아이콘
                
                ## 필수/선택 항목
                **필수**: habitType, notificationEnabled, recordDate  

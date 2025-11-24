@@ -35,7 +35,7 @@ public class UnifiedRecordController {
                description = """
                    특정 날짜의 모든 타입 기록(일상, 운동, 습관)을 통합하여 조회합니다.
                    
-                   ## 캘린더 시스템과 동일한 표시 로직 (v1.8.6)
+                   ## 캘린더 시스템과 동일한 표시 로직 (v1.9.1)
                    
                    **과거 날짜**: 해당 날짜에 실제로 작성된 모든 기록 반환
                    - 작성된 기록만 포함 (`records: [실제기록객체들]`)
@@ -45,17 +45,20 @@ public class UnifiedRecordController {
                    **현재 날짜 (오늘)**: 해당 날짜에 작성된 모든 기록 반환
                    - 작성된 기록만 포함 (`records: [실제기록객체들]`)
                    - 미작성 시 빈 배열 (`records: []`)
-                   - 습관 기록: isCompleted 상태로 완료/미완료 구분
+                   - 습관 기록: 메인 습관은 3단계 (미작성=숨김, 작성=isCompleted:false, 완료=isCompleted:true)
                    - 홈 화면 제한 체크: `records.length >= 2`로 간단히 처리
                    
                    **미래 날짜**: 빈 배열 반환 (`records: []`)
                    - DB에 미래 자동 생성 기록이 있어도 API에서 제외
                    - 목적: 실제 행동 기반, 미리 계획하지 않음
                    
-                   ## 습관 기록 특별 처리 (v1.8.5)
-                   - **습관 타입 사용자**: 목표 기간 내 작성된 습관 기록 (오늘까지만)
+                   ## 습관 기록 특별 처리 (v1.9.1)
+                   - **습관 타입 사용자**: 목표 기간 내 메인 습관 기록 (오늘까지만)
+                     * 미작성 (자동생성 그대로): API 응답에서 제외
+                     * 작성 (사용자 수정): isCompleted=false로 포함
+                     * 완료: isCompleted=true로 포함
                    - **운동/일상 타입 사용자**: 모든 날짜의 습관 기록 (서브 기록)
-                   - **자동 생성 제외**: DB의 자동 생성 기록은 API 응답에서 제외
+                   - **자동 생성 제외**: 사용자가 수정하지 않은 자동 생성 기록은 API 응답에서 제외
                    
                    ## 이미지 URL 처리
                    - 조회 시 자동으로 새로운 Pre-signed URL 생성 (1시간 유효)
@@ -68,7 +71,11 @@ public class UnifiedRecordController {
             description = "일일 기록 통합 조회 성공",
             content = @Content(
                 mediaType = "application/json",
-                examples = @ExampleObject(value = """
+                examples = {
+                    @ExampleObject(
+                        name = "완료된 습관 기록",
+                        summary = "메인 습관 기록이 완료된 경우",
+                        value = """
                     {
                         "statusCode": 200,
                         "code": "S200",
@@ -119,7 +126,50 @@ public class UnifiedRecordController {
                             ]
                         }
                     }
-                    """)
+                    """
+                    ),
+                    @ExampleObject(
+                        name = "미완료 습관 기록",
+                        summary = "메인 습관 기록이 작성되었지만 미완료인 경우",
+                        value = """
+                    {
+                        "statusCode": 200,
+                        "code": "S200",
+                        "message": "일일 기록이 성공적으로 조회되었습니다",
+                        "data": {
+                            "date": "2025-01-07",
+                            "records": [
+                                {
+                                    "id": "880e8400-e29b-41d4-a716-446655440003",
+                                    "type": "HABIT",
+                                    "recordDate": "2025-01-07",
+                                    "recordTime": null,
+                                    "createdAt": "2025-01-07T08:00:00",
+                                    "updatedAt": "2025-01-07T14:30:00",
+                                    "imageUrls": null,
+                                    "habitType": "READING",
+                                    "notificationEnabled": true,
+                                    "notificationTime": "20:00:00",
+                                    "memo": "책을 읽기 시작했지만 아직 목표량에 못 미쳐서 미완료 상태입니다",
+                                    "isCompleted": false
+                                },
+                                {
+                                    "id": "990e8400-e29b-41d4-a716-446655440004",
+                                    "type": "DAILY",
+                                    "recordDate": "2025-01-07",
+                                    "recordTime": "15:21",
+                                    "createdAt": "2025-01-07T15:21:00",
+                                    "updatedAt": "2025-01-07T15:21:00",
+                                    "imageUrls": ["https://example.com/image1.jpg"],
+                                    "emotion": "😊",
+                                    "content": "하루 일상 기록"
+                                }
+                            ]
+                        }
+                    }
+                    """
+                    )
+                }
             )
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
