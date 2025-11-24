@@ -211,4 +211,45 @@ public class GoalApplicationService {
         Optional<Goal> currentGoal = goalRepository.findCurrentGoalByUserId(userId);
         return currentGoal.isEmpty();
     }
+
+    /**
+     * 현재 목표 삭제 (QA 테스트 전용)
+     * 
+     * ### 주의사항
+     * - **테스트 전용**: 프로덕션에서는 사용하지 않는 것을 권장
+     * - **데이터 손실**: 목표와 관련된 진행률 정보가 완전히 삭제됨
+     * - **User 동기화**: mainRecordType, goalDays가 null로 초기화됨
+     * 
+     * @param userId 사용자 ID
+     * @throws CustomException 현재 목표가 없는 경우
+     */
+    @Transactional
+    @CacheEvict(value = "user", key = "#userId.getValue()")
+    public void deleteCurrentGoal(UserId userId) {
+        log.info("QA 테스트: 현재 목표 삭제 요청 - userId: {}", userId.getValue());
+        
+        // 1. 현재 목표 조회
+        Optional<Goal> currentGoalOpt = goalRepository.findCurrentGoalByUserId(userId);
+        if (currentGoalOpt.isEmpty()) {
+            throw new CustomException(ErrorCode.GOAL_NOT_FOUND);
+        }
+        
+        Goal currentGoal = currentGoalOpt.get();
+        log.info("삭제할 목표 - goalId: {}, recordType: {}, goalDays: {}", 
+                currentGoal.getId().getValue(), currentGoal.getRecordType(), currentGoal.getGoalDays());
+        
+        // 2. User 정보 초기화 (mainRecordType, goalDays → null)
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        user.clearGoalSettings(); // mainRecordType, goalDays를 null로 설정하는 메서드
+        userRepository.save(user);
+        
+        log.info("사용자 목표 설정 초기화 완료 - userId: {}", userId.getValue());
+        
+        // 3. 목표 삭제
+        goalRepository.deleteById(currentGoal.getId());
+        
+        log.info("QA 테스트: 목표 삭제 완료 - goalId: {}", currentGoal.getId().getValue());
+    }
 }
