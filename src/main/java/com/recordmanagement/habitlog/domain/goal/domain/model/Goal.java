@@ -74,6 +74,17 @@ public class Goal {
     }
 
     /**
+     * 목표 강제 완료 처리 (QA 테스트 전용)
+     * 
+     * 자연스러운 완료와 동일한 효과를 내며, 달성 보고서에서 정상적으로 표시됩니다.
+     * 현재 진행률을 유지한 채로 완료 상태로만 변경합니다.
+     */
+    public void forceComplete() {
+        this.status = GoalStatus.COMPLETED;
+        this.completedAt = LocalDateTime.now();
+    }
+
+    /**
      * 목표 포기 처리
      */
     public void abandon() {

@@ -213,11 +213,15 @@ public class GoalApplicationService {
     }
 
     /**
-     * 현재 목표 삭제 (QA 테스트 전용)
+     * 현재 목표 강제 완료 (QA 테스트 전용)
+     * 
+     * ### 목적
+     * - **QA 테스트 편의성**: 목표 기간이 끝나지 않아도 강제로 완료 처리
+     * - **달성 보고서 테스트**: currentPeriod 및 recentHistory 정상 동작 확인 가능
+     * - **목표 재설정**: 완료 후 즉시 새로운 목표 설정 가능
      * 
      * ### 주의사항
      * - **테스트 전용**: 프로덕션에서는 사용하지 않는 것을 권장
-     * - **데이터 손실**: 목표와 관련된 진행률 정보가 완전히 삭제됨
      * - **User 동기화**: mainRecordType, goalDays가 null로 초기화됨
      * 
      * @param userId 사용자 ID
@@ -225,8 +229,8 @@ public class GoalApplicationService {
      */
     @Transactional
     @CacheEvict(value = "user", key = "#userId.getValue()")
-    public void deleteCurrentGoal(UserId userId) {
-        log.info("QA 테스트: 현재 목표 삭제 요청 - userId: {}", userId.getValue());
+    public void forceCompleteCurrentGoal(UserId userId) {
+        log.info("QA 테스트: 현재 목표 강제 완료 요청 - userId: {}", userId.getValue());
         
         // 1. 현재 목표 조회
         Optional<Goal> currentGoalOpt = goalRepository.findCurrentGoalByUserId(userId);
@@ -235,21 +239,24 @@ public class GoalApplicationService {
         }
         
         Goal currentGoal = currentGoalOpt.get();
-        log.info("삭제할 목표 - goalId: {}, recordType: {}, goalDays: {}", 
-                currentGoal.getId().getValue(), currentGoal.getRecordType(), currentGoal.getGoalDays());
+        log.info("강제 완료할 목표 - goalId: {}, recordType: {}, goalDays: {}, 현재 진행률: {}%", 
+                currentGoal.getId().getValue(), currentGoal.getRecordType(), currentGoal.getGoalDays(),
+                currentGoal.getAchievementRate());
         
-        // 2. User 정보 초기화 (mainRecordType, goalDays → null)
+        // 2. 목표 상태를 COMPLETED로 변경 및 완료 시간 설정
+        currentGoal.forceComplete(); // Goal 엔터티에 강제 완료 메서드 필요
+        goalRepository.save(currentGoal);
+        
+        log.info("목표 강제 완료 처리 완료 - goalId: {}", currentGoal.getId().getValue());
+        
+        // 3. User 정보 초기화 (새 목표 설정 가능하도록)
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
-        user.clearGoalSettings(); // mainRecordType, goalDays를 null로 설정하는 메서드
+        user.clearGoalSettings(); // mainRecordType, goalDays를 null로 설정
         userRepository.save(user);
         
         log.info("사용자 목표 설정 초기화 완료 - userId: {}", userId.getValue());
-        
-        // 3. 목표 삭제
-        goalRepository.deleteById(currentGoal.getId());
-        
-        log.info("QA 테스트: 목표 삭제 완료 - goalId: {}", currentGoal.getId().getValue());
+        log.info("QA 테스트: 목표 강제 완료 완료 - goalId: {}, 새 목표 설정 가능", currentGoal.getId().getValue());
     }
 }

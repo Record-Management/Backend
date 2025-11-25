@@ -1,9 +1,9 @@
 package com.recordmanagement.habitlog.domain.goal.presentation.controller;
 
+import com.recordmanagement.habitlog.domain.goal.application.dto.CompleteGoalResponse;
 import com.recordmanagement.habitlog.domain.goal.application.dto.CreateGoalRequest;
 import com.recordmanagement.habitlog.domain.goal.application.dto.CreateGoalResponse;
 import com.recordmanagement.habitlog.domain.goal.application.dto.CurrentGoalResponse;
-import com.recordmanagement.habitlog.domain.goal.application.dto.DeleteGoalResponse;
 import com.recordmanagement.habitlog.domain.goal.application.dto.GoalAchievementHistoryResponse;
 import com.recordmanagement.habitlog.domain.goal.application.dto.GoalAchievementReportResponse;
 import com.recordmanagement.habitlog.domain.goal.application.service.GoalApplicationService;
@@ -23,8 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -602,55 +602,62 @@ public class GoalController {
     }
 
     /**
-     * 현재 목표 삭제 (QA 테스트 전용)
+     * 현재 목표 강제 완료 (QA 테스트 전용)
      *
      * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
-     * @return 삭제 결과
+     * @return 강제 완료 결과
      */
-    @DeleteMapping("/current")
+    @PatchMapping("/current/force-complete")
     @Operation(
-            summary = "현재 목표 삭제 (QA 테스트 전용)",
+            summary = "현재 목표 강제 완료 (QA 테스트 전용)",
             description = """
-                현재 진행중인 목표를 완전히 삭제합니다.
+                현재 진행중인 목표를 강제로 완료 상태로 변경합니다.
+                
+                ### 🎯 목적
+                - **QA 테스트 편의성**: 목표 기간이 끝나지 않아도 완료 처리
+                - **달성 보고서 테스트**: currentPeriod 및 recentHistory 정상 동작 확인
+                - **목표 재설정**: 완료 후 즉시 새로운 목표 설정 가능
+                
+                ### 📋 완료 후 변화
+                1. **목표 상태**: IN_PROGRESS → COMPLETED
+                2. **완료 시간**: completedAt 자동 설정
+                3. **진행률 유지**: 현재 달성률 그대로 유지
+                4. **User 정보**: mainRecordType, goalDays → null로 초기화
+                5. **달성 보고서**: recentHistory에 완료된 목표로 표시
+                6. **새 목표**: 즉시 새로운 목표 생성 가능
+                
+                ### 🔍 테스트 시나리오
+                1. **목표 강제 완료** → 달성 보고서에서 `recentHistory[0]` 확인
+                2. **새 목표 생성** → 다양한 타입으로 목표 재설정 테스트
+                3. **완료된 목표 조회** → `currentPeriod`가 올바르게 null인지 확인
                 
                 ### ⚠️ 주의사항
                 - **QA 테스트 전용**: 프로덕션 환경에서 사용 금지
-                - **데이터 손실**: 목표와 관련된 모든 진행률 정보가 영구 삭제됨
-                - **복구 불가**: 삭제된 목표는 복구할 수 없음
-                
-                ### 삭제 후 변화
-                1. **목표 데이터**: DB에서 완전 삭제
-                2. **User 정보**: mainRecordType, goalDays → null로 초기화
-                3. **캘린더**: 해당 기간의 mainRecordTypeForDate → null 반환
-                4. **새 목표**: 즉시 새로운 목표 생성 가능
-                
-                ### 사용 시나리오
-                - QA 테스트 중 목표 재설정이 필요한 경우
-                - 잘못된 목표로 테스트를 시작한 경우
-                - 다양한 목표 타입으로 테스트해야 하는 경우
+                - **데이터 보존**: 목표는 삭제되지 않고 완료 상태로만 변경
                 """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "목표 삭제 성공",
+                    description = "목표 강제 완료 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = @ExampleObject(
-                                    name = "목표 삭제 성공",
+                                    name = "목표 강제 완료 성공",
                                     value = """
                                             {
                                               "statusCode": 200,
                                               "code": "S200",
-                                              "message": "현재 목표가 성공적으로 삭제되었습니다",
+                                              "message": "현재 목표가 성공적으로 완료되었습니다",
                                               "data": {
-                                                "deletedGoalId": "550e8400-e29b-41d4-a716-446655440000",
-                                                "deletedRecordType": "HABIT",
-                                                "deletedGoalDays": 30,
+                                                "completedGoalId": "550e8400-e29b-41d4-a716-446655440000",
+                                                "completedRecordType": "HABIT",
+                                                "completedGoalDays": 30,
+                                                "finalAchievementRate": 73.3,
                                                 "canCreateNewGoal": true,
-                                                "message": "목표가 삭제되었습니다. 새로운 목표를 설정할 수 있습니다."
+                                                "message": "목표가 완료되었습니다. 달성 보고서에서 확인할 수 있습니다."
                                               }
                                             }
                                             """
@@ -659,7 +666,7 @@ public class GoalController {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "삭제할 목표가 없음",
+                    description = "완료할 목표가 없음",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject(
@@ -690,29 +697,29 @@ public class GoalController {
                     )
             )
     })
-    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<DeleteGoalResponse>> deleteCurrentGoal(
+    public ResponseEntity<com.recordmanagement.habitlog.global.common.response.ApiResponse<CompleteGoalResponse>> forceCompleteCurrentGoal(
             Authentication authentication) {
 
         String userId = authentication.getName();
-        log.info("QA 테스트: 현재 목표 삭제 요청 - userId: {}", userId);
+        log.info("QA 테스트: 현재 목표 강제 완료 요청 - userId: {}", userId);
 
-        // 삭제 전 현재 목표 정보 조회 (응답용)
+        // 완료 전 현재 목표 정보 조회 (응답용)
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.from(userId));
         if (currentGoal.isEmpty()) {
             throw new CustomException(com.recordmanagement.habitlog.global.config.exception.ErrorCode.GOAL_NOT_FOUND);
         }
 
-        Goal goalToDelete = currentGoal.get();
+        Goal goalToComplete = currentGoal.get();
         
-        // 목표 삭제 실행
-        goalApplicationService.deleteCurrentGoal(UserId.from(userId));
+        // 목표 강제 완료 실행
+        goalApplicationService.forceCompleteCurrentGoal(UserId.from(userId));
         
         // 새 목표 설정 가능 여부 확인
         boolean canCreateNew = goalApplicationService.canCreateNewGoal(UserId.from(userId));
 
-        DeleteGoalResponse response = DeleteGoalResponse.from(goalToDelete, canCreateNew);
+        CompleteGoalResponse response = CompleteGoalResponse.from(goalToComplete, canCreateNew);
 
-        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("현재 목표가 성공적으로 삭제되었습니다", response));
+        return ResponseEntity.ok(com.recordmanagement.habitlog.global.common.response.ApiResponse.success("현재 목표가 성공적으로 완료되었습니다", response));
     }
 
 }
