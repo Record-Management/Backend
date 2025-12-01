@@ -28,6 +28,7 @@ import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.repository.UserRepository;
 import com.recordmanagement.habitlog.domain.goal.domain.model.Goal;
+import com.recordmanagement.habitlog.domain.goal.domain.model.GoalStatus;
 import com.recordmanagement.habitlog.domain.goal.domain.repository.GoalRepository;
 import com.recordmanagement.habitlog.domain.file.infrastructure.service.S3FileService;
 import lombok.extern.slf4j.Slf4j;
@@ -230,6 +231,11 @@ public class RecordApplicationService {
         
         // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
         if (type == null || type == RecordType.HABIT) {
+            // 습관 타입 사용자인 경우 누락된 메인 습관 기록 자동 보완
+            if (user.getMainRecordType() == RecordType.HABIT) {
+                ensureMainHabitRecordsExist(userIdObj, user);
+            }
+            
             // 습관 기록은 습관 목표 기간 내에서만 조회
             List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
             
@@ -881,5 +887,88 @@ public class RecordApplicationService {
                 user.getId().getValue(), result.size());
         
         return result;
+    }
+    
+    /**
+     * 메인 습관 기록이 누락된 경우 자동으로 보완
+     * 캘린더 조회 시 호출되어 목표 기간 내 누락된 메인 습관 기록을 감지하고 자동 생성
+     */
+    private void ensureMainHabitRecordsExist(UserId userId, User user) {
+        try {
+            // 현재 진행중인 목표 조회
+            List<Goal> currentGoals = goalRepository.findByUserIdAndStatus(userId, 
+                GoalStatus.IN_PROGRESS);
+            
+            if (currentGoals.isEmpty()) {
+                return; // 진행 중인 목표가 없으면 처리하지 않음
+            }
+            
+            // HABIT 타입 목표 찾기
+            Optional<Goal> habitGoalOpt = currentGoals.stream()
+                .filter(goal -> goal.getRecordType() == RecordType.HABIT)
+                .findFirst();
+                
+            if (habitGoalOpt.isEmpty()) {
+                return; // HABIT 타입 목표가 없으면 처리하지 않음
+            }
+            
+            Goal habitGoal = habitGoalOpt.get();
+            LocalDate today = LocalDate.now();
+            LocalDate goalStartDate = habitGoal.getStartDate();
+            LocalDate goalEndDate = habitGoal.getEndDate();
+            
+            // 목표 기간 내에서 오늘까지의 범위만 확인
+            LocalDate checkEndDate = goalEndDate.isBefore(today) ? goalEndDate : today;
+            
+            if (goalStartDate.isAfter(checkEndDate)) {
+                return; // 확인할 기간이 없음
+            }
+            
+            // 해당 기간의 기존 습관 기록 조회
+            List<HabitRecord> existingRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+                userId, goalStartDate, checkEndDate);
+            
+            // 기존 기록이 있는 날짜 집합 생성
+            Set<LocalDate> existingDates = existingRecords.stream()
+                .map(HabitRecord::getRecordDate)
+                .collect(Collectors.toSet());
+            
+            int createdCount = 0;
+            
+            // 목표 시작일부터 오늘까지 누락된 날짜에 메인 습관 기록 생성
+            for (LocalDate date = goalStartDate; !date.isAfter(checkEndDate); date = date.plusDays(1)) {
+                if (!existingDates.contains(date)) {
+                    // 누락된 날짜에 메인 습관 기록 생성
+                    HabitRecord mainHabitRecord = HabitRecord.create(
+                        userId,
+                        com.recordmanagement.habitlog.domain.habit.domain.model.HabitType.WATER_DRINKING,
+                        false,
+                        null,
+                        "자동 생성된 메인 습관 기록",
+                        date
+                    ).updateMainRecordStatus(true);
+                    
+                    habitRecordRepository.save(mainHabitRecord);
+                    createdCount++;
+                    
+                    log.debug("누락된 메인 습관 기록 자동 생성: userId={}, date={}, habitRecordId={}", 
+                            userId.getValue(), date, mainHabitRecord.getId().getValue());
+                }
+            }
+            
+            if (createdCount > 0) {
+                log.info("누락된 메인 습관 기록 자동 보완 완료: userId={}, 생성된 기록 수={}", 
+                        userId.getValue(), createdCount);
+                
+                // 캐시 무효화
+                applicationContext.getBean("cacheManager", org.springframework.cache.CacheManager.class)
+                    .getCache("calendar").clear();
+            }
+            
+        } catch (Exception e) {
+            log.error("메인 습관 기록 자동 보완 실패: userId={}, error={}", 
+                    userId.getValue(), e.getMessage(), e);
+            // 자동 보완 실패가 캘린더 조회를 실패시키지 않도록 함
+        }
     }
 }
