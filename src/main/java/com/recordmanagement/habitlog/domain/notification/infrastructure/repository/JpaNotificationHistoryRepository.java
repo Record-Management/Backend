@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 /**
  * 알림 히스토리 JPA 레포지토리
  *
@@ -29,6 +31,16 @@ public interface JpaNotificationHistoryRepository extends JpaRepository<Notifica
     Page<NotificationHistoryEntity> findByUserIdOrderBySentAtDesc(String userId, Pageable pageable);
 
     /**
+     * 사용자 ID로 특정 기간 이후의 알림 히스토리 페이징 조회 (최신순)
+     *
+     * @param userId 사용자 ID
+     * @param sentAtAfter 조회 시작 시간 (이 시간 이후의 알림만 조회)
+     * @param pageable 페이징 정보
+     * @return 알림 히스토리 페이지
+     */
+    Page<NotificationHistoryEntity> findByUserIdAndSentAtAfterOrderBySentAtDesc(String userId, LocalDateTime sentAtAfter, Pageable pageable);
+
+    /**
      * 사용자의 미읽은 알림 개수 조회
      *
      * @param userId 사용자 ID
@@ -36,6 +48,16 @@ public interface JpaNotificationHistoryRepository extends JpaRepository<Notifica
      */
     @Query("SELECT COUNT(n) FROM NotificationHistoryEntity n WHERE n.userId = :userId AND n.isRead = false")
     long countUnreadByUserId(@Param("userId") String userId);
+
+    /**
+     * 사용자의 특정 기간 이후 미읽은 알림 개수 조회
+     *
+     * @param userId 사용자 ID
+     * @param sentAtAfter 조회 시작 시간 (이 시간 이후의 알림만 조회)
+     * @return 미읽은 알림 개수
+     */
+    @Query("SELECT COUNT(n) FROM NotificationHistoryEntity n WHERE n.userId = :userId AND n.isRead = false AND n.sentAt >= :sentAtAfter")
+    long countUnreadByUserIdAndSentAtAfter(@Param("userId") String userId, @Param("sentAtAfter") LocalDateTime sentAtAfter);
 
     /**
      * 사용자 ID로 모든 알림을 읽음으로 처리

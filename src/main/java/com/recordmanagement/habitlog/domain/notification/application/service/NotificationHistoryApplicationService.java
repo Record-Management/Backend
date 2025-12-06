@@ -35,9 +35,12 @@ public class NotificationHistoryApplicationService {
 
     private final NotificationHistoryRepository notificationHistoryRepository;
     private final NotificationSettingsRepository notificationSettingsRepository;
+    
+    // 알림 히스토리 조회 기간 제한 (7일)
+    private static final int NOTIFICATION_HISTORY_DAYS = 7;
 
     /**
-     * 사용자의 알림 히스토리 페이징 조회
+     * 사용자의 알림 히스토리 페이징 조회 (최근 7일치만)
      *
      * @param userId 사용자 ID
      * @param pageable 페이징 정보
@@ -45,16 +48,19 @@ public class NotificationHistoryApplicationService {
      */
     @Transactional(readOnly = true)
     public Page<NotificationHistoryResponse> getNotificationHistory(UserId userId, Pageable pageable) {
-        log.info("알림 히스토리 조회 시작: userId={}, page={}, size={}", 
+        log.info("알림 히스토리 조회 시작 (최근 7일): userId={}, page={}, size={}", 
                 userId.getValue(), pageable.getPageNumber(), pageable.getPageSize());
 
+        // 7일 전 시점 계산
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(NOTIFICATION_HISTORY_DAYS);
+
         Page<NotificationHistory> historyPage = notificationHistoryRepository
-                .findByUserIdOrderBySentAtDesc(userId, pageable);
+                .findByUserIdAndSentAtAfterOrderBySentAtDesc(userId, weekAgo, pageable);
 
         Page<NotificationHistoryResponse> responsePage = historyPage
                 .map(NotificationHistoryResponse::from);
 
-        log.info("알림 히스토리 조회 완료: userId={}, totalElements={}", 
+        log.info("알림 히스토리 조회 완료 (최근 7일): userId={}, totalElements={}", 
                 userId.getValue(), responsePage.getTotalElements());
 
         return responsePage;
@@ -87,18 +93,21 @@ public class NotificationHistoryApplicationService {
     }
 
     /**
-     * 사용자의 미읽은 알림 개수 조회
+     * 사용자의 미읽은 알림 개수 조회 (최근 7일치만)
      *
      * @param userId 사용자 ID
      * @return 미읽은 알림 개수
      */
     @Transactional(readOnly = true)
     public long getUnreadCount(UserId userId) {
-        log.info("미읽은 알림 개수 조회 시작: userId={}", userId.getValue());
+        log.info("미읽은 알림 개수 조회 시작 (최근 7일): userId={}", userId.getValue());
 
-        long unreadCount = notificationHistoryRepository.countUnreadByUserId(userId);
+        // 7일 전 시점 계산
+        LocalDateTime weekAgo = LocalDateTime.now().minusDays(NOTIFICATION_HISTORY_DAYS);
 
-        log.info("미읽은 알림 개수 조회 완료: userId={}, count={}", userId.getValue(), unreadCount);
+        long unreadCount = notificationHistoryRepository.countUnreadByUserIdAndSentAtAfter(userId, weekAgo);
+
+        log.info("미읽은 알림 개수 조회 완료 (최근 7일): userId={}, count={}", userId.getValue(), unreadCount);
 
         return unreadCount;
     }

@@ -283,8 +283,13 @@ public class NotificationController {
             사용자의 알림 히스토리를 페이징으로 조회합니다.
             
             ### 응답 정보
-            - notifications: 알림 히스토리 목록 (페이징) - id, type, title, message, sentAt, isRead 형태
+            - notifications: 알림 히스토리 목록 (페이징, **최근 7일치만 조회**) - id, type, title, message, sentAt, isRead 형태
             - recentCheckedAt: 알림 센터 마지막 확인 시간 (읽음/안읽음 판단용)
+            
+            ### 조회 제한 정책 (v2.2.0)
+            - **최근 7일간의 알림만 조회됩니다** (성능 최적화 및 사용성 개선)
+            - 알림 히스토리는 데이터베이스에 완전 보존되나, API 응답은 7일로 제한
+            - 오늘 기준으로 7일 전까지의 알림만 반환
             
             ### 응답 필드 상세
             - **id**: 알림 고유 식별자 (예: "notification-123")
@@ -453,6 +458,10 @@ public class NotificationController {
         summary = "미읽은 알림 개수 조회",
         description = """
             사용자의 미읽은 알림 개수를 조회합니다.
+            
+            ### 조회 제한 정책 (v2.2.0)
+            - **최근 7일간의 알림만 계산됩니다** (성능 최적화)
+            - 오늘 기준으로 7일 전까지의 미읽은 알림만 카운트
             
             ### 사용 시나리오
             - 앱 탭바의 알림 배지 표시

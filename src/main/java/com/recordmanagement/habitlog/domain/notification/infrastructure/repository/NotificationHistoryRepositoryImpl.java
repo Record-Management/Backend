@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -55,8 +56,22 @@ public class NotificationHistoryRepositoryImpl implements NotificationHistoryRep
 
     @Override
     @Transactional(readOnly = true)
+    public Page<NotificationHistory> findByUserIdAndSentAtAfterOrderBySentAtDesc(UserId userId, LocalDateTime sentAtAfter, Pageable pageable) {
+        Page<NotificationHistoryEntity> entityPage = jpaRepository.findByUserIdAndSentAtAfterOrderBySentAtDesc(
+                userId.getValue(), sentAtAfter, pageable);
+        return entityPage.map(NotificationHistoryEntity::toDomain);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public long countUnreadByUserId(UserId userId) {
         return jpaRepository.countUnreadByUserId(userId.getValue());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countUnreadByUserIdAndSentAtAfter(UserId userId, LocalDateTime sentAtAfter) {
+        return jpaRepository.countUnreadByUserIdAndSentAtAfter(userId.getValue(), sentAtAfter);
     }
 
     @Override
