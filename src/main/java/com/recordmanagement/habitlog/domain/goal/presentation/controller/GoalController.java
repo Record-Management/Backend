@@ -623,8 +623,9 @@ public class GoalController {
                 2. **완료 시간**: completedAt 자동 설정
                 3. **진행률 유지**: 현재 달성률 그대로 유지
                 4. **User 정보**: mainRecordType, goalDays → null로 초기화
-                5. **달성 보고서**: recentHistory에 완료된 목표로 표시
-                6. **새 목표**: 즉시 새로운 목표 생성 가능
+                5. **미래 메인 습관 기록**: 내일부터의 기록들 자동 삭제 (HABIT 목표만)
+                6. **달성 보고서**: recentHistory에 완료된 목표로 표시
+                7. **새 목표**: 즉시 새로운 목표 생성 가능
                 
                 ### 🔍 테스트 시나리오
                 1. **목표 강제 완료** → 달성 보고서에서 `recentHistory[0]` 확인

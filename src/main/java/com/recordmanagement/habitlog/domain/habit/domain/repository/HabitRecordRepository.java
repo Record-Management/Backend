@@ -31,4 +31,14 @@ public interface HabitRecordRepository {
     int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
     
     boolean existsMainRecordByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
+    
+    /**
+     * 특정 날짜 이후의 메인 습관 기록들을 삭제
+     * 목표 완료/삭제 시 미래의 메인 습관 기록들을 정리하기 위해 사용
+     * 
+     * @param userId 사용자 ID
+     * @param fromDate 삭제할 기준 날짜 (이 날짜 이후의 메인 기록들이 삭제됨)
+     * @return 삭제된 메인 기록 수
+     */
+    int deleteMainRecordsAfterDate(UserId userId, LocalDate fromDate);
 }

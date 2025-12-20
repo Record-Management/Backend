@@ -26,4 +26,14 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
     
     // 특정 날짜에 메인 습관 기록 존재 여부 확인
     boolean existsByUserIdAndRecordDateAndIsMainRecord(String userId, LocalDate recordDate, boolean isMainRecord);
+    
+    /**
+     * 특정 날짜 이후의 메인 습관 기록들을 삭제
+     * 
+     * @param userId 사용자 ID
+     * @param fromDate 삭제할 기준 날짜 (이 날짜 이후의 메인 기록들이 삭제됨)
+     * @param isMainRecord 메인 기록 여부 (true: 메인 기록만 삭제)
+     * @return 삭제된 기록 수
+     */
+    int deleteByUserIdAndRecordDateAfterAndIsMainRecord(String userId, LocalDate fromDate, boolean isMainRecord);
 }

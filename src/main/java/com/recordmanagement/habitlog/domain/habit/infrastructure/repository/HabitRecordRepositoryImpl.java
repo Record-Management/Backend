@@ -121,4 +121,11 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             userId.getValue(), recordDate, true
         );
     }
+    
+    @Override
+    public int deleteMainRecordsAfterDate(UserId userId, LocalDate fromDate) {
+        return jpaHabitRecordRepository.deleteByUserIdAndRecordDateAfterAndIsMainRecord(
+            userId.getValue(), fromDate, true
+        );
+    }
 }

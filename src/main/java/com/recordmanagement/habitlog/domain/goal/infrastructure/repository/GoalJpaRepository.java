@@ -124,4 +124,13 @@ public interface GoalJpaRepository extends JpaRepository<GoalEntity, String> {
     @Query("SELECT CASE WHEN COUNT(g) > 0 THEN true ELSE false END " +
            "FROM GoalEntity g WHERE g.userId = :userId AND g.status = 'IN_PROGRESS' AND g.endDate >= :currentDate")
     boolean hasActiveGoalsByUserId(@Param("userId") String userId, @Param("currentDate") LocalDate currentDate);
+
+    /**
+     * 목표 ID로 기록 타입 조회 (스케줄러용)
+     *
+     * @param goalId 목표 ID
+     * @return 기록 타입
+     */
+    @Query("SELECT g.recordType FROM GoalEntity g WHERE g.goalId = :goalId")
+    RecordType findRecordTypeByGoalId(@Param("goalId") String goalId);
 }

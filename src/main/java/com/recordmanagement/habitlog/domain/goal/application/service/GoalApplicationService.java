@@ -4,6 +4,7 @@ import com.recordmanagement.habitlog.domain.goal.domain.model.Goal;
 import com.recordmanagement.habitlog.domain.goal.domain.model.GoalId;
 import com.recordmanagement.habitlog.domain.goal.domain.model.GoalStatus;
 import com.recordmanagement.habitlog.domain.goal.domain.repository.GoalRepository;
+import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
@@ -46,6 +47,7 @@ public class GoalApplicationService {
 
     private final GoalRepository goalRepository;
     private final UserRepository userRepository;
+    private final HabitRecordRepository habitRecordRepository;
 
     /**
      * 새로운 목표 생성
@@ -121,6 +123,14 @@ public class GoalApplicationService {
         if (goal.isPeriodEnded()) {
             goal.complete();
             
+            // 목표 자연 완료 시 내일부터의 미래 메인 습관 기록들 삭제
+            if (goal.getRecordType() == RecordType.HABIT) {
+                LocalDate tomorrow = LocalDate.now().plusDays(1);
+                int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+                log.info("목표 자연 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}", 
+                        userId.getValue(), deletedCount);
+            }
+            
             // User 정보와 동기화: 목표 완료 시 사용자 정보 초기화
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -188,6 +198,14 @@ public class GoalApplicationService {
         Goal goal = goalRepository.findByIdAndUserId(goalId, userId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 목표를 찾을 수 없습니다."));
 
+        // 목표 삭제 시 내일부터의 미래 메인 습관 기록들 삭제
+        if (goal.getRecordType() == RecordType.HABIT) {
+            LocalDate tomorrow = LocalDate.now().plusDays(1);
+            int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+            log.info("목표 삭제로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}", 
+                    userId.getValue(), deletedCount, tomorrow);
+        }
+
         goalRepository.deleteById(goalId);
         
         // User 정보와 동기화: 목표 삭제 시 사용자 정보 초기화
@@ -252,6 +270,14 @@ public class GoalApplicationService {
         // 3. User 정보 초기화 (새 목표 설정 가능하도록)
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        
+        // 목표 완료 시 내일부터의 미래 메인 습관 기록들 삭제
+        if (currentGoal.getRecordType() == RecordType.HABIT) {
+            LocalDate tomorrow = LocalDate.now().plusDays(1);
+            int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+            log.info("목표 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}", 
+                    userId.getValue(), deletedCount, tomorrow);
+        }
         
         user.clearGoalSettings(); // mainRecordType, goalDays를 null로 설정
         userRepository.save(user);
