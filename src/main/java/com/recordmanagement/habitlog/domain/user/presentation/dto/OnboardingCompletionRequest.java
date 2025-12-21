@@ -38,11 +38,14 @@ public class OnboardingCompletionRequest {
     @NotNull(message = "메인 기록 타입은 필수입니다")
     @Schema(description = "메인 기록 타입", example = "EXERCISE")
     private RecordType mainRecordType;
-    
-    @NotNull(message = "생년월일은 필수입니다")
+
     @Past(message = "생년월일은 과거 날짜여야 합니다")
     @ValidBirthDate
-    @Schema(description = "생년월일", example = "1998-06-02")
+    @Schema(
+        description = "생년월일 (선택 입력, 미입력 시 null 저장)",
+        example = "1998-06-02",
+        nullable = true
+    )
     private LocalDate birthDate;
     
     @NotNull(message = "목표 일수는 필수입니다")
