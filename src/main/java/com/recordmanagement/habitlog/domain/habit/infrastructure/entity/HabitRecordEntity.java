@@ -33,10 +33,13 @@ public class HabitRecordEntity {
     
     @Column(name = "notification_enabled", nullable = false)
     private boolean notificationEnabled;
-    
+
     @Column(name = "notification_time")
     private LocalTime notificationTime;
-    
+
+    @Column(name = "last_notification_sent_date")
+    private LocalDate lastNotificationSentDate;
+
     @Column(name = "memo", columnDefinition = "TEXT")
     private String memo;
     

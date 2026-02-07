@@ -62,8 +62,33 @@ public class HabitRecordController {
                - **완료**: isCompleted=true → 색상 아이콘
                
                ## 필수/선택 항목
-               **필수**: habitType, notificationEnabled, recordDate  
+               **필수**: habitType, notificationEnabled, recordDate
                **선택**: notificationTime, memo, isMainRecord
+
+               ## 습관별 시간 지정 알림 기능 (v1.10.0)
+
+               **알림 설정**: notificationEnabled와 notificationTime으로 습관별 알림 시간 지정 가능
+               ```
+               예시: 물 마시기 습관을 오전 8시에 알림 설정
+               {
+                 "habitType": "WATER_DRINKING",
+                 "notificationEnabled": true,
+                 "notificationTime": "08:00",
+                 "recordDate": "2025-11-19"
+               }
+               ```
+
+               **알림 발송 조건**:
+               - notificationEnabled = true (알림 활성화)
+               - notificationTime이 설정되어 있을 때
+               - 해당 시간에 아직 완료하지 않은 습관에 대해 자동 알림 발송
+               - 하루에 한 번만 발송 (중복 방지)
+
+               **알림 발송 시스템**:
+               - 매분마다 실행되는 스케줄러가 설정된 시간 확인
+               - 각 습관의 개별 시간에 맞춰 알림 발송
+               - 습관 완료 시 알림 발송 안 됨
+               - **중요**: 습관 시간 지정 알림은 FCM 푸시만 발송되고 알림 히스토리에는 저장되지 않음
                
                ## 메인/서브 기록 결정 로직
                - **명시적 설정**: isMainRecord 값 직접 사용
@@ -217,6 +242,7 @@ public class HabitRecordController {
                **수정 가능한 모든 습관 기록:**
                - 메인 기록 타입에 관계없이 모든 사용자의 습관 기록 수정 가능
                - 습관 타입, 알림 설정, 메모, 메인/서브 상태 변경 가능
+               - 알림 시간(notificationTime) 수정을 통해 습관별 알림 시간 변경 가능 (v1.10.0)
                
                **메인/서브 기록 결정:**
                - isMainRecord가 명시적으로 설정된 경우: 해당 값 사용

@@ -1,5 +1,7 @@
 package com.recordmanagement.habitlog.domain.notification.application;
 
+import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecord;
+import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationMessage;
 import com.recordmanagement.habitlog.domain.notification.application.strategy.NotificationMessageStrategyFactory;
 import com.recordmanagement.habitlog.domain.notification.application.util.NotificationImageUtil;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +43,7 @@ public class FcmNotificationService {
 
     private final NotificationSender notificationSender;
     private final UserRepository userRepository;
+    private final HabitRecordRepository habitRecordRepository;
     private final NotificationApplicationService notificationApplicationService;
     private final NotificationMessageStrategyFactory messageStrategyFactory;
     private final com.recordmanagement.habitlog.domain.notification.application.service.NotificationHistoryApplicationService notificationHistoryApplicationService;
@@ -252,14 +256,78 @@ public class FcmNotificationService {
         if (success) {
             // 테스트 알림 발송 성공 시에만 히스토리 저장
             NotificationHistory history = new NotificationHistory(
-                    userId, 
-                    NotificationType.TEST, 
-                    title, 
+                    userId,
+                    NotificationType.TEST,
+                    title,
                     body
             );
             notificationHistoryApplicationService.saveNotificationHistory(history);
         }
-        
+
         return success;
+    }
+
+    /**
+     * 습관별 시간 지정 알림 발송
+     * 각 습관 기록의 설정된 시간에 맞춰 개별 알림 발송
+     *
+     * @param habitRecord 습관 기록
+     */
+    @Transactional
+    public void sendHabitTimeBasedNotification(HabitRecord habitRecord) {
+        log.info("습관별 시간 지정 알림 발송 시작: habitRecordId={}, habitType={}, userId={}",
+                habitRecord.getId().getValue(),
+                habitRecord.getHabitType().getDescription(),
+                habitRecord.getUserId().getValue());
+
+        // 사용자 정보 조회
+        User user = userRepository.findById(habitRecord.getUserId())
+                .filter(u -> !u.isWithdrawn()) // 탈퇴한 사용자 제외
+                .orElse(null);
+
+        if (user == null) {
+            log.warn("사용자를 찾을 수 없거나 탈퇴한 사용자입니다: userId={}", habitRecord.getUserId().getValue());
+            return;
+        }
+
+        // FCM 토큰 확인
+        if (user.getFcmToken() == null || user.getFcmToken().trim().isEmpty()) {
+            log.warn("FCM 토큰이 없어 알림을 발송할 수 없습니다: userId={}", user.getId().getValue());
+            return;
+        }
+
+        // 알림 메시지 생성
+        String title = "습관 실천 알림";
+        String body = String.format("'%s' 습관을 실천할 시간이에요! 오늘도 꾸준히 이어가볼까요?",
+                habitRecord.getHabitType().getDescription());
+
+        // 추가 데이터 설정
+        Map<String, String> data = new HashMap<>();
+        data.put("notificationType", NotificationType.HABIT_REMINDER.name());
+        data.put("habitType", habitRecord.getHabitType().name());
+        data.put("habitRecordId", habitRecord.getId().getValue());
+        data.put("imageUrl", NotificationImageUtil.getImageUrl(RecordType.HABIT));
+
+        // 알림 발송
+        boolean success = notificationSender.sendNotification(
+                user.getFcmToken(),
+                title,
+                body,
+                data
+        );
+
+        if (success) {
+            // 마지막 알림 발송 날짜 업데이트
+            HabitRecord updatedRecord = habitRecord.updateLastNotificationSentDate(LocalDate.now());
+            habitRecordRepository.save(updatedRecord);
+
+            log.info("습관별 시간 지정 알림 발송 성공: habitRecordId={}, habitType={}",
+                    habitRecord.getId().getValue(), habitRecord.getHabitType().getDescription());
+
+            // 참고: 습관 시간 지정 알림은 히스토리에 저장하지 않음 (프론트 앱 호환성)
+        } else {
+            log.error("습관별 시간 지정 알림 발송 실패: habitRecordId={}, userId={}",
+                    habitRecord.getId().getValue(), user.getId().getValue());
+        }
     }
 }

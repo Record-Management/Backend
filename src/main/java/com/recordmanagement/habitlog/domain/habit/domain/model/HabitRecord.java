@@ -14,12 +14,13 @@ import java.time.LocalTime;
 @With
 @AllArgsConstructor(access = AccessLevel.PACKAGE)
 public class HabitRecord {
-    
+
     private final HabitRecordId id;
     private final UserId userId;
     private final HabitType habitType;
     private final boolean notificationEnabled;
     private final LocalTime notificationTime;
+    private final LocalDate lastNotificationSentDate;
     private final String memo;
     private final LocalDate recordDate;
     private final boolean isCompleted;
@@ -38,6 +39,7 @@ public class HabitRecord {
             habitType,
             notificationEnabled,
             notificationTime,
+            null, // lastNotificationSentDate: 생성 시 null
             memo,
             recordDate,
             false, // 기본값: 미완료
@@ -49,11 +51,12 @@ public class HabitRecord {
     
     public static HabitRecord restore(HabitRecordId id, UserId userId, HabitType habitType,
                                     boolean notificationEnabled, LocalTime notificationTime,
+                                    LocalDate lastNotificationSentDate,
                                     String memo, LocalDate recordDate, boolean isCompleted,
                                     boolean isMainRecord, LocalDateTime createdAt, LocalDateTime updatedAt) {
         return new HabitRecord(
             id, userId, habitType, notificationEnabled, notificationTime,
-            memo, recordDate, isCompleted, isMainRecord, createdAt, updatedAt
+            lastNotificationSentDate, memo, recordDate, isCompleted, isMainRecord, createdAt, updatedAt
         );
     }
     
@@ -80,6 +83,11 @@ public class HabitRecord {
     
     public HabitRecord updateMainRecordStatus(boolean isMainRecord) {
         return this.withMainRecord(isMainRecord)
+                  .withUpdatedAt(LocalDateTime.now());
+    }
+
+    public HabitRecord updateLastNotificationSentDate(LocalDate sentDate) {
+        return this.withLastNotificationSentDate(sentDate)
                   .withUpdatedAt(LocalDateTime.now());
     }
 

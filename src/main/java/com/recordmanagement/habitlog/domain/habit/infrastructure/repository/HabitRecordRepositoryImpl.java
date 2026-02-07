@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -80,6 +81,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             .habitType(habitRecord.getHabitType())
             .notificationEnabled(habitRecord.isNotificationEnabled())
             .notificationTime(habitRecord.getNotificationTime())
+            .lastNotificationSentDate(habitRecord.getLastNotificationSentDate())
             .memo(habitRecord.getMemo())
             .recordDate(habitRecord.getRecordDate())
             .isCompleted(habitRecord.isCompleted())
@@ -96,6 +98,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
             entity.getHabitType(),
             entity.isNotificationEnabled(),
             entity.getNotificationTime(),
+            entity.getLastNotificationSentDate(),
             entity.getMemo(),
             entity.getRecordDate(),
             entity.isCompleted(),
@@ -127,5 +130,13 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.deleteByUserIdAndRecordDateAfterAndIsMainRecord(
             userId.getValue(), fromDate, true
         );
+    }
+
+    @Override
+    public List<HabitRecord> findHabitsForNotification(LocalTime currentTime, LocalDate today) {
+        return jpaHabitRecordRepository.findHabitsForNotification(currentTime, today)
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 }
