@@ -1,7 +1,6 @@
 package com.recordmanagement.habitlog.domain.notification.application;
 
 import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecord;
-import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
 import com.recordmanagement.habitlog.domain.notification.application.dto.NotificationMessage;
 import com.recordmanagement.habitlog.domain.notification.application.strategy.NotificationMessageStrategyFactory;
 import com.recordmanagement.habitlog.domain.notification.application.util.NotificationImageUtil;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +41,6 @@ public class FcmNotificationService {
 
     private final NotificationSender notificationSender;
     private final UserRepository userRepository;
-    private final HabitRecordRepository habitRecordRepository;
     private final NotificationApplicationService notificationApplicationService;
     private final NotificationMessageStrategyFactory messageStrategyFactory;
     private final com.recordmanagement.habitlog.domain.notification.application.service.NotificationHistoryApplicationService notificationHistoryApplicationService;
@@ -317,14 +314,11 @@ public class FcmNotificationService {
         );
 
         if (success) {
-            // 마지막 알림 발송 날짜 업데이트
-            HabitRecord updatedRecord = habitRecord.updateLastNotificationSentDate(LocalDate.now());
-            habitRecordRepository.save(updatedRecord);
-
             log.info("습관별 시간 지정 알림 발송 성공: habitRecordId={}, habitType={}",
                     habitRecord.getId().getValue(), habitRecord.getHabitType().getDescription());
 
             // 참고: 습관 시간 지정 알림은 히스토리에 저장하지 않음 (프론트 앱 호환성)
+            // 중복 발송 방지는 notificationTime 조건으로 자연스럽게 처리됨
         } else {
             log.error("습관별 시간 지정 알림 발송 실패: habitRecordId={}, userId={}",
                     habitRecord.getId().getValue(), user.getId().getValue());

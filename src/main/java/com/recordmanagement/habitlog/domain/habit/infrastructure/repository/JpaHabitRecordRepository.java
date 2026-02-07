@@ -48,7 +48,10 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
      * - 알림이 활성화되어 있고 (notificationEnabled = true)
      * - 알림 시간이 현재 시간과 일치하며 (notificationTime = currentTime)
      * - 아직 완료하지 않은 (isCompleted = false)
-     * - 오늘 아직 알림을 보내지 않음 (lastNotificationSentDate != today)
+     *
+     * 중복 발송 방지:
+     * - notificationTime이 분 단위로 일치해야 하므로, 같은 시간에 1번만 조회됨
+     * - 예: 08:00 설정 시 08:00에만 조회, 08:01~23:59에는 조회 안 됨
      *
      * @param currentTime 현재 시간 (HH:mm)
      * @param today 오늘 날짜
@@ -58,8 +61,7 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
            "WHERE h.recordDate = :today " +
            "AND h.notificationEnabled = true " +
            "AND h.notificationTime = :currentTime " +
-           "AND h.isCompleted = false " +
-           "AND (h.lastNotificationSentDate IS NULL OR h.lastNotificationSentDate <> :today)")
+           "AND h.isCompleted = false")
     List<HabitRecordEntity> findHabitsForNotification(
             @Param("currentTime") LocalTime currentTime,
             @Param("today") LocalDate today

@@ -21,13 +21,16 @@ import java.util.List;
  * 1. 현재 시간(HH:mm)을 확인
  * 2. 오늘 날짜의 습관 기록 중 현재 시간에 알림이 설정된 습관 조회
  * 3. 조회된 각 습관에 대해 개별 알림 발송
- * 4. 알림 발송 후 lastNotificationSentDate 업데이트 (중복 발송 방지)
  *
  * 알림 발송 조건:
  * - notificationEnabled = true (알림 활성화)
  * - notificationTime = 현재 시간 (분 단위 일치)
  * - isCompleted = false (아직 완료하지 않음)
- * - lastNotificationSentDate ≠ 오늘 (오늘 아직 알림 발송 안 함)
+ *
+ * 중복 발송 방지:
+ * - notificationTime이 현재 시간과 정확히 일치해야 조회되므로 자연스럽게 방지됨
+ * - 예: 08:00 설정 → 08:00에만 조회, 08:01~23:59에는 조회 안 됨
+ * - 같은 날 알림 시간을 변경하면 변경된 시간에 다시 알림 받을 수 있음
  *
  * 중요 사항:
  * - FCM 푸시 알림만 발송됨 (NotificationHistory에 저장 안 함)
@@ -38,7 +41,7 @@ import java.util.List;
  *
  * @author 전우선
  * @since 2025.02.07
- * @version 1.0.0
+ * @version 1.0.1
  */
 @Slf4j
 @Component

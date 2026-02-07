@@ -48,8 +48,10 @@ public interface HabitRecordRepository {
      * - 오늘 날짜의 습관 기록 중
      * - 알림이 활성화되어 있고 (notificationEnabled = true)
      * - 알림 시간이 현재 시간과 일치하며 (notificationTime = 현재시간)
-     * - 아직 완료하지 않은 (isCompleted = false)
-     * - 오늘 아직 알림을 보내지 않은 습관 기록들
+     * - 아직 완료하지 않은 (isCompleted = false) 습관 기록들
+     *
+     * 중복 발송 방지는 시간 일치 조건으로 자연스럽게 처리됨
+     * (같은 시간에는 1번만 조회되므로)
      *
      * @param currentTime 현재 시간 (HH:mm)
      * @param today 오늘 날짜
