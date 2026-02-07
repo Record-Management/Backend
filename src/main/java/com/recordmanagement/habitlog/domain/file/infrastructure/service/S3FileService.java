@@ -1,27 +1,31 @@
 package com.recordmanagement.habitlog.domain.file.infrastructure.service;
 
-import com.amazonaws.HttpMethod;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.IOException;
-import java.time.Instant;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class S3FileService {
-    
-    private final AmazonS3 amazonS3;
+
+    private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
     private final String bucketName;
     
     // 지원하는 이미지 파일 확장자
@@ -36,42 +40,55 @@ public class S3FileService {
     private static final int MAX_FILE_COUNT = 3;
     
     // Pre-signed URL 유효 시간 (1시간)
-    private static final int PRESIGNED_URL_EXPIRATION_HOURS = 1;
-    
-    public S3FileService(AmazonS3 amazonS3, @Value("${cloud.aws.s3.bucket}") String bucketName) {
-        this.amazonS3 = amazonS3;
+    private static final Duration PRESIGNED_URL_EXPIRATION = Duration.ofHours(1);
+
+    public S3FileService(
+            S3Client s3Client,
+            S3Presigner s3Presigner,
+            @Value("${spring.cloud.aws.s3.bucket}") String bucketName) {
+        this.s3Client = s3Client;
+        this.s3Presigner = s3Presigner;
         this.bucketName = bucketName;
     }
     
     public String uploadFile(MultipartFile file) {
         validateFile(file);
-        
+
         String fileName = generateFileName(file.getOriginalFilename());
         String filePath = "records/images/" + fileName;
-        
+
         try {
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentType(file.getContentType());
-            metadata.setContentLength(file.getSize());
-            
-            // Private으로 업로드 (ACL 제거)
-            PutObjectRequest putObjectRequest = new PutObjectRequest(
-                bucketName, filePath, file.getInputStream(), metadata
-            );
-            
-            amazonS3.putObject(putObjectRequest);
-            
+            // S3에 파일 업로드
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(filePath)
+                    .contentType(file.getContentType())
+                    .contentLength(file.getSize())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+
             // Pre-signed URL 생성 (1시간 유효)
-            Date expiration = Date.from(
-                Instant.now().plusSeconds(PRESIGNED_URL_EXPIRATION_HOURS * 3600)
-            );
-            
-            return amazonS3.generatePresignedUrl(bucketName, filePath, expiration, HttpMethod.GET)
-                    .toString();
-            
+            return generatePresignedUrl(filePath);
+
         } catch (IOException e) {
             throw new CustomException(ErrorCode.FILE_UPLOAD_FAILED);
         }
+    }
+
+    private String generatePresignedUrl(String filePath) {
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(filePath)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(PRESIGNED_URL_EXPIRATION)
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        PresignedGetObjectRequest presignedRequest = s3Presigner.presignGetObject(presignRequest);
+        return presignedRequest.url().toString();
     }
     
     public List<String> uploadMultipleFiles(List<MultipartFile> files) {
@@ -85,12 +102,7 @@ public class S3FileService {
     
     public String regeneratePresignedUrl(String filePath) {
         try {
-            Date expiration = Date.from(
-                Instant.now().plusSeconds(PRESIGNED_URL_EXPIRATION_HOURS * 3600)
-            );
-            
-            return amazonS3.generatePresignedUrl(bucketName, filePath, expiration, HttpMethod.GET)
-                    .toString();
+            return generatePresignedUrl(filePath);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
         }
@@ -122,7 +134,11 @@ public class S3FileService {
     public void deleteFile(String fileUrl) {
         try {
             String fileName = extractFilePathFromUrl(fileUrl);
-            amazonS3.deleteObject(bucketName, fileName);
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+            s3Client.deleteObject(deleteObjectRequest);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.FILE_DELETE_FAILED);
         }

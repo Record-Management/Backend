@@ -63,8 +63,8 @@ dependencies {
     // MySQL driver for Gradle tasks
     implementation 'com.mysql:mysql-connector-j'
     
-    // AWS S3 for file upload
-    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    // AWS S3 for file upload (Spring Boot 3.x compatible)
+    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.2.1'
 }
 
 tasks.named('test') {
