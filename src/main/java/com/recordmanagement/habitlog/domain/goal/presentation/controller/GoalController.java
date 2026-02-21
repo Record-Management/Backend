@@ -602,51 +602,67 @@ public class GoalController {
     }
 
     /**
-     * 현재 목표 강제 완료 (QA 테스트 전용)
+     * 목표 초기화 (현재 목표 강제 완료)
+     *
+     * 중간에 메인 기록 타입을 변경하고 싶을 때 사용합니다.
+     * 현재 목표를 완료 처리하고 recentHistory[0]에 저장한 후,
+     * 새로운 목표를 설정할 수 있도록 초기화합니다.
      *
      * @param authentication 인증 정보 (JWT 토큰에서 userId 추출)
      * @return 강제 완료 결과
      */
     @PatchMapping("/current/force-complete")
     @Operation(
-            summary = "현재 목표 강제 완료 (QA 테스트 전용)",
+            summary = "목표 초기화 (현재 목표 강제 완료)",
             description = """
-                현재 진행중인 목표를 강제로 완료 상태로 변경합니다.
-                
-                ### 🎯 목적
-                - **QA 테스트 편의성**: 목표 기간이 끝나지 않아도 완료 처리
-                - **달성 보고서 테스트**: currentPeriod 및 recentHistory 정상 동작 확인
-                - **목표 재설정**: 완료 후 즉시 새로운 목표 설정 가능
-                
+                현재 진행중인 목표를 강제로 완료 상태로 변경하여 목표를 초기화합니다.
+
+                ### 🎯 목표 초기화가 필요한 경우
+
+                사용자가 목표를 설정한 후 중간에 **메인 기록 타입을 변경**하고 싶을 때 사용합니다.
+
+                **예시 시나리오:**
+                1. 운동 기록으로 20일 목표를 설정함
+                2. 20일 동안 운동이 메인 기록 타입으로 고정됨
+                3. 중간에 운동을 그만두고 **습관 기록으로 전환하고 싶음**
+                4. 하지만 20일이 끝나기 전까지는 운동이 메인으로 유지됨
+                5. **목표 초기화**를 통해 현재 목표를 완료 처리하고 새로운 목표 설정 가능
+
+                ### 📌 사용 목적
+                - **사용자 자율성 부여**: 목표 기간 중에도 메인 기록 타입 변경 가능
+                - **유연한 목표 관리**: 운동 → 습관, 습관 → 일상 등 자유롭게 전환
+                - **기록 보존**: 이전 목표는 달성 보고서(`recentHistory[0]`)에 히스토리로 저장
+
                 ### 📋 완료 후 변화
                 1. **목표 상태**: IN_PROGRESS → COMPLETED
                 2. **완료 시간**: completedAt 자동 설정
                 3. **진행률 유지**: 현재 달성률 그대로 유지
-                4. **User 정보**: mainRecordType, goalDays → null로 초기화
+                4. **User 정보**: mainRecordType, goalDays → **null로 초기화**
                 5. **미래 메인 습관 기록**: 내일부터의 기록들 자동 삭제 (HABIT 목표만)
-                6. **달성 보고서**: recentHistory에 완료된 목표로 표시
-                7. **새 목표**: 즉시 새로운 목표 생성 가능
-                
-                ### 🔍 테스트 시나리오
-                1. **목표 강제 완료** → 달성 보고서에서 `recentHistory[0]` 확인
-                2. **새 목표 생성** → 다양한 타입으로 목표 재설정 테스트
-                3. **완료된 목표 조회** → `currentPeriod`가 올바르게 null인지 확인
-                
-                ### ⚠️ 주의사항
-                - **QA 테스트 전용**: 프로덕션 환경에서 사용 금지
-                - **데이터 보존**: 목표는 삭제되지 않고 완료 상태로만 변경
+                6. **달성 보고서**: **recentHistory[0]에 완료된 목표로 저장**
+                7. **새 목표**: 즉시 새로운 목표 설정 가능 (다른 타입으로 변경 가능)
+
+                ### 🔄 사용 흐름
+                1. **목표 초기화 호출** → 현재 목표 완료 처리
+                2. **달성 보고서 확인** → `recentHistory[0]`에서 이전 목표 확인 가능
+                3. **새 목표 설정** → 원하는 타입(HABIT/EXERCISE/DAILY)으로 새로운 목표 생성
+
+                ### 💡 참고사항
+                - 메인 화면의 ALL 타입에서는 메인 기록 타입이 우선 표시됨
+                - 목표 초기화 후에는 다시 목표를 설정해야 메인 화면 사용 가능
+                - 이전 목표 기록들은 삭제되지 않고 히스토리에 보존됨
                 """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "목표 강제 완료 성공",
+                    description = "목표 초기화 성공 (완료된 목표는 recentHistory[0]에 저장됨)",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = com.recordmanagement.habitlog.global.common.response.ApiResponse.class),
                             examples = @ExampleObject(
-                                    name = "목표 강제 완료 성공",
+                                    name = "목표 초기화 성공",
                                     value = """
                                             {
                                               "statusCode": 200,
@@ -658,7 +674,7 @@ public class GoalController {
                                                 "completedGoalDays": 30,
                                                 "finalAchievementRate": 73.3,
                                                 "canCreateNewGoal": true,
-                                                "message": "목표가 완료되었습니다. 달성 보고서에서 확인할 수 있습니다."
+                                                "message": "목표가 완료되었습니다. 달성 보고서 recentHistory[0]에서 확인할 수 있습니다."
                                               }
                                             }
                                             """
@@ -702,7 +718,7 @@ public class GoalController {
             Authentication authentication) {
 
         String userId = authentication.getName();
-        log.info("QA 테스트: 현재 목표 강제 완료 요청 - userId: {}", userId);
+        log.info("목표 초기화: 현재 목표 강제 완료 요청 - userId: {}", userId);
 
         // 완료 전 현재 목표 정보 조회 (응답용)
         Optional<Goal> currentGoal = goalApplicationService.getCurrentGoal(UserId.from(userId));
