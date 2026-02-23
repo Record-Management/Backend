@@ -78,6 +78,10 @@ public class NotificationHistoryResponse {
                 "습관 기록",
                 "아직 '습관 기록'을 작성하지 않았어요. 꾸준히 쌓이는 하루가 큰 변화를 만들 수 있어요."
             );
+            case HABIT_TIME_BASED_REMINDER -> new TitleMessage(
+                "습관 실천 알림",
+                "습관을 실천할 시간이에요! 오늘도 꾸준히 이어가볼까요?"
+            );
             case GOAL_SETTING_REMINDER -> new TitleMessage(
                 "목표 설정",
                 "아직 목표를 설정하지 않으셨어요! 지금부터 새로운 목표를 만들어볼까요?"

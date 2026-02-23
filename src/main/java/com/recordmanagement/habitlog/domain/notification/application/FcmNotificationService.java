@@ -300,7 +300,7 @@ public class FcmNotificationService {
 
         // 추가 데이터 설정
         Map<String, String> data = new HashMap<>();
-        data.put("notificationType", NotificationType.HABIT_REMINDER.name());
+        data.put("notificationType", NotificationType.HABIT_TIME_BASED_REMINDER.name());
         data.put("habitType", habitRecord.getHabitType().name());
         data.put("habitRecordId", habitRecord.getId().getValue());
         data.put("imageUrl", NotificationImageUtil.getImageUrl(RecordType.HABIT));
@@ -314,11 +314,17 @@ public class FcmNotificationService {
         );
 
         if (success) {
+            // 알림 발송 성공 시 히스토리 저장
+            NotificationHistory history = new NotificationHistory(
+                    user.getId(),
+                    NotificationType.HABIT_TIME_BASED_REMINDER,
+                    title,
+                    body
+            );
+            notificationHistoryApplicationService.saveNotificationHistory(history);
+
             log.info("습관별 시간 지정 알림 발송 성공: habitRecordId={}, habitType={}",
                     habitRecord.getId().getValue(), habitRecord.getHabitType().getDescription());
-
-            // 참고: 습관 시간 지정 알림은 히스토리에 저장하지 않음 (프론트 앱 호환성)
-            // 중복 발송 방지는 notificationTime 조건으로 자연스럽게 처리됨
         } else {
             log.error("습관별 시간 지정 알림 발송 실패: habitRecordId={}, userId={}",
                     habitRecord.getId().getValue(), user.getId().getValue());

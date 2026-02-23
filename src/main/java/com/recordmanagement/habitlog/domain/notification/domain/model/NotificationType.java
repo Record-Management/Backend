@@ -28,9 +28,14 @@ public enum NotificationType {
     EXERCISE_REMINDER("운동 기록 미등록 알림"),
 
     /**
-     * 습관 기록 미등록 알림
+     * 습관 기록 미등록 알림 (19시 일괄)
      */
     HABIT_REMINDER("습관 기록 미등록 알림"),
+
+    /**
+     * 습관별 시간 지정 알림
+     */
+    HABIT_TIME_BASED_REMINDER("습관별 시간 지정 알림"),
 
     /**
      * 목표 미설정 알림
