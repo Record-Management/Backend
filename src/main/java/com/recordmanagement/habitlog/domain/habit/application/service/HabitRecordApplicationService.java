@@ -102,39 +102,35 @@ public class HabitRecordApplicationService {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
         
-        // 메인 기록 결정 (명시적으로 설정되지 않은 경우)
-        boolean isMainRecord = false; // 기본값을 서브 기록으로 변경
-        if (command.isMainRecord() == null) {
-            // 해당 날짜에 이미 메인 습관 기록이 있는지 확인
-            boolean hasMainHabitRecord = habitRecordRepository.existsMainRecordByUserIdAndRecordDate(
-                command.userId(), 
-                command.recordDate()
-            );
-            
-            if (hasMainHabitRecord) {
-                // 이미 메인 기록이 있으면 서브 기록으로 설정
-                isMainRecord = false;
-                log.info("해당 날짜에 메인 습관 기록이 이미 존재하여 서브 기록으로 생성: userId=[{}], recordDate=[{}]", 
-                        command.userId().getValue(), command.recordDate());
-            } else {
-                // 메인 기록이 없으면 사용자의 메인 기록 타입에 따라 결정
-                if (user.getMainRecordType() == RecordType.HABIT) {
-                    // 습관 타입 사용자인 경우: MainRecordDeterminationService 사용
-                    isMainRecord = mainRecordDeterminationService.determineMainRecord(
-                        command.userId(), 
-                        RecordType.HABIT, 
-                        command.recordDate(), 
-                        habitRecordCount
-                    );
-                } else {
-                    // 다른 타입 사용자인 경우: 서브 기록으로 설정
-                    isMainRecord = false;
-                    log.info("사용자의 메인 기록 타입이 습관이 아니므로 서브 기록으로 생성: userId=[{}], mainRecordType=[{}]", 
-                            command.userId().getValue(), user.getMainRecordType());
-                }
-            }
-        } else {
+        // 메인 기록 결정
+        // 습관 타입 사용자의 경우 해당 날짜 첫 습관 기록은 무조건 메인 기록
+        boolean hasMainHabitRecord = habitRecordRepository.existsMainRecordByUserIdAndRecordDate(
+            command.userId(),
+            command.recordDate()
+        );
+
+        boolean isMainRecord;
+
+        if (user.getMainRecordType() == RecordType.HABIT && !hasMainHabitRecord) {
+            // 습관 타입 사용자 + 첫 습관 기록 = 무조건 메인 기록
+            isMainRecord = true;
+            log.info("습관 타입 사용자의 첫 습관 기록으로 메인 기록 설정: userId=[{}], recordDate=[{}]",
+                    command.userId().getValue(), command.recordDate());
+        } else if (hasMainHabitRecord) {
+            // 이미 메인 습관 기록이 있으면 서브 기록으로 설정
+            isMainRecord = false;
+            log.info("해당 날짜에 메인 습관 기록이 이미 존재하여 서브 기록으로 생성: userId=[{}], recordDate=[{}]",
+                    command.userId().getValue(), command.recordDate());
+        } else if (command.isMainRecord() != null) {
+            // 습관 타입이 아닌 사용자가 명시적으로 isMainRecord를 설정한 경우
             isMainRecord = command.isMainRecord();
+            log.info("메인 기록 상태 명시적 설정: userId=[{}], isMainRecord=[{}]",
+                    command.userId().getValue(), isMainRecord);
+        } else {
+            // 그 외의 경우 서브 기록
+            isMainRecord = false;
+            log.info("서브 기록으로 설정: userId=[{}], mainRecordType=[{}]",
+                    command.userId().getValue(), user.getMainRecordType());
         }
         
         HabitRecord habitRecord = HabitRecord.create(
