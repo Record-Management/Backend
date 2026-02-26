@@ -151,13 +151,13 @@ public class HabitRecordApplicationService {
         if (isMainRecord && user.getMainRecordType() == RecordType.HABIT) {
             updateExistingMainRecordsToSub(user, savedHabitRecord);
             
-            // 메인 습관 기록 생성 시 목표 종료일까지 자동 생성
+            // 메인 습관 기록 생성 시 내일부터 목표 종료일까지 자동 생성
             try {
                 var recordApplicationService = applicationContext.getBean(
                     com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
                 recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(command.userId());
-                
-                log.info("메인 습관 기록 목표 기간 자동 생성 완료: userId={}", command.userId().getValue());
+
+                log.info("메인 습관 기록 자동 생성 완료 (내일부터): userId={}", command.userId().getValue());
             } catch (Exception e) {
                 log.error("메인 습관 기록 자동 생성 실패: userId={}, error={}", 
                         command.userId().getValue(), e.getMessage(), e);

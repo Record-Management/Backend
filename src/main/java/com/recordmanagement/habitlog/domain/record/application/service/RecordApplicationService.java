@@ -584,8 +584,10 @@ public class RecordApplicationService {
     }
     
     /**
-     * 전체 습관 기간에 대한 메인 습관 기록 실제 생성
-     * 메인 기록 타입이 HABIT로 변경될 때 호출되어 전체 목표 기간에 대한 메인 습관 기록을 실제 DB에 생성
+     * 내일부터 목표 종료일까지 메인 습관 기록 자동 생성
+     *
+     * 습관 타입 사용자가 첫 습관 기록을 생성할 때 호출됩니다.
+     * 오늘 날짜는 이미 습관 기록이 생성되었으므로, 내일부터 목표 종료일까지만 자동 생성합니다.
      */
     @CacheEvict(value = "calendar", allEntries = true)
     public void generatePlaceholderMainHabitRecordsForEntirePeriod(UserId userId) {
@@ -610,9 +612,10 @@ public class RecordApplicationService {
         LocalDate habitStartDate = user.getHabitStartDate();
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
         LocalDate today = LocalDate.now();
-        
-        // 오늘부터 목표 종료일까지의 기존 습관 기록 조회 (과거 날짜는 생성하지 않음)
-        LocalDate startDate = today.isAfter(habitStartDate) ? today : habitStartDate;
+        LocalDate tomorrow = today.plusDays(1);
+
+        // 내일부터 목표 종료일까지의 기존 습관 기록 조회 (오늘 날짜는 이미 생성되었으므로 제외)
+        LocalDate startDate = tomorrow.isAfter(habitStartDate) ? tomorrow : habitStartDate;
         List<HabitRecord> existingHabitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
             userId, startDate, habitEndDate);
         
@@ -635,7 +638,7 @@ public class RecordApplicationService {
         
         int createdCount = 0;
         
-        // 오늘부터 목표 종료일까지 실제 메인 습관 기록을 DB에 생성
+        // 내일부터 목표 종료일까지 실제 메인 습관 기록을 DB에 생성
         for (LocalDate date = startDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
             // 이미 습관 기록이 있는 날짜는 스킵
             if (!existingHabitDates.contains(date)) {
@@ -657,7 +660,7 @@ public class RecordApplicationService {
             }
         }
         
-        log.info("오늘부터 목표 종료일까지 메인 습관 기록 생성 완료: userId={}, generationPeriod=[{} ~ {}], createdCount={}", 
+        log.info("내일부터 목표 종료일까지 메인 습관 기록 생성 완료: userId={}, generationPeriod=[{} ~ {}], createdCount={}",
                 userId.getValue(), startDate, habitEndDate, createdCount);
     }
     

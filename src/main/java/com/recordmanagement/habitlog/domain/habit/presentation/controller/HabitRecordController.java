@@ -109,8 +109,8 @@ public class HabitRecordController {
                 mediaType = "application/json",
                 examples = {
                     @io.swagger.v3.oas.annotations.media.ExampleObject(
-                        name = "습관 타입 사용자의 메인 기록",
-                        summary = "메인 기록 타입이 습관인 사용자의 메인 습관 기록 작성 + 목표 기간 자동 생성 (DB에만, API는 오늘만)",
+                        name = "습관 타입 사용자의 첫 습관 (무조건 메인 기록)",
+                        summary = "습관 타입 사용자의 첫 습관은 isMainRecord 값에 관계없이 무조건 메인 기록 + 내일부터 목표 종료일까지 자동 생성",
                         value = """
                             {
                               "statusCode": 200,
@@ -126,7 +126,7 @@ public class HabitRecordController {
                                 "habitType": "WATER_DRINKING",
                                 "notificationEnabled": true,
                                 "notificationTime": "09:00:00",
-                                "memo": "30일 물마시기 도전 시작! (DB에는 목표 종료일까지 자동 생성, API는 오늘까지만 응답)",
+                                "memo": "30일 물마시기 도전 시작! (첫 습관은 무조건 메인, 내일부터 자동 생성)",
                                 "isCompleted": false,
                                 "isMainRecord": true
                               }
