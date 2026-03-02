@@ -64,6 +64,12 @@ public class GoalApplicationService {
         log.info("Creating new goal for user: {}, recordType: {}, goalDays: {}, startDate: {}",
                 userId.getValue(), recordType, goalDays, startDate);
 
+        // 중복 IN_PROGRESS 목표 자동 정리 (데이터 정합성 보장)
+        int cleanedCount = cleanupDuplicateInProgressGoals(userId);
+        if (cleanedCount > 0) {
+            log.info("목표 생성 전 중복 목표 정리 완료 - {}개 정리됨", cleanedCount);
+        }
+
         // 기존 진행중인 목표가 있는지 확인
         Optional<Goal> existingGoal = goalRepository.findCurrentGoalByUserId(userId);
         if (existingGoal.isPresent()) {
@@ -249,7 +255,13 @@ public class GoalApplicationService {
     @CacheEvict(value = "user", key = "#userId.getValue()")
     public void forceCompleteCurrentGoal(UserId userId) {
         log.info("QA 테스트: 현재 목표 강제 완료 요청 - userId: {}", userId.getValue());
-        
+
+        // 중복 IN_PROGRESS 목표 자동 정리 (데이터 정합성 보장)
+        int cleanedCount = cleanupDuplicateInProgressGoals(userId);
+        if (cleanedCount > 0) {
+            log.info("목표 초기화 전 중복 목표 정리 완료 - {}개 정리됨", cleanedCount);
+        }
+
         // 1. 현재 목표 조회
         Optional<Goal> currentGoalOpt = goalRepository.findCurrentGoalByUserId(userId);
         if (currentGoalOpt.isEmpty()) {
@@ -284,5 +296,51 @@ public class GoalApplicationService {
         
         log.info("사용자 목표 설정 초기화 완료 - userId: {}", userId.getValue());
         log.info("QA 테스트: 목표 강제 완료 완료 - goalId: {}, 새 목표 설정 가능", currentGoal.getId().getValue());
+    }
+
+    /**
+     * 중복된 IN_PROGRESS 목표 정리
+     * - 여러 개의 IN_PROGRESS 목표가 존재하는 경우, 가장 최근 목표만 남기고 나머지는 COMPLETED로 변경
+     * - 데이터 정합성 문제 해결용 유틸리티 메서드
+     *
+     * @param userId 사용자 ID
+     * @return 정리된 목표 개수
+     */
+    @Transactional
+    public int cleanupDuplicateInProgressGoals(UserId userId) {
+        log.info("중복 IN_PROGRESS 목표 정리 시작 - userId: {}", userId.getValue());
+
+        // 모든 IN_PROGRESS 목표 조회
+        List<Goal> inProgressGoals = goalRepository.findByUserIdAndStatus(userId, GoalStatus.IN_PROGRESS);
+
+        if (inProgressGoals.size() <= 1) {
+            log.info("중복 목표 없음 - IN_PROGRESS 목표 개수: {}", inProgressGoals.size());
+            return 0;
+        }
+
+        log.warn("중복 IN_PROGRESS 목표 발견 - 개수: {}", inProgressGoals.size());
+
+        // 가장 최근에 생성된 목표만 유지하고 나머지는 COMPLETED로 변경
+        List<Goal> sortedGoals = inProgressGoals.stream()
+                .sorted((g1, g2) -> g2.getCreatedAt().compareTo(g1.getCreatedAt()))
+                .toList();
+
+        Goal latestGoal = sortedGoals.get(0);
+        List<Goal> duplicateGoals = sortedGoals.subList(1, sortedGoals.size());
+
+        int cleanedCount = 0;
+        for (Goal duplicateGoal : duplicateGoals) {
+            log.info("중복 목표 강제 완료 처리 - goalId: {}, createdAt: {}",
+                    duplicateGoal.getId().getValue(), duplicateGoal.getCreatedAt());
+
+            duplicateGoal.forceComplete();
+            goalRepository.save(duplicateGoal);
+            cleanedCount++;
+        }
+
+        log.info("중복 IN_PROGRESS 목표 정리 완료 - 유지: goalId={}, 정리: {}개",
+                latestGoal.getId().getValue(), cleanedCount);
+
+        return cleanedCount;
     }
 }
