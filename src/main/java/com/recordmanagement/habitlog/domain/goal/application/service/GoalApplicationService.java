@@ -14,6 +14,7 @@ import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,19 +82,25 @@ public class GoalApplicationService {
             throw new IllegalArgumentException("목표일수는 10, 20, 30일만 가능합니다.");
         }
 
-        Goal goal = new Goal(userId, recordType, goalDays, startDate);
-        Goal savedGoal = goalRepository.save(goal);
-        
-        // User 정보와 동기화: 목표 생성 시 사용자 정보 업데이트
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        user.updateGoalSettings(recordType, goalDays);
-        userRepository.save(user);
-        
-        log.info("User goal settings updated: userId={}, recordType={}, goalDays={}", 
-                userId.getValue(), recordType, goalDays);
-        
-        return savedGoal;
+        try {
+            Goal goal = new Goal(userId, recordType, goalDays, startDate);
+            Goal savedGoal = goalRepository.save(goal);
+
+            // User 정보와 동기화: 목표 생성 시 사용자 정보 업데이트
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            user.updateGoalSettings(recordType, goalDays);
+            userRepository.save(user);
+
+            log.info("User goal settings updated: userId={}, recordType={}, goalDays={}",
+                    userId.getValue(), recordType, goalDays);
+
+            return savedGoal;
+        } catch (DataIntegrityViolationException e) {
+            // DB UNIQUE INDEX 위반 (race condition으로 동시에 목표 생성 시도)
+            log.warn("목표 생성 중 DB 제약 위반 발생 - userId: {}, 이미 진행 중인 목표 존재", userId.getValue());
+            throw new CustomException(ErrorCode.GOAL_ALREADY_IN_PROGRESS);
+        }
     }
 
     /**
