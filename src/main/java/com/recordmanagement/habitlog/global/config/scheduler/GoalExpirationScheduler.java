@@ -83,17 +83,17 @@ public class GoalExpirationScheduler {
                         RecordType recordType = goalJpaRepository.findRecordTypeByGoalId(goalId);
                         
                         if (userId != null) {
-                            // HABIT 타입 목표 완료 시 미래 메인 습관 기록 삭제
-                            if (recordType == RecordType.HABIT) {
-                                try {
-                                    int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(
-                                            UserId.of(userId), today);
-                                    log.info("자동 목표 완료로 미래 메인 습관 기록 삭제: userId={}, deletedCount={}", 
+                            // 목표 완료 시 미래 메인 습관 기록 삭제 (이전 목표 타입과 무관)
+                            try {
+                                int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(
+                                        UserId.of(userId), today);
+                                if (deletedCount > 0) {
+                                    log.info("자동 목표 완료로 미래 메인 습관 기록 삭제: userId={}, deletedCount={}",
                                             userId, deletedCount);
-                                } catch (Exception e) {
-                                    log.error("미래 메인 습관 기록 삭제 실패: userId={}, goalId={}, error={}", 
-                                            userId, goalId, e.getMessage());
                                 }
+                            } catch (Exception e) {
+                                log.error("미래 메인 습관 기록 삭제 실패: userId={}, goalId={}, error={}",
+                                        userId, goalId, e.getMessage());
                             }
                             
                             // 사용자에게 다른 진행중인 목표가 있는지 확인

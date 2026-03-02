@@ -137,10 +137,11 @@ public class GoalApplicationService {
             goal.complete();
             
             // 목표 자연 완료 시 내일부터의 미래 메인 습관 기록들 삭제
-            if (goal.getRecordType() == RecordType.HABIT) {
-                LocalDate tomorrow = LocalDate.now().plusDays(1);
-                int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
-                log.info("목표 자연 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}", 
+            // 이전 목표 타입과 관계없이 항상 삭제
+            LocalDate tomorrow = LocalDate.now().plusDays(1);
+            int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+            if (deletedCount > 0) {
+                log.info("목표 자연 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}",
                         userId.getValue(), deletedCount);
             }
             
@@ -212,10 +213,11 @@ public class GoalApplicationService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 목표를 찾을 수 없습니다."));
 
         // 목표 삭제 시 내일부터의 미래 메인 습관 기록들 삭제
-        if (goal.getRecordType() == RecordType.HABIT) {
-            LocalDate tomorrow = LocalDate.now().plusDays(1);
-            int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
-            log.info("목표 삭제로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}", 
+        // 이전 목표 타입과 관계없이 항상 삭제
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+        if (deletedCount > 0) {
+            log.info("목표 삭제로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}",
                     userId.getValue(), deletedCount, tomorrow);
         }
 
@@ -291,10 +293,11 @@ public class GoalApplicationService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         
         // 목표 완료 시 내일부터의 미래 메인 습관 기록들 삭제
-        if (currentGoal.getRecordType() == RecordType.HABIT) {
-            LocalDate tomorrow = LocalDate.now().plusDays(1);
-            int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
-            log.info("목표 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}", 
+        // 이전 목표 타입과 관계없이 항상 삭제 (습관→하루/운동 전환 시에도 이전 습관 기록 제거)
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        int deletedCount = habitRecordRepository.deleteMainRecordsAfterDate(userId, tomorrow);
+        if (deletedCount > 0) {
+            log.info("목표 완료로 미래 메인 습관 기록 삭제 완료: userId={}, deletedCount={}, fromDate={}",
                     userId.getValue(), deletedCount, tomorrow);
         }
         
