@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.domain.user.domain.repository;
 
+import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
@@ -100,8 +101,16 @@ public interface UserRepository {
 
     /**
      * 활성 사용자 조회 (탈퇴하지 않은 사용자)
-     * 
+     *
      * @return 활성 사용자 목록
      */
     List<User> findActiveUsers();
+
+    /**
+     * 메인 기록 타입으로 사용자 조회
+     *
+     * @param mainRecordType 메인 기록 타입
+     * @return 해당 메인 기록 타입을 가진 사용자 목록
+     */
+    List<User> findByMainRecordType(RecordType mainRecordType);
 }

@@ -103,7 +103,6 @@ public class HabitRecordApplicationService {
         }
         
         // 메인 기록 결정
-        // 습관 타입 사용자의 경우 해당 날짜 첫 습관 기록은 무조건 메인 기록
         boolean hasMainHabitRecord = habitRecordRepository.existsMainRecordByUserIdAndRecordDate(
             command.userId(),
             command.recordDate()
@@ -111,26 +110,29 @@ public class HabitRecordApplicationService {
 
         boolean isMainRecord;
 
-        if (user.getMainRecordType() == RecordType.HABIT && !hasMainHabitRecord) {
-            // 습관 타입 사용자 + 첫 습관 기록 = 무조건 메인 기록
+        // 1순위: 사용자가 명시적으로 메인 기록으로 설정한 경우 (서브→메인 변경 체크 시)
+        if (command.isMainRecord() != null && command.isMainRecord()) {
             isMainRecord = true;
-            log.info("습관 타입 사용자의 첫 습관 기록으로 메인 기록 설정: userId=[{}], recordDate=[{}]",
+            log.info("사용자가 명시적으로 메인 기록으로 설정: userId=[{}], recordDate=[{}]",
                     command.userId().getValue(), command.recordDate());
-        } else if (hasMainHabitRecord) {
-            // 이미 메인 습관 기록이 있으면 서브 기록으로 설정
+        }
+        // 2순위: 명시적으로 서브로 설정한 경우
+        else if (command.isMainRecord() != null && !command.isMainRecord()) {
             isMainRecord = false;
-            log.info("해당 날짜에 메인 습관 기록이 이미 존재하여 서브 기록으로 생성: userId=[{}], recordDate=[{}]",
+            log.info("사용자가 명시적으로 서브 기록으로 설정: userId=[{}], recordDate=[{}]",
                     command.userId().getValue(), command.recordDate());
-        } else if (command.isMainRecord() != null) {
-            // 습관 타입이 아닌 사용자가 명시적으로 isMainRecord를 설정한 경우
-            isMainRecord = command.isMainRecord();
-            log.info("메인 기록 상태 명시적 설정: userId=[{}], isMainRecord=[{}]",
-                    command.userId().getValue(), isMainRecord);
-        } else {
-            // 그 외의 경우 서브 기록
+        }
+        // 3순위: 습관 타입 사용자 + 첫 습관 기록 = 자동으로 메인 기록
+        else if (user.getMainRecordType() == RecordType.HABIT && !hasMainHabitRecord) {
+            isMainRecord = true;
+            log.info("습관 타입 사용자의 첫 습관 기록으로 메인 기록 자동 설정: userId=[{}], recordDate=[{}]",
+                    command.userId().getValue(), command.recordDate());
+        }
+        // 4순위: 이미 메인 습관 기록이 있거나 습관 타입이 아닌 경우 서브 기록
+        else {
             isMainRecord = false;
-            log.info("서브 기록으로 설정: userId=[{}], mainRecordType=[{}]",
-                    command.userId().getValue(), user.getMainRecordType());
+            log.info("서브 기록으로 설정: userId=[{}], mainRecordType=[{}], hasMainRecord=[{}]",
+                    command.userId().getValue(), user.getMainRecordType(), hasMainHabitRecord);
         }
         
         HabitRecord habitRecord = HabitRecord.create(
@@ -257,28 +259,52 @@ public class HabitRecordApplicationService {
         // 메인 기록 상태 업데이트
         updatedRecord = updatedRecord.updateMainRecordStatus(finalIsMainRecord);
         
-        // 메인 기록으로 변경되는 경우 오늘부터 목표 종료일까지의 기존 메인 기록들을 삭제
+        // 메인 기록으로 변경되는 경우 기존 메인 기록 처리
         if (finalIsMainRecord && !existingRecord.isMainRecord() && user.getMainRecordType() == RecordType.HABIT) {
+            LocalDate recordDate = existingRecord.getRecordDate();
             LocalDate today = LocalDate.now();
             LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
-            
-            // 오늘부터 목표 종료일까지의 다른 메인 습관 기록들을 삭제 (정리본에 따라)
-            List<HabitRecord> otherMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-                command.userId(), today, habitEndDate
+            LocalDate tomorrow = today.plusDays(1);
+
+            // 1. 같은 날짜의 다른 메인 습관 기록들을 서브로 변경
+            List<HabitRecord> sameDateMainRecords = habitRecordRepository.findByUserIdAndRecordDate(
+                command.userId(), recordDate
             ).stream()
             .filter(record -> !record.getId().equals(existingRecord.getId()))
             .filter(HabitRecord::isMainRecord)
             .toList();
-            
-            int deletedCount = 0;
-            for (HabitRecord otherMainRecord : otherMainRecords) {
-                habitRecordRepository.deleteById(otherMainRecord.getId());
-                deletedCount++;
-                log.info("서브→메인 변경으로 기존 메인 습관 기록 삭제: habitRecordId={}, recordDate={}", 
+
+            int updatedCount = 0;
+            for (HabitRecord otherMainRecord : sameDateMainRecords) {
+                HabitRecord toSubRecord = otherMainRecord.updateMainRecordStatus(false);
+                habitRecordRepository.save(toSubRecord);
+                updatedCount++;
+                log.info("서브→메인 변경으로 같은 날짜 기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}",
                         otherMainRecord.getId().getValue(), otherMainRecord.getRecordDate());
             }
-            log.info("서브→메인 변경으로 기존 메인 습관 기록 삭제 완료: userId={}, 삭제된 기록 수={}, 기간=[{} ~ {}]", 
-                    command.userId().getValue(), deletedCount, today, habitEndDate);
+
+            // 2. 내일부터 목표 종료일까지의 기존 메인 습관 기록들을 삭제 (미래 날짜만)
+            if (tomorrow.isBefore(habitEndDate) || tomorrow.isEqual(habitEndDate)) {
+                List<HabitRecord> futureMainRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
+                    command.userId(), tomorrow, habitEndDate
+                ).stream()
+                .filter(record -> !record.getId().equals(existingRecord.getId()))
+                .filter(HabitRecord::isMainRecord)
+                .toList();
+
+                int deletedCount = 0;
+                for (HabitRecord futureMainRecord : futureMainRecords) {
+                    habitRecordRepository.deleteById(futureMainRecord.getId());
+                    deletedCount++;
+                    log.info("서브→메인 변경으로 미래 메인 습관 기록 삭제: habitRecordId={}, recordDate={}",
+                            futureMainRecord.getId().getValue(), futureMainRecord.getRecordDate());
+                }
+                log.info("서브→메인 변경 처리 완료: userId={}, 서브로 변경={}, 미래 삭제={}",
+                        command.userId().getValue(), updatedCount, deletedCount);
+            } else {
+                log.info("서브→메인 변경 처리 완료: userId={}, 서브로 변경={}",
+                        command.userId().getValue(), updatedCount);
+            }
         }
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);

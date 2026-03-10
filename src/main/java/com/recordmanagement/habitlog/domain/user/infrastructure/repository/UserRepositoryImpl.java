@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.domain.auth.infrastructure.user.repository;
 
+import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
@@ -135,12 +136,26 @@ public class UserRepositoryImpl implements UserRepository {
 
     /**
      * 활성 사용자 조회 (탈퇴하지 않은 사용자)
-     * 
+     *
      * @return 활성 사용자 목록
      */
     @Override
     public List<User> findActiveUsers() {
         return userJpaRepository.findByDeletedAtIsNull()
+                .stream()
+                .map(UserEntity::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 메인 기록 타입으로 사용자 조회
+     *
+     * @param mainRecordType 메인 기록 타입
+     * @return 해당 메인 기록 타입을 가진 사용자 목록
+     */
+    @Override
+    public List<User> findByMainRecordType(RecordType mainRecordType) {
+        return userJpaRepository.findByMainRecordTypeAndDeletedAtIsNull(mainRecordType)
                 .stream()
                 .map(UserEntity::toDomain)
                 .collect(Collectors.toList());

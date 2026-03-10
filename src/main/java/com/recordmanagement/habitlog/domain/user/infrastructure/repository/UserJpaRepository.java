@@ -1,5 +1,6 @@
 package com.recordmanagement.habitlog.domain.auth.infrastructure.user.repository;
 
+import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.infrastructure.entity.UserEntity;
 import com.recordmanagement.habitlog.domain.user.domain.model.SocialType;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -85,8 +86,16 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, String> {
 
     /**
      * 활성 사용자 조회 (탈퇴하지 않은 사용자)
-     * 
+     *
      * @return 활성 사용자 엔티티 목록
      */
     List<UserEntity> findByDeletedAtIsNull();
+
+    /**
+     * 메인 기록 타입으로 활성 사용자 조회 (탈퇴하지 않은 사용자만)
+     *
+     * @param mainRecordType 메인 기록 타입
+     * @return 해당 메인 기록 타입을 가진 활성 사용자 엔티티 목록
+     */
+    List<UserEntity> findByMainRecordTypeAndDeletedAtIsNull(RecordType mainRecordType);
 }
