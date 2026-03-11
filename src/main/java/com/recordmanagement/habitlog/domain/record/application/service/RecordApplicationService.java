@@ -231,11 +231,6 @@ public class RecordApplicationService {
         
         // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
         if (type == null || type == RecordType.HABIT) {
-            // 습관 타입 사용자인 경우 누락된 메인 습관 기록 자동 보완
-            if (user.getMainRecordType() == RecordType.HABIT) {
-                ensureMainHabitRecordsExist(userIdObj, user);
-            }
-            
             // 습관 기록은 습관 목표 기간 내에서만 조회
             List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
             
@@ -582,88 +577,7 @@ public class RecordApplicationService {
         log.info("메인 습관 플레이스홀더 생성 완료: userId={}, habitPeriod=[{} ~ {}], calendarRange=[{} ~ {}]", 
                 userId.getValue(), habitStartDate, habitEndDate, startDate, endDate);
     }
-    
-    /**
-     * 내일부터 목표 종료일까지 메인 습관 기록 자동 생성
-     *
-     * 습관 타입 사용자가 첫 습관 기록을 생성할 때 호출됩니다.
-     * 오늘 날짜는 이미 습관 기록이 생성되었으므로, 내일부터 목표 종료일까지만 자동 생성합니다.
-     */
-    @CacheEvict(value = "calendar", allEntries = true)
-    public void generatePlaceholderMainHabitRecordsForEntirePeriod(UserId userId) {
-        // 사용자 정보 조회
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        
-        // 메인 기록 타입이 HABIT이 아닌 경우 처리하지 않음
-        if (user.getMainRecordType() != RecordType.HABIT) {
-            log.info("메인 기록 타입이 HABIT이 아니므로 메인 습관 기록 생성 생략: userId={}, mainRecordType={}", 
-                    userId.getValue(), user.getMainRecordType());
-            return;
-        }
-        
-        // 습관 시작일이 설정되지 않은 경우 처리하지 않음
-        if (user.getHabitStartDate() == null) {
-            log.warn("습관 시작일이 설정되지 않아 메인 습관 기록 생성 불가: userId={}", userId.getValue());
-            return;
-        }
-        
-        // 습관 기간 범위 계산
-        LocalDate habitStartDate = user.getHabitStartDate();
-        LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
-        LocalDate today = LocalDate.now();
-        LocalDate tomorrow = today.plusDays(1);
 
-        // 내일부터 목표 종료일까지의 기존 습관 기록 조회 (오늘 날짜는 이미 생성되었으므로 제외)
-        LocalDate startDate = tomorrow.isAfter(habitStartDate) ? tomorrow : habitStartDate;
-        List<HabitRecord> existingHabitRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-            userId, startDate, habitEndDate);
-        
-        // 기존 메인 습관 기록이 있는 날짜들을 서브로 변경
-        List<HabitRecord> existingMainRecords = existingHabitRecords.stream()
-            .filter(HabitRecord::isMainRecord)
-            .toList();
-        
-        for (HabitRecord existingMainRecord : existingMainRecords) {
-            HabitRecord updatedRecord = existingMainRecord.updateMainRecordStatus(false);
-            habitRecordRepository.save(updatedRecord);
-            log.info("기존 메인 습관 기록을 서브로 변경: habitRecordId={}, recordDate={}", 
-                    existingMainRecord.getId().getValue(), existingMainRecord.getRecordDate());
-        }
-        
-        // 기존 습관 기록이 있는 날짜 집합 생성
-        Set<LocalDate> existingHabitDates = existingHabitRecords.stream()
-            .map(HabitRecord::getRecordDate)
-            .collect(Collectors.toSet());
-        
-        int createdCount = 0;
-        
-        // 내일부터 목표 종료일까지 실제 메인 습관 기록을 DB에 생성
-        for (LocalDate date = startDate; !date.isAfter(habitEndDate); date = date.plusDays(1)) {
-            // 이미 습관 기록이 있는 날짜는 스킵
-            if (!existingHabitDates.contains(date)) {
-                // 기본 메인 습관 기록 생성
-                HabitRecord mainHabitRecord = HabitRecord.create(
-                    userId,
-                    com.recordmanagement.habitlog.domain.habit.domain.model.HabitType.WATER_DRINKING, // 기본 습관 타입
-                    false, // 기본 알림 비활성화
-                    null, // 알림 시간 없음
-                    "자동 생성된 메인 습관 기록", // 기본 메모
-                    date
-                ).updateMainRecordStatus(true); // 메인 기록으로 설정
-                
-                habitRecordRepository.save(mainHabitRecord);
-                createdCount++;
-                
-                log.debug("자동 메인 습관 기록 생성: habitRecordId={}, date={}", 
-                        mainHabitRecord.getId().getValue(), date);
-            }
-        }
-        
-        log.info("내일부터 목표 종료일까지 메인 습관 기록 생성 완료: userId={}, generationPeriod=[{} ~ {}], createdCount={}",
-                userId.getValue(), startDate, habitEndDate, createdCount);
-    }
-    
     /**
      * 플레이스홀더 습관 기록 생성
      */
@@ -892,86 +806,4 @@ public class RecordApplicationService {
         return result;
     }
     
-    /**
-     * 메인 습관 기록이 누락된 경우 자동으로 보완
-     * 캘린더 조회 시 호출되어 목표 기간 내 누락된 메인 습관 기록을 감지하고 자동 생성
-     */
-    private void ensureMainHabitRecordsExist(UserId userId, User user) {
-        try {
-            // 현재 진행중인 목표 조회
-            List<Goal> currentGoals = goalRepository.findByUserIdAndStatus(userId, 
-                GoalStatus.IN_PROGRESS);
-            
-            if (currentGoals.isEmpty()) {
-                return; // 진행 중인 목표가 없으면 처리하지 않음
-            }
-            
-            // HABIT 타입 목표 찾기
-            Optional<Goal> habitGoalOpt = currentGoals.stream()
-                .filter(goal -> goal.getRecordType() == RecordType.HABIT)
-                .findFirst();
-                
-            if (habitGoalOpt.isEmpty()) {
-                return; // HABIT 타입 목표가 없으면 처리하지 않음
-            }
-            
-            Goal habitGoal = habitGoalOpt.get();
-            LocalDate today = LocalDate.now();
-            LocalDate goalStartDate = habitGoal.getStartDate();
-            LocalDate goalEndDate = habitGoal.getEndDate();
-            
-            // 목표 기간 내에서 오늘까지의 범위만 확인
-            LocalDate checkEndDate = goalEndDate.isBefore(today) ? goalEndDate : today;
-            
-            if (goalStartDate.isAfter(checkEndDate)) {
-                return; // 확인할 기간이 없음
-            }
-            
-            // 해당 기간의 기존 습관 기록 조회
-            List<HabitRecord> existingRecords = habitRecordRepository.findByUserIdAndRecordDateBetween(
-                userId, goalStartDate, checkEndDate);
-            
-            // 기존 기록이 있는 날짜 집합 생성
-            Set<LocalDate> existingDates = existingRecords.stream()
-                .map(HabitRecord::getRecordDate)
-                .collect(Collectors.toSet());
-            
-            int createdCount = 0;
-            
-            // 목표 시작일부터 오늘까지 누락된 날짜에 메인 습관 기록 생성
-            for (LocalDate date = goalStartDate; !date.isAfter(checkEndDate); date = date.plusDays(1)) {
-                if (!existingDates.contains(date)) {
-                    // 누락된 날짜에 메인 습관 기록 생성
-                    HabitRecord mainHabitRecord = HabitRecord.create(
-                        userId,
-                        com.recordmanagement.habitlog.domain.habit.domain.model.HabitType.WATER_DRINKING,
-                        false,
-                        null,
-                        "자동 생성된 메인 습관 기록",
-                        date
-                    ).updateMainRecordStatus(true);
-                    
-                    habitRecordRepository.save(mainHabitRecord);
-                    createdCount++;
-                    
-                    log.debug("누락된 메인 습관 기록 자동 생성: userId={}, date={}, habitRecordId={}", 
-                            userId.getValue(), date, mainHabitRecord.getId().getValue());
-                }
-            }
-            
-            if (createdCount > 0) {
-                log.info("누락된 메인 습관 기록 자동 보완 완료: userId={}, 생성된 기록 수={}", 
-                        userId.getValue(), createdCount);
-                
-                // 캐시 무효화
-                applicationContext.getBean("cacheManager", org.springframework.cache.CacheManager.class)
-                    .getCache("calendar").clear();
-            }
-            
-        } catch (Exception e) {
-            log.error("메인 습관 기록 자동 보완 실패: userId={}, error={}", 
-                    userId.getValue(), e.getMessage(), e);
-            // 자동 보완 실패가 캘린더 조회를 실패시키지 않도록 함
-        }
-    }
 }

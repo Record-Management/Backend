@@ -148,23 +148,12 @@ public class HabitRecordApplicationService {
         habitRecord = habitRecord.updateMainRecordStatus(isMainRecord);
         
         HabitRecord savedHabitRecord = habitRecordRepository.save(habitRecord);
-        
+
         // 메인 기록이고 사용자의 메인 기록 타입이 HABIT인 경우 기존 메인 기록들을 서브로 변경
         if (isMainRecord && user.getMainRecordType() == RecordType.HABIT) {
             updateExistingMainRecordsToSub(user, savedHabitRecord);
-            
-            // 메인 습관 기록 생성 시 내일부터 목표 종료일까지 자동 생성
-            try {
-                var recordApplicationService = applicationContext.getBean(
-                    com.recordmanagement.habitlog.domain.record.application.service.RecordApplicationService.class);
-                recordApplicationService.generatePlaceholderMainHabitRecordsForEntirePeriod(command.userId());
 
-                log.info("메인 습관 기록 자동 생성 완료 (내일부터): userId={}", command.userId().getValue());
-            } catch (Exception e) {
-                log.error("메인 습관 기록 자동 생성 실패: userId={}, error={}", 
-                        command.userId().getValue(), e.getMessage(), e);
-                // 자동 생성 실패가 메인 기록 생성을 실패시키지 않도록 함
-            }
+            log.info("메인 습관 기록 생성 완료 (스케줄러가 내일부터 자동 생성): userId={}", command.userId().getValue());
         }
         
         // 습관 기록 생성 후 목표 진행률 업데이트
@@ -308,15 +297,9 @@ public class HabitRecordApplicationService {
         }
         
         HabitRecord savedRecord = habitRecordRepository.save(updatedRecord);
-        
-        // 메인 기록으로 변경된 경우 또는 메인 기록의 습관 타입이 변경된 경우 일괄 업데이트 (습관 타입 사용자만)
-        if (finalIsMainRecord && user.getMainRecordType() == RecordType.HABIT && 
-            (!existingRecord.isMainRecord() || !existingRecord.getHabitType().equals(savedRecord.getHabitType()))) {
-            updateMainHabitRecordsForRemainingPeriod(command.userId(), savedRecord);
-        }
-        
-        log.info("습관기록 수정 완료: habitRecordId=[{}]", habitRecordId);
-        
+
+        log.info("습관기록 수정 완료: habitRecordId=[{}] (스케줄러가 내일부터 자동 생성)", habitRecordId);
+
         return toResponse(savedRecord);
     }
     
@@ -393,11 +376,8 @@ public class HabitRecordApplicationService {
         // 서브 중 첫 번째를 메인으로 전환
         HabitRecord newMainRecord = subRecords.get(0).updateMainRecordStatus(true);
         habitRecordRepository.save(newMainRecord);
-        
-        // 새 메인 기록으로 목표기간까지 자동 생성
-        updateMainHabitRecordsForRemainingPeriod(userId, newMainRecord);
-        
-        log.info("메인+서브 삭제 처리 완료: 기존메인타입=[{}] 삭제된기록수=[{}], 새메인=[{}] 전환", 
+
+        log.info("메인+서브 삭제 처리 완료: 기존메인타입=[{}] 삭제된기록수=[{}], 새메인=[{}] 전환 (스케줄러가 내일부터 자동 생성)",
                 mainRecord.getHabitType(), deletedCount, newMainRecord.getId().getValue());
     }
     
@@ -537,59 +517,7 @@ public class HabitRecordApplicationService {
         log.info("서브→메인 전환 처리 완료: userId={}, 오늘자 서브 변경={}, 내일부터 삭제 완료", 
                 user.getId().getValue(), updatedCount);
     }
-    
-    /**
-     * 서브 습관을 메인으로 변경시 내일부터 목표 종료일까지 새로운 메인 습관 기록 자동 생성
-     * (기존 메인 습관은 이미 삭제된 상태, 오늘자 기존 메인은 서브로 변경된 상태)
-     */
-    private void updateMainHabitRecordsForRemainingPeriod(UserId userId, HabitRecord newMainRecord) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        
-        LocalDate today = LocalDate.now();
-        LocalDate habitEndDate = user.getHabitStartDate().plusDays(user.getGoalDays() - 1);
-        
-        if (today.isAfter(habitEndDate)) {
-            log.info("목표 기간이 이미 완료되어 메인 습관 기록 자동 생성 불필요: userId={}, today={}, habitEndDate={}", 
-                    userId.getValue(), today, habitEndDate);
-            return;
-        }
-        
-        int createdCount = 0;
-        
-        // 내일부터 목표 종료일까지 새로운 메인 습관 기록 생성
-        for (LocalDate date = today.plusDays(1); !date.isAfter(habitEndDate); date = date.plusDays(1)) {
-            // 해당 날짜에 이미 메인 습관 기록이 있는지 확인
-            boolean hasMainHabitRecord = habitRecordRepository.findByUserIdAndRecordDate(userId, date)
-                    .stream()
-                    .anyMatch(HabitRecord::isMainRecord);
-            
-            if (!hasMainHabitRecord) {
-                // 새로운 메인 습관 기록 생성
-                HabitRecord newHabitRecord = HabitRecord.create(
-                    userId,
-                    newMainRecord.getHabitType(),
-                    newMainRecord.isNotificationEnabled(),
-                    newMainRecord.getNotificationTime(),
-                    "자동 생성된 메인 습관 기록",
-                    date
-                );
-                
-                // 메인 기록으로 설정
-                newHabitRecord = newHabitRecord.updateMainRecordStatus(true);
-                
-                habitRecordRepository.save(newHabitRecord);
-                createdCount++;
-                
-                log.debug("새로운 메인 습관 기록 자동 생성: date={}, habitType={}", 
-                        date, newMainRecord.getHabitType());
-            }
-        }
-        
-        log.info("서브→메인 변경으로 새로운 메인 습관 기록 자동 생성 완료: userId={}, 생성된 기록 수={}, 기간=[{} ~ {}]", 
-                userId.getValue(), createdCount, today.plusDays(1), habitEndDate);
-    }
-    
+
     /**
      * 메인 습관 기록 삭제시 목표 기간 전체의 해당 습관 모든 기록 삭제
      * (습관 포기 의도 - 시작일부터 종료일까지 모든 해당 습관 삭제)
