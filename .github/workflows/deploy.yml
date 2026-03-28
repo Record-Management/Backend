@@ -54,7 +54,7 @@ jobs:
           echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > src/main/resources/firebase-service-account.json
 
           echo "3. 무중단 배포 시작 (빌드 및 컨테이너 재시작)..."
-          docker-compose -f \$COMPOSE_FILE --env-file \$ENV_FILE up -d --build --remove-orphans
+          docker-compose -f \$COMPOSE_FILE --env-file \$ENV_FILE up -d --build
 
           echo "4. 배포 상태 확인 중..."
           sleep 10
