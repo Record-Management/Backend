@@ -131,8 +131,11 @@ public class OpenApiConfig {
                         .url("http://localhost:" + serverPort)
                         .description("로컬 개발 서버"),
                 new Server()
-                        .url("http://54.180.82.163:8082")
-                        .description("개발 서버 (EC2)")
+                        .url("http://54.180.106.131:8082")
+                        .description("Production 서버 (EC2)"),
+                new Server()
+                        .url("http://54.180.106.131:8083")
+                        .description("QA 서버 (EC2)")
         );
     }
 
