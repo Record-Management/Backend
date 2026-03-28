@@ -27,6 +27,7 @@ public class S3FileService {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final String bucketName;
+    private final String s3Prefix;
     
     // 지원하는 이미지 파일 확장자
     private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList(
@@ -45,17 +46,22 @@ public class S3FileService {
     public S3FileService(
             S3Client s3Client,
             S3Presigner s3Presigner,
-            @Value("${spring.cloud.aws.s3.bucket}") String bucketName) {
+            @Value("${spring.cloud.aws.s3.bucket}") String bucketName,
+            @Value("${s3.prefix:prod}") String s3Prefix) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.bucketName = bucketName;
+        this.s3Prefix = s3Prefix;
     }
     
     public String uploadFile(MultipartFile file) {
         validateFile(file);
 
         String fileName = generateFileName(file.getOriginalFilename());
-        String filePath = "records/images/" + fileName;
+        // QA 환경만 prefix 추가, Production은 기존 경로 유지
+        String filePath = "qa".equals(s3Prefix)
+            ? s3Prefix + "/records/images/" + fileName
+            : "records/images/" + fileName;
 
         try {
             // S3에 파일 업로드
