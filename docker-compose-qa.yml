@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  habitlog-db:
+  habitlog-qa-db:
     image: mysql:8.0
-    container_name: habitlog-db
+    container_name: habitlog-qa-db
     restart: always
     environment:
       TZ: Asia/Seoul
@@ -12,29 +12,29 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_qa_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     networks:
-      - habitlog-network
+      - habitlog-qa-network
 
-  habitlog-app:
+  habitlog-qa-app:
     build: .
-    container_name: habitlog-app
+    container_name: habitlog-qa-app
     restart: always
     ports:
-      - "8082:8082"
+      - "8083:8083"
     depends_on:
-      - habitlog-db
+      - habitlog-qa-db
     networks:
-      - habitlog-network
+      - habitlog-qa-network
     environment:
       - TZ=Asia/Seoul
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=${SERVER_PORT}
-      - SPRING_DATASOURCE_URL=jdbc:mysql://habitlog-db:3306/${DB_NAME}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://habitlog-qa-db:3306/${DB_NAME}
       - SPRING_DATASOURCE_USERNAME=${DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
@@ -85,8 +85,8 @@ services:
       - ${APPLE_PRIVATE_KEY_PATH}:/app/AuthKey_BR37FCMBWW.p8
 
 volumes:
-  mysql_data:
+  mysql_qa_data:
 
 networks:
-  habitlog-network:
+  habitlog-qa-network:
     driver: bridge
