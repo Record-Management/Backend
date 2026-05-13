@@ -74,8 +74,9 @@ public class RecordApplicationService {
     private final MainRecordDeterminationService mainRecordDeterminationService;
     private final RecordTypeValidationStrategyFactory validationStrategyFactory;
     private final ApplicationContext applicationContext;
+    private final com.recordmanagement.habitlog.domain.schedule.domain.repository.ScheduleRecordRepository scheduleRecordRepository;
     
-    public RecordApplicationService(RecordRepository recordRepository, 
+    public RecordApplicationService(RecordRepository recordRepository,
                                    ExerciseRecordQueryRepository exerciseRecordQueryRepository,
                                    ExerciseRecordSecurityRepository exerciseRecordSecurityRepository,
                                    HabitRecordRepository habitRecordRepository,
@@ -84,7 +85,8 @@ public class RecordApplicationService {
                                    S3FileService s3FileService,
                                    MainRecordDeterminationService mainRecordDeterminationService,
                                    RecordTypeValidationStrategyFactory validationStrategyFactory,
-                                   ApplicationContext applicationContext) {
+                                   ApplicationContext applicationContext,
+                                   com.recordmanagement.habitlog.domain.schedule.domain.repository.ScheduleRecordRepository scheduleRecordRepository) {
         this.recordRepository = recordRepository;
         this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
         this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
@@ -95,6 +97,7 @@ public class RecordApplicationService {
         this.mainRecordDeterminationService = mainRecordDeterminationService;
         this.validationStrategyFactory = validationStrategyFactory;
         this.applicationContext = applicationContext;
+        this.scheduleRecordRepository = scheduleRecordRepository;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -233,14 +236,33 @@ public class RecordApplicationService {
         if (type == null || type == RecordType.HABIT) {
             // 습관 기록은 습관 목표 기간 내에서만 조회
             List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
-            
+
             // 습관 타입 사용자의 특별한 캘린더 표시 로직 적용
             List<UnifiedRecordResponse> habitResponses = applyHabitTypeCalendarLogic(
                 user, habitRecords, startDate, endDate);
             allRecords.addAll(habitResponses);
         }
-        
-        // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
+
+        // 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
+        if (type == null || type == RecordType.SCHEDULE) {
+            List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
+                scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate);
+
+            // 각 일정을 startDate~endDate 범위의 각 날짜에 표시
+            for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
+                LocalDate scheduleStart = schedule.getStartDate();
+                LocalDate scheduleEnd = schedule.getEndDate();
+
+                // 캘린더 조회 범위와 일정 범위의 교집합 계산
+                LocalDate displayStart = scheduleStart.isBefore(startDate) ? startDate : scheduleStart;
+                LocalDate displayEnd = scheduleEnd.isAfter(endDate) ? endDate : scheduleEnd;
+
+                // 교집합 범위의 각 날짜마다 UnifiedRecordResponse 생성
+                for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
+                    allRecords.add(UnifiedRecordResponse.fromScheduleRecord(schedule, date));
+                }
+            }
+        }
         
         // 날짜별로 그룹핑 (UnifiedRecordResponse 기준)
         Map<LocalDate, List<UnifiedRecordResponse>> recordsByDate = allRecords.stream()
@@ -339,7 +361,15 @@ public class RecordApplicationService {
                 .toList());
         }
         // 미작성인 경우: 아무것도 추가하지 않음 (빈 배열로 프론트에서 처리)
-        
+
+        // 일정 기록 처리 (항상 표시)
+        List<UnifiedRecordResponse> scheduleRecords = recordsByType.getOrDefault(RecordType.SCHEDULE, new ArrayList<>());
+        if (!scheduleRecords.isEmpty()) {
+            summaries.addAll(scheduleRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        }
+
         return summaries;
     }
     
@@ -367,7 +397,7 @@ public class RecordApplicationService {
         
         // 습관 기록 처리: 작성된 것만 표시 (미작성 시 빈칸, 자동 생성 기록도 실제 작성된 것으로 간주)
         List<UnifiedRecordResponse> habitRecords = recordsByType.getOrDefault(RecordType.HABIT, new ArrayList<>());
-        
+
         // 습관 타입 사용자의 자동 생성 기록 특별 처리
         if (mainRecordTypeForDate == RecordType.HABIT) {
             // 메인 습관: 미작성시 숨김, 작성시 isCompleted=false로 표시, 완료시 isCompleted=true로 표시
@@ -381,7 +411,13 @@ public class RecordApplicationService {
                 .map(CalendarRecordResponse.RecordSummary::from)
                 .toList());
         }
-        
+
+        // 일정 기록 처리 (항상 표시)
+        List<UnifiedRecordResponse> scheduleRecords = recordsByType.getOrDefault(RecordType.SCHEDULE, new ArrayList<>());
+        summaries.addAll(scheduleRecords.stream()
+            .map(CalendarRecordResponse.RecordSummary::from)
+            .toList());
+
         return summaries;
     }
     
@@ -597,7 +633,8 @@ public class RecordApplicationService {
             null, // notificationTime
             null, // memo
             false, // isCompleted (미완료 상태)
-            true // isMainRecord (메인 기록)
+            true, // isMainRecord (메인 기록)
+            null, null, null, null, null, null, null // SCHEDULE 필드 없음
         );
     }
     
