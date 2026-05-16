@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.domain.record.application.dto.CalendarRespo
 import com.recordmanagement.habitlog.domain.record.application.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.RecordResponse;
+import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleSummary;
 import com.recordmanagement.habitlog.domain.record.application.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.strategy.RecordTypeValidationStrategyFactory;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -209,9 +211,9 @@ public class RecordApplicationService {
         User user = userRepository.findById(userIdObj)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
         
-        // 모든 타입의 기록을 통합하여 조회
+        // 모든 타입의 기록을 통합하여 조회 (일정 제외)
         List<UnifiedRecordResponse> allRecords = new ArrayList<>();
-        
+
         // 1. 일상 기록 조회 (type이 null이거나 DAILY인 경우)
         if (type == null || type == RecordType.DAILY) {
             List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
@@ -221,7 +223,7 @@ public class RecordApplicationService {
                 .map(UnifiedRecordResponse::fromRecord)
                 .toList());
         }
-        
+
         // 2. 운동 기록 조회 (type이 null이거나 EXERCISE인 경우)
         if (type == null || type == RecordType.EXERCISE) {
             List<ExerciseRecord> exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDateBetween(
@@ -231,7 +233,7 @@ public class RecordApplicationService {
                 .map(UnifiedRecordResponse::fromExerciseRecord)
                 .toList());
         }
-        
+
         // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
         if (type == null || type == RecordType.HABIT) {
             // 습관 기록은 습관 목표 기간 내에서만 조회
@@ -243,12 +245,13 @@ public class RecordApplicationService {
             allRecords.addAll(habitResponses);
         }
 
-        // 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
+        // 4. 일정 기록 조회 (별도 처리)
+        Map<LocalDate, List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord>> schedulesByDate = new HashMap<>();
         if (type == null || type == RecordType.SCHEDULE) {
             List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
                 scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate);
 
-            // 각 일정을 startDate~endDate 범위의 각 날짜에 표시
+            // 각 일정을 startDate~endDate 범위의 각 날짜별로 그룹핑
             for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
                 LocalDate scheduleStart = schedule.getStartDate();
                 LocalDate scheduleEnd = schedule.getEndDate();
@@ -257,9 +260,9 @@ public class RecordApplicationService {
                 LocalDate displayStart = scheduleStart.isBefore(startDate) ? startDate : scheduleStart;
                 LocalDate displayEnd = scheduleEnd.isAfter(endDate) ? endDate : scheduleEnd;
 
-                // 교집합 범위의 각 날짜마다 UnifiedRecordResponse 생성
+                // 교집합 범위의 각 날짜마다 일정 추가
                 for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
-                    allRecords.add(UnifiedRecordResponse.fromScheduleRecord(schedule, date));
+                    schedulesByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
                 }
             }
         }
@@ -276,15 +279,18 @@ public class RecordApplicationService {
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             // 해당 날짜의 실제 기록들
             List<UnifiedRecordResponse> dateRecords = recordsByDate.getOrDefault(date, new ArrayList<>());
-            
+
             // 해당 날짜의 메인 기록 타입 결정
             RecordType mainRecordTypeForDate = determineMainRecordTypeForDate(user, date);
-            
+
             // 요구사항에 맞는 캘린더 레코드 생성
-            List<CalendarRecordResponse.RecordSummary> summaries = 
+            List<CalendarRecordResponse.RecordSummary> summaries =
                 createCalendarSummariesWithDisplayLogic(user, mainRecordTypeForDate, date, dateRecords, today);
-            
-            calendarRecords.add(new CalendarRecordResponse(date, mainRecordTypeForDate, summaries));
+
+            // 해당 날짜의 일정 요약 정보 생성
+            ScheduleSummary scheduleSummary = createScheduleSummary(schedulesByDate.get(date));
+
+            calendarRecords.add(new CalendarRecordResponse(date, mainRecordTypeForDate, summaries, scheduleSummary));
         }
         
         calendarRecords.sort((a, b) -> a.date().compareTo(b.date()));
@@ -293,8 +299,29 @@ public class RecordApplicationService {
     }
     
     /**
+     * 일정 요약 정보 생성
+     * - title: 대표 일정명 (첫 번째 일정)
+     * - size: 일정 개수
+     * - color: 대표 일정 색상 (첫 번째 일정)
+     */
+    private ScheduleSummary createScheduleSummary(List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
+            return null;
+        }
+
+        // 첫 번째 일정을 대표로 사용
+        com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord firstSchedule = schedules.get(0);
+
+        return ScheduleSummary.builder()
+                .title(firstSchedule.getTitle())
+                .size(schedules.size())
+                .color(firstSchedule.getColor())
+                .build();
+    }
+
+    /**
      * 요구사항에 맞는 캘린더 표시 로직 적용
-     * 
+     *
      * 과거: 하루/운동 미작성 시 빈 배열(프론트에서 회색 처리), 습관 미완료 시 회색 아이콘
      * 현재: 하루/운동 미작성 시 빈칸, 습관 미작성 시 빈칸/작성 시 회색/완료 시 색상
      * 미래: 모든 기록 빈칸 (이미 상위에서 필터링됨)
