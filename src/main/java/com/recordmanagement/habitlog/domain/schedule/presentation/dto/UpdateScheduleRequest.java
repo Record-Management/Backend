@@ -38,6 +38,9 @@ public class UpdateScheduleRequest {
     @Schema(description = "알림 커스텀 시간 (CUSTOM일 때만, 0-23)", example = "9")
     private Integer notificationCustomHours;
 
+    @Schema(description = "알림 커스텀 분 (CUSTOM일 때만, 0-59)", example = "30")
+    private Integer notificationCustomMinutes;
+
     @NotNull(message = "반복 타입은 필수입니다.")
     @Schema(description = "반복 타입", example = "NONE")
     private RepeatType repeatType;
@@ -62,6 +65,7 @@ public class UpdateScheduleRequest {
             endDate,
             notificationType,
             notificationCustomHours,
+            notificationCustomMinutes,
             repeatType,
             repeatEndsOn,
             location,

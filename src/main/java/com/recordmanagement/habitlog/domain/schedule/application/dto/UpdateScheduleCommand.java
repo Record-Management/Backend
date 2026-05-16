@@ -18,6 +18,7 @@ public class UpdateScheduleCommand {
     private LocalDate endDate;
     private NotificationType notificationType;
     private Integer notificationCustomHours;
+    private Integer notificationCustomMinutes;
     private RepeatType repeatType;
     private LocalDate repeatEndsOn;
     private String location;

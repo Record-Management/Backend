@@ -40,21 +40,22 @@ public interface JpaScheduleRecordRepository extends JpaRepository<ScheduleRecor
      * 알림이 필요한 일정 조회
      * - ONE_DAY_BEFORE: startDate - 1일, 09:00
      * - TWO_DAYS_BEFORE: startDate - 2일, 09:00
-     * - CUSTOM: startDate 당일, customHours시
+     * - CUSTOM: startDate 당일, customHours:customMinutes
      */
     @Query("SELECT s FROM ScheduleRecordEntity s " +
            "WHERE s.notificationType <> 'NONE' " +
            "AND (" +
-           "  (s.notificationType = 'ONE_DAY_BEFORE' AND s.startDate = :oneDayAfter AND :hour = 9) " +
-           "  OR (s.notificationType = 'TWO_DAYS_BEFORE' AND s.startDate = :twoDaysAfter AND :hour = 9) " +
+           "  (s.notificationType = 'ONE_DAY_BEFORE' AND s.startDate = :oneDayAfter AND :hour = 9 AND :minute = 0) " +
+           "  OR (s.notificationType = 'TWO_DAYS_BEFORE' AND s.startDate = :twoDaysAfter AND :hour = 9 AND :minute = 0) " +
            "  OR (s.notificationType = 'CUSTOM' AND s.startDate = :notificationDate " +
-           "      AND s.notificationCustomHours = :hour) " +
+           "      AND s.notificationCustomHours = :hour AND s.notificationCustomMinutes = :minute) " +
            ")")
     List<ScheduleRecordEntity> findSchedulesForNotification(
             @Param("notificationDate") LocalDate notificationDate,
             @Param("oneDayAfter") LocalDate oneDayAfter,
             @Param("twoDaysAfter") LocalDate twoDaysAfter,
-            @Param("hour") int hour
+            @Param("hour") int hour,
+            @Param("minute") int minute
     );
 
     /**

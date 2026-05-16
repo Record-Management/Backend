@@ -43,15 +43,16 @@ public class ScheduleRecordController {
 
                ## 선택 항목
                - notificationCustomHours: 커스텀 알림 시간 (CUSTOM일 때만, 0-23)
+               - notificationCustomMinutes: 커스텀 알림 분 (CUSTOM일 때만, 0-59)
                - repeatEndsOn: 반복 종료일
                - location: 위치
                - memo: 메모
 
                ## 알림 타입
                - NONE: 알림 없음
-               - ONE_DAY_BEFORE: 1일 전 오전 9시
-               - TWO_DAYS_BEFORE: 2일 전 오전 9시
-               - CUSTOM: 사용자 지정 (startDate 당일 customHours시에 알림, customHours 필수)
+               - ONE_DAY_BEFORE: 1일 전 오전 9:00
+               - TWO_DAYS_BEFORE: 2일 전 오전 9:00
+               - CUSTOM: 사용자 지정 (startDate 당일 customHours:customMinutes에 알림, customHours/customMinutes 필수)
 
                ## 반복 타입
                - NONE: 반복 없음

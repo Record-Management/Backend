@@ -51,6 +51,9 @@ public class ScheduleRecordEntity {
     @Column(name = "notification_custom_hours")
     private Integer notificationCustomHours;
 
+    @Column(name = "notification_custom_minutes")
+    private Integer notificationCustomMinutes;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "repeat_type", nullable = false, length = 10)
     private RepeatType repeatType;
@@ -83,6 +86,7 @@ public class ScheduleRecordEntity {
             .endDate(scheduleRecord.getEndDate())
             .notificationType(scheduleRecord.getNotificationType())
             .notificationCustomHours(scheduleRecord.getNotificationCustomHours())
+            .notificationCustomMinutes(scheduleRecord.getNotificationCustomMinutes())
             .repeatType(scheduleRecord.getRepeatType())
             .repeatEndsOn(scheduleRecord.getRepeatEndsOn())
             .location(scheduleRecord.getLocation())
@@ -102,6 +106,7 @@ public class ScheduleRecordEntity {
             this.endDate,
             this.notificationType,
             this.notificationCustomHours,
+            this.notificationCustomMinutes,
             this.repeatType,
             this.repeatEndsOn,
             this.location,

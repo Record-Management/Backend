@@ -70,6 +70,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 NotificationType.ONE_DAY_BEFORE,
                 null,
+                null,
                 RepeatType.NONE,
                 null,
                 "도쿄점",
@@ -102,7 +103,8 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 10),
                 NotificationType.CUSTOM,
-                9, // startDate 당일 오전 9시에 알림
+                9, // startDate 당일 오전 9시 30분에 알림
+                30,
                 RepeatType.NONE,
                 null,
                 "회의실 A",
@@ -116,6 +118,7 @@ class ScheduleRecordApplicationServiceTest {
         // then
         assertThat(response.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
         assertThat(response.getNotificationCustomHours()).isEqualTo(9);
+        assertThat(response.getNotificationCustomMinutes()).isEqualTo(30);
     }
 
     @Test
@@ -127,6 +130,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 25),
                 LocalDate.of(2026, 3, 20), // 종료일이 시작일보다 빠름
                 NotificationType.NONE,
+                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -141,15 +145,16 @@ class ScheduleRecordApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("CUSTOM 알림 시 customHours가 없으면 예외가 발생한다")
+    @DisplayName("CUSTOM 알림 시 customHours 또는 customMinutes가 없으면 예외가 발생한다")
     void createSchedule_WithCustomNotificationWithoutValues_ThrowsException() {
-        // given
-        CreateScheduleCommand command = new CreateScheduleCommand(
+        // given - customHours 없음
+        CreateScheduleCommand command1 = new CreateScheduleCommand(
                 "회의",
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 10),
                 NotificationType.CUSTOM,
                 null, // customHours 없음
+                30,
                 RepeatType.NONE,
                 null,
                 null,
@@ -158,7 +163,26 @@ class ScheduleRecordApplicationServiceTest {
         );
 
         // when & then
-        assertThatThrownBy(() -> scheduleRecordApplicationService.create(testUserId, command))
+        assertThatThrownBy(() -> scheduleRecordApplicationService.create(testUserId, command1))
+                .isInstanceOf(CustomException.class);
+
+        // given - customMinutes 없음
+        CreateScheduleCommand command2 = new CreateScheduleCommand(
+                "회의",
+                LocalDate.of(2026, 5, 10),
+                LocalDate.of(2026, 5, 10),
+                NotificationType.CUSTOM,
+                9,
+                null, // customMinutes 없음
+                RepeatType.NONE,
+                null,
+                null,
+                ScheduleColor.BLUE,
+                null
+        );
+
+        // when & then
+        assertThatThrownBy(() -> scheduleRecordApplicationService.create(testUserId, command2))
                 .isInstanceOf(CustomException.class);
     }
 
@@ -171,6 +195,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
+                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -186,6 +211,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 22),
                 LocalDate.of(2026, 3, 23),
                 NotificationType.ONE_DAY_BEFORE,
+                null,
                 null,
                 RepeatType.DAY,
                 LocalDate.of(2026, 4, 1),
@@ -220,6 +246,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
                 null,
+                null,
                 RepeatType.NONE,
                 null,
                 null,
@@ -246,6 +273,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
+                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -274,7 +302,7 @@ class ScheduleRecordApplicationServiceTest {
                 "3월 21일 일정",
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
-                NotificationType.NONE, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.RED, null
         ));
 
@@ -282,7 +310,7 @@ class ScheduleRecordApplicationServiceTest {
                 "3월 22-25일 일정",
                 LocalDate.of(2026, 3, 22),
                 LocalDate.of(2026, 3, 25),
-                NotificationType.NONE, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.BLUE, null
         ));
 
@@ -290,7 +318,7 @@ class ScheduleRecordApplicationServiceTest {
                 "4월 1일 일정",
                 LocalDate.of(2026, 4, 1),
                 LocalDate.of(2026, 4, 1),
-                NotificationType.NONE, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.GREEN, null
         ));
 
@@ -315,7 +343,7 @@ class ScheduleRecordApplicationServiceTest {
                 "긴 일정",
                 LocalDate.of(2026, 3, 20),
                 LocalDate.of(2026, 3, 25),
-                NotificationType.NONE, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.PINK, null
         ));
 
@@ -341,7 +369,7 @@ class ScheduleRecordApplicationServiceTest {
                 "내 일정",
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
-                NotificationType.NONE, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.RED, null
         );
         ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, command);
@@ -374,6 +402,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 20),
                 NotificationType.NONE,
                 null,
+                null,
                 RepeatType.NONE,
                 null,
                 null,
@@ -388,7 +417,8 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 20),
                 LocalDate.of(2026, 5, 20),
                 NotificationType.CUSTOM,
-                14, // 오후 2시에 알림
+                14, // 오후 2시 15분에 알림
+                15,
                 RepeatType.NONE,
                 null,
                 null,
@@ -402,6 +432,7 @@ class ScheduleRecordApplicationServiceTest {
         // then: 알림이 올바르게 추가됨
         assertThat(updated.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
         assertThat(updated.getNotificationCustomHours()).isEqualTo(14);
+        assertThat(updated.getNotificationCustomMinutes()).isEqualTo(15);
         assertThat(updated.getTitle()).isEqualTo("알림 추가된 일정");
     }
 
@@ -414,6 +445,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 25),
                 LocalDate.of(2026, 5, 25),
                 NotificationType.ONE_DAY_BEFORE,
+                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -430,6 +462,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 25),
                 NotificationType.NONE,
                 null,
+                null,
                 RepeatType.NONE,
                 null,
                 "회의실 B",
@@ -443,6 +476,7 @@ class ScheduleRecordApplicationServiceTest {
         // then: 알림이 올바르게 삭제됨
         assertThat(updated.getNotificationType()).isEqualTo(NotificationType.NONE);
         assertThat(updated.getNotificationCustomHours()).isNull();
+        assertThat(updated.getNotificationCustomMinutes()).isNull();
         assertThat(updated.getTitle()).isEqualTo("알림 삭제된 일정");
     }
 
@@ -455,6 +489,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 6, 1),
                 LocalDate.of(2026, 6, 1),
                 NotificationType.ONE_DAY_BEFORE,
+                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -470,7 +505,8 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 6, 1),
                 LocalDate.of(2026, 6, 1),
                 NotificationType.CUSTOM,
-                7, // 오전 7시에 알림
+                7, // 오전 7시 45분에 알림
+                45,
                 RepeatType.NONE,
                 null,
                 null,
@@ -484,5 +520,6 @@ class ScheduleRecordApplicationServiceTest {
         // then: 알림 타입이 올바르게 변경됨
         assertThat(updated.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
         assertThat(updated.getNotificationCustomHours()).isEqualTo(7);
+        assertThat(updated.getNotificationCustomMinutes()).isEqualTo(45);
     }
 }

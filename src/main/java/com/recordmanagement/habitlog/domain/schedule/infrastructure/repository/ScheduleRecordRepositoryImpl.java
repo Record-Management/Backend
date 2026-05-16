@@ -71,12 +71,12 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
     }
 
     @Override
-    public List<ScheduleRecord> findSchedulesForNotification(LocalDate notificationDate, int notificationHour) {
+    public List<ScheduleRecord> findSchedulesForNotification(LocalDate notificationDate, int notificationHour, int notificationMinute) {
         LocalDate oneDayAfter = notificationDate.plusDays(1);
         LocalDate twoDaysAfter = notificationDate.plusDays(2);
 
         return jpaScheduleRecordRepository.findSchedulesForNotification(
-                notificationDate, oneDayAfter, twoDaysAfter, notificationHour
+                notificationDate, oneDayAfter, twoDaysAfter, notificationHour, notificationMinute
         ).stream()
                 .map(ScheduleRecordEntity::toDomain)
                 .collect(Collectors.toList());

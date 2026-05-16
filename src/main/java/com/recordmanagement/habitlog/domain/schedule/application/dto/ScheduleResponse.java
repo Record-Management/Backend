@@ -24,6 +24,7 @@ public class ScheduleResponse {
     private LocalDate endDate;
     private NotificationType notificationType;
     private Integer notificationCustomHours;
+    private Integer notificationCustomMinutes;
     private RepeatType repeatType;
     private LocalDate repeatEndsOn;
     private String location;
@@ -41,6 +42,7 @@ public class ScheduleResponse {
                 .endDate(scheduleRecord.getEndDate())
                 .notificationType(scheduleRecord.getNotificationType())
                 .notificationCustomHours(scheduleRecord.getNotificationCustomHours())
+                .notificationCustomMinutes(scheduleRecord.getNotificationCustomMinutes())
                 .repeatType(scheduleRecord.getRepeatType())
                 .repeatEndsOn(scheduleRecord.getRepeatEndsOn())
                 .location(scheduleRecord.getLocation())

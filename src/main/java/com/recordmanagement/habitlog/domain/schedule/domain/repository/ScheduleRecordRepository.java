@@ -33,9 +33,9 @@ public interface ScheduleRecordRepository {
     /**
      * 알림이 필요한 일정 조회
      * - 알림 타입이 NONE이 아니고
-     * - 알림 발송 날짜/시간이 현재와 일치하는 일정
+     * - 알림 발송 날짜/시간/분이 현재와 일치하는 일정
      */
-    List<ScheduleRecord> findSchedulesForNotification(LocalDate notificationDate, int notificationHour);
+    List<ScheduleRecord> findSchedulesForNotification(LocalDate notificationDate, int notificationHour, int notificationMinute);
 
     /**
      * 반복 일정 조회
