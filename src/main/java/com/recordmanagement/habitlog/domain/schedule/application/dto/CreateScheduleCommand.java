@@ -17,7 +17,6 @@ public class CreateScheduleCommand {
     private LocalDate startDate;
     private LocalDate endDate;
     private NotificationType notificationType;
-    private Integer notificationCustomDays;
     private Integer notificationCustomHours;
     private RepeatType repeatType;
     private LocalDate repeatEndsOn;

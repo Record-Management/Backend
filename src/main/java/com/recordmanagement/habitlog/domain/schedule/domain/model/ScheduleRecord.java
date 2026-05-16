@@ -15,7 +15,6 @@ public class ScheduleRecord {
     private final LocalDate startDate;
     private final LocalDate endDate;
     private final NotificationType notificationType;
-    private final Integer notificationCustomDays;
     private final Integer notificationCustomHours;
     private final RepeatType repeatType;
     private final LocalDate repeatEndsOn;
@@ -27,7 +26,7 @@ public class ScheduleRecord {
 
     public ScheduleRecord(ScheduleRecordId id, UserId userId, String title,
                          LocalDate startDate, LocalDate endDate,
-                         NotificationType notificationType, Integer notificationCustomDays, Integer notificationCustomHours,
+                         NotificationType notificationType, Integer notificationCustomHours,
                          RepeatType repeatType, LocalDate repeatEndsOn,
                          String location, ScheduleColor color, String memo,
                          LocalDateTime createdAt, LocalDateTime updatedAt) {
@@ -37,7 +36,6 @@ public class ScheduleRecord {
         this.startDate = startDate;
         this.endDate = endDate;
         this.notificationType = notificationType;
-        this.notificationCustomDays = notificationCustomDays;
         this.notificationCustomHours = notificationCustomHours;
         this.repeatType = repeatType;
         this.repeatEndsOn = repeatEndsOn;
@@ -50,7 +48,7 @@ public class ScheduleRecord {
 
     public static ScheduleRecord create(UserId userId, String title,
                                        LocalDate startDate, LocalDate endDate,
-                                       NotificationType notificationType, Integer notificationCustomDays, Integer notificationCustomHours,
+                                       NotificationType notificationType, Integer notificationCustomHours,
                                        RepeatType repeatType, LocalDate repeatEndsOn,
                                        String location, ScheduleColor color, String memo) {
         LocalDateTime now = LocalDateTime.now();
@@ -61,7 +59,6 @@ public class ScheduleRecord {
             startDate,
             endDate,
             notificationType,
-            notificationCustomDays,
             notificationCustomHours,
             repeatType,
             repeatEndsOn,
@@ -74,7 +71,7 @@ public class ScheduleRecord {
     }
 
     public ScheduleRecord update(String title, LocalDate startDate, LocalDate endDate,
-                                NotificationType notificationType, Integer notificationCustomDays, Integer notificationCustomHours,
+                                NotificationType notificationType, Integer notificationCustomHours,
                                 RepeatType repeatType, LocalDate repeatEndsOn,
                                 String location, ScheduleColor color, String memo) {
         return new ScheduleRecord(
@@ -84,7 +81,6 @@ public class ScheduleRecord {
             startDate,
             endDate,
             notificationType,
-            notificationCustomDays,
             notificationCustomHours,
             repeatType,
             repeatEndsOn,

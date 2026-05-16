@@ -48,9 +48,6 @@ public class ScheduleRecordEntity {
     @Column(name = "notification_type", nullable = false, length = 20)
     private NotificationType notificationType;
 
-    @Column(name = "notification_custom_days")
-    private Integer notificationCustomDays;
-
     @Column(name = "notification_custom_hours")
     private Integer notificationCustomHours;
 
@@ -85,7 +82,6 @@ public class ScheduleRecordEntity {
             .startDate(scheduleRecord.getStartDate())
             .endDate(scheduleRecord.getEndDate())
             .notificationType(scheduleRecord.getNotificationType())
-            .notificationCustomDays(scheduleRecord.getNotificationCustomDays())
             .notificationCustomHours(scheduleRecord.getNotificationCustomHours())
             .repeatType(scheduleRecord.getRepeatType())
             .repeatEndsOn(scheduleRecord.getRepeatEndsOn())
@@ -105,7 +101,6 @@ public class ScheduleRecordEntity {
             this.startDate,
             this.endDate,
             this.notificationType,
-            this.notificationCustomDays,
             this.notificationCustomHours,
             this.repeatType,
             this.repeatEndsOn,

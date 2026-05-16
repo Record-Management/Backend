@@ -35,10 +35,7 @@ public class CreateScheduleRequest {
     @Schema(description = "알림 타입", example = "ONE_DAY_BEFORE")
     private NotificationType notificationType;
 
-    @Schema(description = "알림 커스텀 일수 (CUSTOM일 때만)", example = "1")
-    private Integer notificationCustomDays;
-
-    @Schema(description = "알림 커스텀 시간 (CUSTOM일 때만)", example = "18")
+    @Schema(description = "알림 커스텀 시간 (CUSTOM일 때만, 0-23)", example = "9")
     private Integer notificationCustomHours;
 
     @NotNull(message = "반복 타입은 필수입니다.")
@@ -64,7 +61,6 @@ public class CreateScheduleRequest {
             startDate,
             endDate,
             notificationType,
-            notificationCustomDays,
             notificationCustomHours,
             repeatType,
             repeatEndsOn,

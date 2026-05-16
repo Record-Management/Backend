@@ -42,8 +42,7 @@ public class ScheduleRecordController {
                - color: 색상 (RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, PINK, GRAY)
 
                ## 선택 항목
-               - notificationCustomDays: 커스텀 알림 일수 (CUSTOM일 때만)
-               - notificationCustomHours: 커스텀 알림 시간 (CUSTOM일 때만)
+               - notificationCustomHours: 커스텀 알림 시간 (CUSTOM일 때만, 0-23)
                - repeatEndsOn: 반복 종료일
                - location: 위치
                - memo: 메모
@@ -52,7 +51,7 @@ public class ScheduleRecordController {
                - NONE: 알림 없음
                - ONE_DAY_BEFORE: 1일 전 오전 9시
                - TWO_DAYS_BEFORE: 2일 전 오전 9시
-               - CUSTOM: 사용자 지정 (customDays, customHours 필수)
+               - CUSTOM: 사용자 지정 (startDate 당일 customHours시에 알림, customHours 필수)
 
                ## 반복 타입
                - NONE: 반복 없음

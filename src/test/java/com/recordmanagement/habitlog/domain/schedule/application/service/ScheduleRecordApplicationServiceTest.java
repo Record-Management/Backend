@@ -70,7 +70,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 NotificationType.ONE_DAY_BEFORE,
                 null,
-                null,
                 RepeatType.NONE,
                 null,
                 "도쿄점",
@@ -103,8 +102,7 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 10),
                 NotificationType.CUSTOM,
-                1, // 1일 전
-                18, // 오후 6시
+                9, // startDate 당일 오전 9시에 알림
                 RepeatType.NONE,
                 null,
                 "회의실 A",
@@ -117,8 +115,7 @@ class ScheduleRecordApplicationServiceTest {
 
         // then
         assertThat(response.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
-        assertThat(response.getNotificationCustomDays()).isEqualTo(1);
-        assertThat(response.getNotificationCustomHours()).isEqualTo(18);
+        assertThat(response.getNotificationCustomHours()).isEqualTo(9);
     }
 
     @Test
@@ -130,7 +127,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 25),
                 LocalDate.of(2026, 3, 20), // 종료일이 시작일보다 빠름
                 NotificationType.NONE,
-                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -145,7 +141,7 @@ class ScheduleRecordApplicationServiceTest {
     }
 
     @Test
-    @DisplayName("CUSTOM 알림 시 customDays와 customHours가 없으면 예외가 발생한다")
+    @DisplayName("CUSTOM 알림 시 customHours가 없으면 예외가 발생한다")
     void createSchedule_WithCustomNotificationWithoutValues_ThrowsException() {
         // given
         CreateScheduleCommand command = new CreateScheduleCommand(
@@ -153,7 +149,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 5, 10),
                 LocalDate.of(2026, 5, 10),
                 NotificationType.CUSTOM,
-                null, // customDays 없음
                 null, // customHours 없음
                 RepeatType.NONE,
                 null,
@@ -177,7 +172,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
                 null,
-                null,
                 RepeatType.NONE,
                 null,
                 "원래 위치",
@@ -192,7 +186,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 22),
                 LocalDate.of(2026, 3, 23),
                 NotificationType.ONE_DAY_BEFORE,
-                null,
                 null,
                 RepeatType.DAY,
                 LocalDate.of(2026, 4, 1),
@@ -227,7 +220,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
                 null,
-                null,
                 RepeatType.NONE,
                 null,
                 null,
@@ -254,7 +246,6 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
                 NotificationType.NONE,
-                null,
                 null,
                 RepeatType.NONE,
                 null,
@@ -283,7 +274,7 @@ class ScheduleRecordApplicationServiceTest {
                 "3월 21일 일정",
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, RepeatType.NONE, null,
                 null, ScheduleColor.RED, null
         ));
 
@@ -291,7 +282,7 @@ class ScheduleRecordApplicationServiceTest {
                 "3월 22-25일 일정",
                 LocalDate.of(2026, 3, 22),
                 LocalDate.of(2026, 3, 25),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, RepeatType.NONE, null,
                 null, ScheduleColor.BLUE, null
         ));
 
@@ -299,7 +290,7 @@ class ScheduleRecordApplicationServiceTest {
                 "4월 1일 일정",
                 LocalDate.of(2026, 4, 1),
                 LocalDate.of(2026, 4, 1),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, RepeatType.NONE, null,
                 null, ScheduleColor.GREEN, null
         ));
 
@@ -324,7 +315,7 @@ class ScheduleRecordApplicationServiceTest {
                 "긴 일정",
                 LocalDate.of(2026, 3, 20),
                 LocalDate.of(2026, 3, 25),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, RepeatType.NONE, null,
                 null, ScheduleColor.PINK, null
         ));
 
@@ -350,7 +341,7 @@ class ScheduleRecordApplicationServiceTest {
                 "내 일정",
                 LocalDate.of(2026, 3, 21),
                 LocalDate.of(2026, 3, 21),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                NotificationType.NONE, null, RepeatType.NONE, null,
                 null, ScheduleColor.RED, null
         );
         ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, command);

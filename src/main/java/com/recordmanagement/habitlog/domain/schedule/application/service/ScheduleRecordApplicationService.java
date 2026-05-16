@@ -34,8 +34,7 @@ public class ScheduleRecordApplicationService {
 
         // 입력 검증
         validateScheduleCommand(command.getStartDate(), command.getEndDate(),
-                              command.getNotificationType(), command.getNotificationCustomDays(),
-                              command.getNotificationCustomHours());
+                              command.getNotificationType(), command.getNotificationCustomHours());
 
         ScheduleRecord scheduleRecord = ScheduleRecord.create(
             UserId.of(userId),
@@ -43,7 +42,6 @@ public class ScheduleRecordApplicationService {
             command.getStartDate(),
             command.getEndDate(),
             command.getNotificationType(),
-            command.getNotificationCustomDays(),
             command.getNotificationCustomHours(),
             command.getRepeatType(),
             command.getRepeatEndsOn(),
@@ -69,15 +67,13 @@ public class ScheduleRecordApplicationService {
 
         // 입력 검증
         validateScheduleCommand(command.getStartDate(), command.getEndDate(),
-                              command.getNotificationType(), command.getNotificationCustomDays(),
-                              command.getNotificationCustomHours());
+                              command.getNotificationType(), command.getNotificationCustomHours());
 
         ScheduleRecord updatedSchedule = existingSchedule.update(
             command.getTitle(),
             command.getStartDate(),
             command.getEndDate(),
             command.getNotificationType(),
-            command.getNotificationCustomDays(),
             command.getNotificationCustomHours(),
             command.getRepeatType(),
             command.getRepeatEndsOn(),
@@ -141,18 +137,18 @@ public class ScheduleRecordApplicationService {
      */
     private void validateScheduleCommand(LocalDate startDate, LocalDate endDate,
                                         com.recordmanagement.habitlog.domain.schedule.domain.model.NotificationType notificationType,
-                                        Integer customDays, Integer customHours) {
+                                        Integer customHours) {
         // 시작일이 종료일보다 늦으면 안 됨
         if (startDate.isAfter(endDate)) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        // CUSTOM 알림일 경우 customDays와 customHours 필수
+        // CUSTOM 알림일 경우 customHours 필수
         if (notificationType == com.recordmanagement.habitlog.domain.schedule.domain.model.NotificationType.CUSTOM) {
-            if (customDays == null || customHours == null) {
+            if (customHours == null) {
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
-            if (customDays < 0 || customHours < 0 || customHours > 23) {
+            if (customHours < 0 || customHours > 23) {
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
         }
