@@ -363,4 +363,126 @@ class ScheduleRecordApplicationServiceTest {
                 )
         ).isInstanceOf(CustomException.class);
     }
+
+    @Test
+    @DisplayName("알림 없음에서 알림 생성으로 수정할 수 있다")
+    void updateSchedule_FromNoNotificationToWithNotification_Success() {
+        // given: 알림 없는 일정 생성
+        CreateScheduleCommand createCommand = new CreateScheduleCommand(
+                "알림 없는 일정",
+                LocalDate.of(2026, 5, 20),
+                LocalDate.of(2026, 5, 20),
+                NotificationType.NONE,
+                null,
+                RepeatType.NONE,
+                null,
+                null,
+                ScheduleColor.GREEN,
+                null
+        );
+        ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, createCommand);
+
+        // when: CUSTOM 알림 추가
+        UpdateScheduleCommand updateCommand = new UpdateScheduleCommand(
+                "알림 추가된 일정",
+                LocalDate.of(2026, 5, 20),
+                LocalDate.of(2026, 5, 20),
+                NotificationType.CUSTOM,
+                14, // 오후 2시에 알림
+                RepeatType.NONE,
+                null,
+                null,
+                ScheduleColor.GREEN,
+                null
+        );
+        ScheduleResponse updated = scheduleRecordApplicationService.update(
+                testUserId, created.getScheduleRecordId(), updateCommand
+        );
+
+        // then: 알림이 올바르게 추가됨
+        assertThat(updated.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
+        assertThat(updated.getNotificationCustomHours()).isEqualTo(14);
+        assertThat(updated.getTitle()).isEqualTo("알림 추가된 일정");
+    }
+
+    @Test
+    @DisplayName("알림 있음에서 알림 삭제로 수정할 수 있다")
+    void updateSchedule_FromWithNotificationToNoNotification_Success() {
+        // given: ONE_DAY_BEFORE 알림이 있는 일정 생성
+        CreateScheduleCommand createCommand = new CreateScheduleCommand(
+                "알림 있는 일정",
+                LocalDate.of(2026, 5, 25),
+                LocalDate.of(2026, 5, 25),
+                NotificationType.ONE_DAY_BEFORE,
+                null,
+                RepeatType.NONE,
+                null,
+                "회의실 B",
+                ScheduleColor.BLUE,
+                "중요 회의"
+        );
+        ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, createCommand);
+
+        // when: 알림 삭제 (NONE으로 변경)
+        UpdateScheduleCommand updateCommand = new UpdateScheduleCommand(
+                "알림 삭제된 일정",
+                LocalDate.of(2026, 5, 25),
+                LocalDate.of(2026, 5, 25),
+                NotificationType.NONE,
+                null,
+                RepeatType.NONE,
+                null,
+                "회의실 B",
+                ScheduleColor.BLUE,
+                "중요 회의"
+        );
+        ScheduleResponse updated = scheduleRecordApplicationService.update(
+                testUserId, created.getScheduleRecordId(), updateCommand
+        );
+
+        // then: 알림이 올바르게 삭제됨
+        assertThat(updated.getNotificationType()).isEqualTo(NotificationType.NONE);
+        assertThat(updated.getNotificationCustomHours()).isNull();
+        assertThat(updated.getTitle()).isEqualTo("알림 삭제된 일정");
+    }
+
+    @Test
+    @DisplayName("알림 타입을 변경할 수 있다 (ONE_DAY_BEFORE → CUSTOM)")
+    void updateSchedule_ChangeNotificationType_Success() {
+        // given: ONE_DAY_BEFORE 알림이 있는 일정 생성
+        CreateScheduleCommand createCommand = new CreateScheduleCommand(
+                "알림 타입 변경 테스트",
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 6, 1),
+                NotificationType.ONE_DAY_BEFORE,
+                null,
+                RepeatType.NONE,
+                null,
+                null,
+                ScheduleColor.PINK,
+                null
+        );
+        ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, createCommand);
+
+        // when: CUSTOM 알림으로 변경
+        UpdateScheduleCommand updateCommand = new UpdateScheduleCommand(
+                "알림 타입 변경 테스트",
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 6, 1),
+                NotificationType.CUSTOM,
+                7, // 오전 7시에 알림
+                RepeatType.NONE,
+                null,
+                null,
+                ScheduleColor.PINK,
+                null
+        );
+        ScheduleResponse updated = scheduleRecordApplicationService.update(
+                testUserId, created.getScheduleRecordId(), updateCommand
+        );
+
+        // then: 알림 타입이 올바르게 변경됨
+        assertThat(updated.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
+        assertThat(updated.getNotificationCustomHours()).isEqualTo(7);
+    }
 }
