@@ -112,12 +112,18 @@ public class CalendarController {
                                             "type": "HABIT",
                                             "isCompleted": true
                                         }
-                                    ]
+                                    ],
+                                    "schedules": {
+                                        "title": "회의",
+                                        "size": 3,
+                                        "color": "BLUE"
+                                    }
                                 },
                                 {
                                     "date": "2025-11-18",
                                     "mainRecordTypeForDate": "HABIT",
-                                    "records": []
+                                    "records": [],
+                                    "schedules": null
                                 },
                                 {
                                     "date": "2025-11-19",
@@ -128,12 +134,18 @@ public class CalendarController {
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }
-                                    ]
+                                    ],
+                                    "schedules": {
+                                        "title": "점심 약속",
+                                        "size": 1,
+                                        "color": "PINK"
+                                    }
                                 },
                                 {
                                     "date": "2025-11-20",
                                     "mainRecordTypeForDate": "HABIT",
-                                    "records": []
+                                    "records": [],
+                                    "schedules": null
                                 }
                             ]
                         }
@@ -166,12 +178,18 @@ public class CalendarController {
                                             "type": "HABIT",
                                             "isCompleted": true
                                         }
-                                    ]
+                                    ],
+                                    "schedules": null
                                 },
                                 {
                                     "date": "2025-11-18",
                                     "mainRecordTypeForDate": "EXERCISE",
-                                    "records": []
+                                    "records": [],
+                                    "schedules": {
+                                        "title": "병원 예약",
+                                        "size": 2,
+                                        "color": "GREEN"
+                                    }
                                 },
                                 {
                                     "date": "2025-11-19",
@@ -182,12 +200,14 @@ public class CalendarController {
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }
-                                    ]
+                                    ],
+                                    "schedules": null
                                 },
                                 {
                                     "date": "2025-11-20",
                                     "mainRecordTypeForDate": "EXERCISE",
-                                    "records": []
+                                    "records": [],
+                                    "schedules": null
                                 }
                             ]
                         }
@@ -215,12 +235,18 @@ public class CalendarController {
                                             "type": "DAILY",
                                             "isCompleted": true
                                         }
-                                    ]
+                                    ],
+                                    "schedules": null
                                 },
                                 {
                                     "date": "2025-10-23",
                                     "mainRecordTypeForDate": null,
-                                    "records": []
+                                    "records": [],
+                                    "schedules": {
+                                        "title": "여행",
+                                        "size": 5,
+                                        "color": "ORANGE"
+                                    }
                                 },
                                 {
                                     "date": "2025-11-08",
@@ -231,7 +257,8 @@ public class CalendarController {
                                             "type": "HABIT",
                                             "isCompleted": false
                                         }
-                                    ]
+                                    ],
+                                    "schedules": null
                                 }
                             ]
                         }

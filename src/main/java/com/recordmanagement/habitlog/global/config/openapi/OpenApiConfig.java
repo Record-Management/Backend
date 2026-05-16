@@ -62,9 +62,19 @@ public class OpenApiConfig {
                 .title("HabitLog API")
                 .description("""
                         ## HabitLog 백엔드 API 명세서
-                        
+
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
-                        
+
+                        ### v1.5.0 업데이트 (2026.05.16)
+                        - **일정 기록 기능**: 일정 CRUD 기능 추가 (제목, 기간, 알림, 반복, 색상)
+                        - **일정 알림 시스템**: CUSTOM 알림 타입에 분(minutes) 단위 설정 추가 (0-59)
+                        - **캘린더 API 개선**: 일정 정보를 schedules 필드로 분리 (ScheduleSummary: title, size, color)
+                        - **일일 기록 API 개선**: 일정 정보를 schedules 배열로 분리 (ScheduleDetail: 상세 정보)
+                        - **기록 제한 정책 변경**: 타입별 2개 제한 → 전체 합산 2개 제한으로 통합
+                          * 변경 전: DAILY 2개, EXERCISE 2개, HABIT 2개 (각각)
+                          * 변경 후: DAILY + EXERCISE + HABIT 합쳐서 2개 (전체)
+                          * 유지: 하루 최대 2가지 타입 제한
+
                         ### v1.4.4 업데이트 (2025.11.14)
                         - **목표 달성 보고서 정렬 개선**: recentHistory를 종료일 기준으로 정렬
                         - **프론트엔드 UX 향상**: 가장 최근 완료된 목표를 정확히 식별 가능
@@ -110,7 +120,7 @@ public class OpenApiConfig {
                         - **프론트엔드 Android**: [HabitLog Android App](https://github.com/Record-Management/Android)
                         - **문의사항**: Discord - jws0602
                         """)
-                .version("v1.4.4")
+                .version("v1.5.0")
                 .contact(new Contact()
                         .name("전우선 (Jeon Woo Seon)")
                         .email("wooxexn@gmail.com")

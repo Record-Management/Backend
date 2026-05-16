@@ -63,8 +63,9 @@ public class RecordController {
             - 작성 순서와는 무관하게 결정됩니다
             
             **기록 제한:**
-            - 하루 최대 2개의 일상 기록 작성 가능
+            - 하루 전체 기록(일상+운동+습관) 합쳐서 최대 2개 작성 가능
             - 하루 최대 2가지 기록 타입 작성 가능
+            - 예시: 일상 1개 + 운동 1개 = 2개 (가능) / 일상 2개 + 운동 1개 = 3개 (불가능)
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -114,13 +115,13 @@ public class RecordController {
             mediaType = "application/json",
             examples = {
                 @ExampleObject(
-                    name = "하루 1개 제한 초과",
-                    summary = "일상기록 하루 1개 제한 초과",
+                    name = "하루 2개 제한 초과",
+                    summary = "전체 기록 하루 2개 제한 초과",
                     value = """
                         {
                             "statusCode": 400,
                             "code": "E40407",
-                            "message": "하루에 등록할 수 있는 일상 기록은 최대 2개입니다.",
+                            "message": "하루에 등록할 수 있는 기록은 최대 2개입니다.",
                             "data": null
                         }
                         """

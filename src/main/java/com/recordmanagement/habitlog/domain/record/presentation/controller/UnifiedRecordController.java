@@ -82,6 +82,16 @@ public class UnifiedRecordController {
                         "message": "일일 기록이 성공적으로 조회되었습니다",
                         "data": {
                             "date": "2025-01-07",
+                            "schedules": [
+                                {
+                                    "scheduleId": "schedule_001",
+                                    "title": "팀 회의",
+                                    "startDate": "2025-01-07",
+                                    "endDate": "2025-01-07",
+                                    "color": "BLUE",
+                                    "memo": "Q1 목표 논의"
+                                }
+                            ],
                             "records": [
                                 {
                                     "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -138,6 +148,24 @@ public class UnifiedRecordController {
                         "message": "일일 기록이 성공적으로 조회되었습니다",
                         "data": {
                             "date": "2025-01-07",
+                            "schedules": [
+                                {
+                                    "scheduleId": "schedule_002",
+                                    "title": "저녁 약속",
+                                    "startDate": "2025-01-07",
+                                    "endDate": "2025-01-07",
+                                    "color": "PINK",
+                                    "memo": "친구들과 저녁 식사"
+                                },
+                                {
+                                    "scheduleId": "schedule_003",
+                                    "title": "운동",
+                                    "startDate": "2025-01-07",
+                                    "endDate": "2025-01-07",
+                                    "color": "ORANGE",
+                                    "memo": null
+                                }
+                            ],
                             "records": [
                                 {
                                     "id": "880e8400-e29b-41d4-a716-446655440003",
