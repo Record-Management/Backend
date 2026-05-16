@@ -105,24 +105,22 @@ public class RecordApplicationService {
     
     @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
-        // 기존 기록 개수 조회 (메인 기록 결정에 필요)
-        int existingRecordCount = 0;
-        
-        // 일상 기록인 경우 하루 최대 2개 제한 검증
-        if (command.type() == RecordType.DAILY) {
-            existingRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
-                command.userId(), 
-                command.recordDate(), 
-                RecordType.DAILY
-            );
-            
-            if (existingRecordCount >= 2) {
-                throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
-            }
+        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= 2) {
+            throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
         }
-        
+
         // 전체 기록 종류 최대 2가지 제한 검증
         validateRecordTypeLimit(command.userId(), command.recordDate(), RecordType.DAILY);
+
+        // 기존 기록 개수 조회 (메인 기록 결정에 필요)
+        int existingRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
+            command.userId(),
+            command.recordDate(),
+            RecordType.DAILY
+        );
         
         // 메인 기록 결정
         boolean isMainRecord = mainRecordDeterminationService.determineMainRecord(
@@ -694,8 +692,19 @@ public class RecordApplicationService {
     }
     
     /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordQueryRepository.findByUserIdAndRecordDate(userId, recordDate).size();
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
+    /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
-     * 
+     *
      * OCP 적용: Strategy 패턴으로 switch 문 제거
      * - 새로운 기록 타입 추가 시 기존 코드 수정 불필요
      * - 각 기록 타입별 검증 전략이 독립적으로 동작

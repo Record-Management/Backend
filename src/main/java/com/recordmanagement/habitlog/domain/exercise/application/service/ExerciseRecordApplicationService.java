@@ -38,20 +38,22 @@ public class ExerciseRecordApplicationService {
     
     @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
-        log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
+        log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]",
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
-        
-        // 하루 최대 2개 운동기록 제한 검증
-        int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
-            command.userId(), 
-            command.recordDate()
-        );
-        
-        if (exerciseRecordCount >= 2) {
+
+        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= 2) {
             throw new CustomException(ErrorCode.EXERCISE_RECORD_LIMIT_EXCEEDED);
         }
-        
-        // 전체 기록 종류 최대 2가지 제한 검증 (운동기록이 없는 경우에만)
+
+        // 전체 기록 종류 최대 2가지 제한 검증
+        int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
+            command.userId(),
+            command.recordDate()
+        );
+
         if (exerciseRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
@@ -214,6 +216,17 @@ public class ExerciseRecordApplicationService {
         return response.withUpdatedImageUrls(updatedUrls);
     }
     
+    /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
     /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
      */

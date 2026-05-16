@@ -87,17 +87,19 @@ public class HabitRecordApplicationService {
             }
         }
         
-        // 하루 최대 2개 습관기록 제한 검증
-        int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
-            command.userId(), 
-            command.recordDate()
-        );
-        
-        if (habitRecordCount >= 2) {
+        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= 2) {
             throw new CustomException(ErrorCode.HABIT_RECORD_LIMIT_EXCEEDED);
         }
-        
-        // 전체 기록 종류 최대 2가지 제한 검증 (습관기록이 없는 경우에만)
+
+        // 전체 기록 종류 최대 2가지 제한 검증
+        int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
+            command.userId(),
+            command.recordDate()
+        );
+
         if (habitRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
@@ -446,6 +448,17 @@ public class HabitRecordApplicationService {
         );
     }
     
+    /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
     /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
      */
