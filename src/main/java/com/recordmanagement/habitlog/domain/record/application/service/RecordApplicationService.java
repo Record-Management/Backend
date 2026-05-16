@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.domain.record.application.dto.CalendarRespo
 import com.recordmanagement.habitlog.domain.record.application.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.RecordResponse;
+import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleDetail;
 import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleSummary;
 import com.recordmanagement.habitlog.domain.record.application.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UpdateRecordCommand;
@@ -512,15 +513,21 @@ public class RecordApplicationService {
         allRecords.addAll(habitRecords.stream()
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList());
-        
-        // TODO: 4. 일정 기록 조회
-        
+
+        // 4. 일정 기록 조회 (별도 처리)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
+            scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, date, date);
+
+        List<ScheduleDetail> schedules = scheduleRecords.stream()
+            .map(ScheduleDetail::from)
+            .toList();
+
         // Pre-signed URL 재생성
         List<UnifiedRecordResponse> recordsWithUpdatedUrls = allRecords.stream()
             .map(this::updateImageUrls)
             .toList();
-        
-        return DailyRecordResponse.of(date, recordsWithUpdatedUrls);
+
+        return DailyRecordResponse.of(date, recordsWithUpdatedUrls, schedules);
     }
     
     @Transactional(readOnly = true)
