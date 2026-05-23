@@ -244,25 +244,23 @@ public class RecordApplicationService {
             allRecords.addAll(habitResponses);
         }
 
-        // 4. 일정 기록 조회 (별도 처리)
+        // 4. 일정 기록 조회 (별도 처리 - 타입 필터링과 무관하게 항상 조회)
         Map<LocalDate, List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord>> schedulesByDate = new HashMap<>();
-        if (type == null || type == RecordType.SCHEDULE) {
-            List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
-                scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate);
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
+            scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate);
 
-            // 각 일정을 startDate~endDate 범위의 각 날짜별로 그룹핑
-            for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
-                LocalDate scheduleStart = schedule.getStartDate();
-                LocalDate scheduleEnd = schedule.getEndDate();
+        // 각 일정을 startDate~endDate 범위의 각 날짜별로 그룹핑
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
+            LocalDate scheduleStart = schedule.getStartDate();
+            LocalDate scheduleEnd = schedule.getEndDate();
 
-                // 캘린더 조회 범위와 일정 범위의 교집합 계산
-                LocalDate displayStart = scheduleStart.isBefore(startDate) ? startDate : scheduleStart;
-                LocalDate displayEnd = scheduleEnd.isAfter(endDate) ? endDate : scheduleEnd;
+            // 캘린더 조회 범위와 일정 범위의 교집합 계산
+            LocalDate displayStart = scheduleStart.isBefore(startDate) ? startDate : scheduleStart;
+            LocalDate displayEnd = scheduleEnd.isAfter(endDate) ? endDate : scheduleEnd;
 
-                // 교집합 범위의 각 날짜마다 일정 추가
-                for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
-                    schedulesByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
-                }
+            // 교집합 범위의 각 날짜마다 일정 추가
+            for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
+                schedulesByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
             }
         }
         
