@@ -11,6 +11,7 @@ import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class ScheduleRecordApplicationService {
     /**
      * 일정 생성
      */
+    @CacheEvict(value = "calendar", allEntries = true)
     public ScheduleResponse create(String userId, CreateScheduleCommand command) {
         log.info("Creating schedule for user: {}", userId);
 
@@ -59,6 +61,7 @@ public class ScheduleRecordApplicationService {
     /**
      * 일정 수정
      */
+    @CacheEvict(value = "calendar", allEntries = true)
     public ScheduleResponse update(String userId, String scheduleRecordId, UpdateScheduleCommand command) {
         log.info("Updating schedule: {} for user: {}", scheduleRecordId, userId);
 
@@ -93,6 +96,7 @@ public class ScheduleRecordApplicationService {
     /**
      * 일정 삭제
      */
+    @CacheEvict(value = "calendar", allEntries = true)
     public void delete(String userId, String scheduleRecordId) {
         log.info("Deleting schedule: {} for user: {}", scheduleRecordId, userId);
 

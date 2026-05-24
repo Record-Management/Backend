@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.domain.record.application.dto.CalendarRecor
 import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleSummary;
 import com.recordmanagement.habitlog.domain.schedule.application.dto.CreateScheduleCommand;
 import com.recordmanagement.habitlog.domain.schedule.application.dto.ScheduleResponse;
+import com.recordmanagement.habitlog.domain.schedule.application.dto.UpdateScheduleCommand;
 import com.recordmanagement.habitlog.domain.schedule.application.service.ScheduleRecordApplicationService;
 import com.recordmanagement.habitlog.domain.schedule.domain.model.NotificationType;
 import com.recordmanagement.habitlog.domain.schedule.domain.model.RepeatType;
@@ -318,5 +319,143 @@ class CalendarWithScheduleTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(may4.schedules()).isNull();
+    }
+
+    @Test
+    @DisplayName("일정 생성 후 캘린더 캐시가 갱신된다")
+    void createSchedule_CacheEviction_ReturnsNewSchedule() {
+        // given: 5월 캘린더 조회 (캐시 생성)
+        LocalDate targetDate = LocalDate.of(2026, 5, 28);
+        CalendarResponse beforeResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        // 처음에는 5월 28일에 일정이 없음
+        CalendarRecordResponse may28Before = beforeResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+        assertThat(may28Before.schedules()).isNull();
+
+        // when: 5월 28일에 일정 생성
+        CreateScheduleCommand scheduleCommand = new CreateScheduleCommand(
+                "새로운 일정",
+                targetDate, targetDate,
+                NotificationType.NONE, null, null,
+                RepeatType.NONE, null, null,
+                ScheduleColor.INDIGO,
+                "캐시 테스트"
+        );
+        scheduleRecordApplicationService.create(testUserId, scheduleCommand);
+
+        // then: 캘린더 다시 조회 시 새 일정이 보임 (캐시가 갱신됨)
+        CalendarResponse afterResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        CalendarRecordResponse may28After = afterResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(may28After.schedules()).isNotNull();
+        assertThat(may28After.schedules().getTitle()).isEqualTo("새로운 일정");
+        assertThat(may28After.schedules().getSize()).isEqualTo(1);
+        assertThat(may28After.schedules().getColor()).isEqualTo(ScheduleColor.INDIGO);
+    }
+
+    @Test
+    @DisplayName("일정 수정 후 캘린더 캐시가 갱신된다")
+    void updateSchedule_CacheEviction_ReturnsUpdatedSchedule() {
+        // given: 일정 생성
+        LocalDate targetDate = LocalDate.of(2026, 5, 30);
+        CreateScheduleCommand createCommand = new CreateScheduleCommand(
+                "원래 제목",
+                targetDate, targetDate,
+                NotificationType.NONE, null, null,
+                RepeatType.NONE, null, null,
+                ScheduleColor.RED,
+                null
+        );
+        ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, createCommand);
+
+        // 캘린더 조회 (캐시 생성)
+        CalendarResponse beforeResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        CalendarRecordResponse may30Before = beforeResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+        assertThat(may30Before.schedules().getTitle()).isEqualTo("원래 제목");
+
+        // when: 일정 수정
+        UpdateScheduleCommand updateCommand = new UpdateScheduleCommand(
+                "수정된 제목",
+                targetDate, targetDate,
+                NotificationType.ONE_DAY_BEFORE, null, null,
+                RepeatType.NONE, null, null,
+                ScheduleColor.BLUE,
+                "수정됨"
+        );
+        scheduleRecordApplicationService.update(testUserId, created.getScheduleRecordId(), updateCommand);
+
+        // then: 캘린더 다시 조회 시 수정된 내용이 보임
+        CalendarResponse afterResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        CalendarRecordResponse may30After = afterResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(may30After.schedules()).isNotNull();
+        assertThat(may30After.schedules().getTitle()).isEqualTo("수정된 제목");
+        assertThat(may30After.schedules().getColor()).isEqualTo(ScheduleColor.BLUE);
+    }
+
+    @Test
+    @DisplayName("일정 삭제 후 캘린더 캐시가 갱신된다")
+    void deleteSchedule_CacheEviction_ScheduleDisappears() {
+        // given: 일정 생성
+        LocalDate targetDate = LocalDate.of(2026, 5, 31);
+        CreateScheduleCommand createCommand = new CreateScheduleCommand(
+                "삭제할 일정",
+                targetDate, targetDate,
+                NotificationType.NONE, null, null,
+                RepeatType.NONE, null, null,
+                ScheduleColor.GREEN,
+                null
+        );
+        ScheduleResponse created = scheduleRecordApplicationService.create(testUserId, createCommand);
+
+        // 캘린더 조회 (캐시 생성)
+        CalendarResponse beforeResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        CalendarRecordResponse may31Before = beforeResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+        assertThat(may31Before.schedules()).isNotNull();
+        assertThat(may31Before.schedules().getTitle()).isEqualTo("삭제할 일정");
+
+        // when: 일정 삭제
+        scheduleRecordApplicationService.delete(testUserId, created.getScheduleRecordId());
+
+        // then: 캘린더 다시 조회 시 일정이 사라짐
+        CalendarResponse afterResponse = recordApplicationService.getCalendar(
+                testUserId, 2026, 5, null
+        );
+
+        CalendarRecordResponse may31After = afterResponse.monthlyRecords().stream()
+                .filter(r -> r.date().equals(targetDate))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(may31After.schedules()).isNull();
     }
 }
