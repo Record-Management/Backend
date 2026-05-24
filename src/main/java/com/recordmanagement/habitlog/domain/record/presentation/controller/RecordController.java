@@ -414,13 +414,8 @@ public class RecordController {
             mediaType = "application/json",
             examples = @ExampleObject(value = """
                 {
-                    "statusCode": 200,
-                    "code": "S200",
-                    "message": "생성 제한 조회 성공",
-                    "data": {
-                        "canCreateRecord": true,
-                        "canCreateSchedule": false
-                    }
+                    "canCreateRecord": true,
+                    "canCreateSchedule": false
                 }
                 """)
         )
@@ -440,7 +435,7 @@ public class RecordController {
         )
     )
     @GetMapping("/creation-limits")
-    public ResponseEntity<ApiResponse<com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse>> getCreationLimits(
+    public ResponseEntity<com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse> getCreationLimits(
             @RequestParam(required = false) String date,
             Authentication authentication) {
 
@@ -464,7 +459,7 @@ public class RecordController {
         log.info("생성 제한 조회 완료: canCreateRecord=[{}], canCreateSchedule=[{}]",
                 response.isCanCreateRecord(), response.isCanCreateSchedule());
 
-        return ResponseEntity.ok(ApiResponse.success("생성 제한 조회 성공", response));
+        return ResponseEntity.ok(response);
     }
 
 }
