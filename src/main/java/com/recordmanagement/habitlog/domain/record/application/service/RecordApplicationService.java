@@ -878,10 +878,41 @@ public class RecordApplicationService {
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList();
         
-        log.debug("습관 타입 사용자의 습관 기록 표시: userId={}, 표시된 기록 수={}", 
+        log.debug("습관 타입 사용자의 습관 기록 표시: userId={}, 표시된 기록 수={}",
                 user.getId().getValue(), result.size());
-        
+
         return result;
     }
-    
+
+    /**
+     * 기록/일정 생성 제한 조회
+     *
+     * @param userId 사용자 ID
+     * @param date 조회할 날짜 (기록은 recordDate 기준, 일정은 createdAt 기준)
+     * @return 생성 제한 정보 (canCreateRecord, canCreateSchedule)
+     */
+    @Transactional(readOnly = true)
+    public com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse getCreationLimits(
+            String userId, LocalDate date) {
+        log.info("생성 제한 조회: userId={}, date={}", userId, date);
+
+        UserId userIdObj = UserId.of(userId);
+
+        // 기록 생성 가능 여부 (recordDate 기준 DAILY+EXERCISE+HABIT 합계 < 2)
+        int totalRecordCount = getTotalRecordCount(userIdObj, date);
+        boolean canCreateRecord = totalRecordCount < 2;
+
+        // 일정 생성 가능 여부 (createdAt 기준 일정 개수 < 2)
+        int scheduleCount = scheduleRecordRepository.countByUserIdAndCreatedAtToday(userIdObj, date);
+        boolean canCreateSchedule = scheduleCount < 2;
+
+        log.info("생성 제한 조회 결과: canCreateRecord={}, canCreateSchedule={}",
+                canCreateRecord, canCreateSchedule);
+
+        return com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse.builder()
+                .canCreateRecord(canCreateRecord)
+                .canCreateSchedule(canCreateSchedule)
+                .build();
+    }
+
 }

@@ -43,4 +43,10 @@ public interface ScheduleRecordRepository {
      * - 반복 종료일이 null이거나 아직 종료되지 않은 일정
      */
     List<ScheduleRecord> findRepeatableSchedules();
+
+    /**
+     * 오늘 생성된 일정 개수 조회 (createdAt 기준)
+     * - 일정 생성 제한 검증용
+     */
+    int countByUserIdAndCreatedAtToday(UserId userId, LocalDate today);
 }

@@ -142,27 +142,19 @@ class CalendarWithScheduleTest {
                 ScheduleColor.PINK, null
         ));
 
-        scheduleRecordApplicationService.create(testUserId, new CreateScheduleCommand(
-                "저녁 미팅",
-                targetDate, targetDate,
-                NotificationType.NONE, null, null,
-                RepeatType.NONE, null, null,
-                ScheduleColor.ORANGE, null
-        ));
-
         // when
         CalendarResponse response = recordApplicationService.getCalendar(
                 testUserId, 2026, 5, null
         );
 
-        // then: 5월 20일의 schedules size가 3
+        // then: 5월 20일의 schedules size가 2 (일정 생성 제한으로 최대 2개)
         CalendarRecordResponse may20 = response.monthlyRecords().stream()
                 .filter(r -> r.date().equals(targetDate))
                 .findFirst()
                 .orElseThrow();
 
         assertThat(may20.schedules()).isNotNull();
-        assertThat(may20.schedules().getSize()).isEqualTo(3);
+        assertThat(may20.schedules().getSize()).isEqualTo(2);
         assertThat(may20.schedules().getTitle()).isEqualTo("아침 운동"); // 첫 번째 일정이 대표
         assertThat(may20.schedules().getColor()).isEqualTo(ScheduleColor.GREEN);
     }

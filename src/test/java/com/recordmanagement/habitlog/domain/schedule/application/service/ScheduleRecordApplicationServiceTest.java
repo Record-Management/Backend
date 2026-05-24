@@ -297,7 +297,7 @@ class ScheduleRecordApplicationServiceTest {
     @Test
     @DisplayName("날짜 범위로 일정을 조회할 수 있다")
     void findSchedulesByDateRange_Success() {
-        // given: 여러 일정 생성
+        // given: 3월 일정 1개, 5월 일정 1개 생성 (일정 생성 제한 2개 이내)
         scheduleRecordApplicationService.create(testUserId, new CreateScheduleCommand(
                 "3월 21일 일정",
                 LocalDate.of(2026, 3, 21),
@@ -307,17 +307,9 @@ class ScheduleRecordApplicationServiceTest {
         ));
 
         scheduleRecordApplicationService.create(testUserId, new CreateScheduleCommand(
-                "3월 22-25일 일정",
-                LocalDate.of(2026, 3, 22),
-                LocalDate.of(2026, 3, 25),
-                NotificationType.NONE, null, null, RepeatType.NONE, null,
-                null, ScheduleColor.BLUE, null
-        ));
-
-        scheduleRecordApplicationService.create(testUserId, new CreateScheduleCommand(
-                "4월 1일 일정",
-                LocalDate.of(2026, 4, 1),
-                LocalDate.of(2026, 4, 1),
+                "5월 10일 일정",
+                LocalDate.of(2026, 5, 10),
+                LocalDate.of(2026, 5, 10),
                 NotificationType.NONE, null, null, RepeatType.NONE, null,
                 null, ScheduleColor.GREEN, null
         ));
@@ -329,10 +321,9 @@ class ScheduleRecordApplicationServiceTest {
                 LocalDate.of(2026, 3, 31)
         );
 
-        // then: 3월에 걸친 일정 2개만 조회됨
-        assertThat(schedules).hasSize(2);
-        assertThat(schedules).extracting(ScheduleResponse::getTitle)
-                .containsExactlyInAnyOrder("3월 21일 일정", "3월 22-25일 일정");
+        // then: 3월에 해당하는 일정 1개만 조회됨 (5월 일정은 제외)
+        assertThat(schedules).hasSize(1);
+        assertThat(schedules.get(0).getTitle()).isEqualTo("3월 21일 일정");
     }
 
     @Test
@@ -521,5 +512,107 @@ class ScheduleRecordApplicationServiceTest {
         assertThat(updated.getNotificationType()).isEqualTo(NotificationType.CUSTOM);
         assertThat(updated.getNotificationCustomHours()).isEqualTo(7);
         assertThat(updated.getNotificationCustomMinutes()).isEqualTo(45);
+    }
+
+    @Test
+    @DisplayName("오늘 일정을 2개까지 생성할 수 있다")
+    void createSchedule_WithinLimit_Success() {
+        // given & when: 오늘 첫 번째 일정 생성
+        CreateScheduleCommand command1 = new CreateScheduleCommand(
+                "첫 번째 일정",
+                LocalDate.now().plusDays(10),
+                LocalDate.now().plusDays(10),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.RED, null
+        );
+        ScheduleResponse schedule1 = scheduleRecordApplicationService.create(testUserId, command1);
+
+        // when: 오늘 두 번째 일정 생성
+        CreateScheduleCommand command2 = new CreateScheduleCommand(
+                "두 번째 일정",
+                LocalDate.now().plusDays(20),
+                LocalDate.now().plusDays(20),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.BLUE, null
+        );
+        ScheduleResponse schedule2 = scheduleRecordApplicationService.create(testUserId, command2);
+
+        // then: 2개 모두 생성 성공
+        assertThat(schedule1).isNotNull();
+        assertThat(schedule1.getTitle()).isEqualTo("첫 번째 일정");
+        assertThat(schedule2).isNotNull();
+        assertThat(schedule2.getTitle()).isEqualTo("두 번째 일정");
+    }
+
+    @Test
+    @DisplayName("오늘 일정을 3개 생성하려고 하면 예외가 발생한다")
+    void createSchedule_ExceedsLimit_ThrowsException() {
+        // given: 오늘 2개 일정 이미 생성
+        CreateScheduleCommand command1 = new CreateScheduleCommand(
+                "첫 번째 일정",
+                LocalDate.now().plusDays(10),
+                LocalDate.now().plusDays(10),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.RED, null
+        );
+        scheduleRecordApplicationService.create(testUserId, command1);
+
+        CreateScheduleCommand command2 = new CreateScheduleCommand(
+                "두 번째 일정",
+                LocalDate.now().plusDays(20),
+                LocalDate.now().plusDays(20),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.BLUE, null
+        );
+        scheduleRecordApplicationService.create(testUserId, command2);
+
+        // when & then: 세 번째 일정 생성 시도하면 예외 발생
+        CreateScheduleCommand command3 = new CreateScheduleCommand(
+                "세 번째 일정",
+                LocalDate.now().plusDays(30),
+                LocalDate.now().plusDays(30),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.GREEN, null
+        );
+
+        assertThatThrownBy(() -> scheduleRecordApplicationService.create(testUserId, command3))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("오늘 등록할 수 있는 일정은 최대 2개입니다");
+    }
+
+    @Test
+    @DisplayName("일정 생성 제한은 createdAt 기준이므로 startDate와 무관하다")
+    void createSchedule_LimitBasedOnCreatedAt_NotStartDate() {
+        // given & when: 미래 날짜를 startDate로 하는 일정 2개 생성 (오늘 생성)
+        CreateScheduleCommand command1 = new CreateScheduleCommand(
+                "한 달 뒤 일정",
+                LocalDate.now().plusMonths(1),
+                LocalDate.now().plusMonths(1),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.RED, null
+        );
+        scheduleRecordApplicationService.create(testUserId, command1);
+
+        CreateScheduleCommand command2 = new CreateScheduleCommand(
+                "두 달 뒤 일정",
+                LocalDate.now().plusMonths(2),
+                LocalDate.now().plusMonths(2),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.BLUE, null
+        );
+        scheduleRecordApplicationService.create(testUserId, command2);
+
+        // when & then: 세 번째 일정 생성 시도 (startDate는 미래이지만 오늘 생성하므로 제한 적용)
+        CreateScheduleCommand command3 = new CreateScheduleCommand(
+                "세 달 뒤 일정",
+                LocalDate.now().plusMonths(3),
+                LocalDate.now().plusMonths(3),
+                NotificationType.NONE, null, null, RepeatType.NONE, null,
+                null, ScheduleColor.GREEN, null
+        );
+
+        assertThatThrownBy(() -> scheduleRecordApplicationService.create(testUserId, command3))
+                .isInstanceOf(CustomException.class)
+                .hasMessageContaining("오늘 등록할 수 있는 일정은 최대 2개입니다");
     }
 }

@@ -74,6 +74,11 @@ public class OpenApiConfig {
                           * 변경 전: DAILY 2개, EXERCISE 2개, HABIT 2개 (각각)
                           * 변경 후: DAILY + EXERCISE + HABIT 합쳐서 2개 (전체)
                           * 유지: 하루 최대 2가지 타입 제한
+                        - **일정 생성 제한**: 오늘 생성할 수 있는 일정은 최대 2개 (createdAt 기준)
+                          * 일정의 startDate와 무관하게 오늘 생성한 일정 개수로 제한
+                        - **생성 제한 조회 API**: 기록/일정 생성 가능 여부 확인 API 추가
+                          * GET /api/daily-records/creation-limits?date={date}
+                          * 응답: {canCreateRecord: boolean, canCreateSchedule: boolean}
 
                         ### v1.4.4 업데이트 (2025.11.14)
                         - **목표 달성 보고서 정렬 개선**: recentHistory를 종료일 기준으로 정렬

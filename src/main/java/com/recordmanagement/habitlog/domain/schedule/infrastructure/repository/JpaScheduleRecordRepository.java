@@ -67,4 +67,16 @@ public interface JpaScheduleRecordRepository extends JpaRepository<ScheduleRecor
            "WHERE s.repeatType <> 'NONE' " +
            "AND (s.repeatEndsOn IS NULL OR s.repeatEndsOn >= :today)")
     List<ScheduleRecordEntity> findRepeatableSchedules(@Param("today") LocalDate today);
+
+    /**
+     * 오늘 생성된 일정 개수 조회 (createdAt 기준)
+     * - createdAt의 날짜 부분만 비교
+     */
+    @Query("SELECT COUNT(s) FROM ScheduleRecordEntity s " +
+           "WHERE s.userId = :userId " +
+           "AND FUNCTION('DATE', s.createdAt) = :today")
+    int countByUserIdAndCreatedAtToday(
+            @Param("userId") String userId,
+            @Param("today") LocalDate today
+    );
 }

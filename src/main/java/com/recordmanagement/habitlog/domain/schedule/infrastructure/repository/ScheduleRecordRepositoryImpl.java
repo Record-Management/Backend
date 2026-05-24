@@ -89,4 +89,9 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
                 .map(ScheduleRecordEntity::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public int countByUserIdAndCreatedAtToday(UserId userId, LocalDate today) {
+        return jpaScheduleRecordRepository.countByUserIdAndCreatedAtToday(userId.getValue(), today);
+    }
 }

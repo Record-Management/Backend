@@ -34,6 +34,16 @@ public class ScheduleRecordApplicationService {
     public ScheduleResponse create(String userId, CreateScheduleCommand command) {
         log.info("Creating schedule for user: {}", userId);
 
+        // 오늘 생성한 일정 개수 체크 (createdAt 기준 최대 2개)
+        int todayScheduleCount = scheduleRecordRepository.countByUserIdAndCreatedAtToday(
+            UserId.of(userId),
+            LocalDate.now()
+        );
+
+        if (todayScheduleCount >= 2) {
+            throw new CustomException(ErrorCode.SCHEDULE_RECORD_LIMIT_EXCEEDED);
+        }
+
         // 입력 검증
         validateScheduleCommand(command.getStartDate(), command.getEndDate(),
                               command.getNotificationType(), command.getNotificationCustomHours(),
