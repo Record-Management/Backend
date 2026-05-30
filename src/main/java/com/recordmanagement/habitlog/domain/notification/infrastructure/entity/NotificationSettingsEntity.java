@@ -46,6 +46,9 @@ public class NotificationSettingsEntity extends BaseEntity {
     @Column(name = "goal_setting_notification_enabled", nullable = false)
     private boolean goalSettingNotificationEnabled;
 
+    @Column(name = "schedule_notification_enabled", nullable = false)
+    private boolean scheduleNotificationEnabled;
+
     @Column(name = "last_checked_at")
     private LocalDateTime lastCheckedAt;
 
@@ -61,6 +64,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         this.exerciseNotificationEnabled = notificationSettings.isExerciseNotificationEnabled();
         this.habitNotificationEnabled = notificationSettings.isHabitNotificationEnabled();
         this.goalSettingNotificationEnabled = notificationSettings.isGoalSettingNotificationEnabled();
+        this.scheduleNotificationEnabled = notificationSettings.isScheduleNotificationEnabled();
         this.lastCheckedAt = notificationSettings.getLastCheckedAt();
         this.setCreatedAt(notificationSettings.getCreatedAt());
         this.setUpdatedAt(notificationSettings.getUpdatedAt());
@@ -77,7 +81,8 @@ public class NotificationSettingsEntity extends BaseEntity {
             this.dailyRecordNotificationEnabled,
             this.exerciseNotificationEnabled,
             this.habitNotificationEnabled,
-            this.goalSettingNotificationEnabled
+            this.goalSettingNotificationEnabled,
+            this.scheduleNotificationEnabled
         );
 
         // 리플렉션을 사용하여 private 필드 설정
@@ -103,6 +108,7 @@ public class NotificationSettingsEntity extends BaseEntity {
         this.exerciseNotificationEnabled = notificationSettings.isExerciseNotificationEnabled();
         this.habitNotificationEnabled = notificationSettings.isHabitNotificationEnabled();
         this.goalSettingNotificationEnabled = notificationSettings.isGoalSettingNotificationEnabled();
+        this.scheduleNotificationEnabled = notificationSettings.isScheduleNotificationEnabled();
         this.setUpdatedAt(notificationSettings.getUpdatedAt());
     }
 

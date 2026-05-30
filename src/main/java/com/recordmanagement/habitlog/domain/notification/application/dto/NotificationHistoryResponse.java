@@ -48,9 +48,21 @@ public class NotificationHistoryResponse {
      * @return 응답 DTO
      */
     public static NotificationHistoryResponse from(NotificationHistory history) {
-        // 알림 타입에 따른 제목과 메시지 매핑
+        // 일정 알림의 경우 도메인 모델의 message를 사용 (일정명)
+        if (history.getType() == com.recordmanagement.habitlog.domain.notification.domain.model.NotificationType.SCHEDULE_REMINDER) {
+            return new NotificationHistoryResponse(
+                history.getId().getValue(),
+                history.getType().name(),
+                "일정 기록",
+                history.getMessage(), // 일정명을 그대로 사용
+                history.getSentAt(),
+                history.isRead()
+            );
+        }
+
+        // 다른 알림 타입들은 기존처럼 고정 메시지 사용
         TitleMessage titleMessage = getTitleMessage(history.getType());
-        
+
         return new NotificationHistoryResponse(
             history.getId().getValue(),
             history.getType().name(),
@@ -86,12 +98,16 @@ public class NotificationHistoryResponse {
                 "목표 설정",
                 "아직 목표를 설정하지 않으셨어요! 지금부터 새로운 목표를 만들어볼까요?"
             );
+            case SCHEDULE_REMINDER -> new TitleMessage(
+                "일정 기록",
+                "" // 일정 알림은 from() 메서드에서 별도 처리되므로 이 코드는 실행되지 않음
+            );
             case SYSTEM_ANNOUNCEMENT -> new TitleMessage(
                 "HabitLog",
                 "시스템 공지사항"
             );
             case TEST -> new TitleMessage(
-                "HabitLog", 
+                "HabitLog",
                 "테스트 알림 발송 완료"
             );
         };

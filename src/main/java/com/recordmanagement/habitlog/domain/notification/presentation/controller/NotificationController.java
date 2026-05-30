@@ -43,7 +43,8 @@ import jakarta.validation.Valid;
  * - exerciseNotification: 운동 기록 미등록 알림
  * - habitNotification: 습관 기록 미등록 알림
  * - goalSettingNotification: 목표 미설정 알림
- * 
+ * - scheduleNotification: 일정 알림
+ *
  * 자동 알림 시스템 (v2.1.1):
  * - 매일 오후 7시(한국시간) 자동 발송
  * - 메인 기록 타입에 따른 맞춤 알림:
@@ -88,22 +89,23 @@ public class NotificationController {
         summary = "알림 설정 조회",
         description = """
             현재 사용자의 모든 알림 설정을 조회합니다.
-            
+
             ### 포함 정보
             - 메인 기록 미등록 알림 활성화 여부
             - 운동 기록 알림 활성화 여부
             - 습관 기록 알림 활성화 여부
             - 목표 미설정 알림 활성화 여부
-            
+            - 일정 알림 활성화 여부
+
             ### 자동 알림 시스템 연동
             - 매일 오후 7시에 설정값에 따라 알림 발송
             - 각 타입별 개별 on/off 가능
             - FCM 토큰 등록 필수
-            
+
             ### 기본값 정책
             - 신규 사용자: 모든 알림이 **true**로 설정 (자동 생성)
             - 설정 조회 시 자동으로 기본 설정이 생성되어 일관된 결과 보장
-            
+
             ### 사용 시나리오
             - 설정 화면 진입 시 현재 알림 설정 표시
             - 앱 시작 시 알림 설정 확인
@@ -127,7 +129,8 @@ public class NotificationController {
                             "dailyRecordNotificationEnabled": true,
                             "exerciseNotificationEnabled": true,
                             "habitNotificationEnabled": false,
-                            "goalSettingNotificationEnabled": true
+                            "goalSettingNotificationEnabled": true,
+                            "scheduleNotificationEnabled": true
                           }
                         }
                         """
@@ -180,21 +183,22 @@ public class NotificationController {
         summary = "알림 설정 업데이트",
         description = """
             사용자의 알림 설정을 선택적으로 업데이트합니다.
-            
+
             ### 업데이트 가능한 설정
             - dailyRecordNotificationEnabled: 메인 기록 미등록 알림
             - exerciseNotificationEnabled: 운동 기록 미등록 알림
             - habitNotificationEnabled: 습관 기록 미등록 알림
             - goalSettingNotificationEnabled: 목표 미설정 알림
-            
+            - scheduleNotificationEnabled: 일정 알림
+
             ### 선택적 업데이트
             - null이 아닌 값만 업데이트됩니다
             - 설정이 없는 경우 기본 설정을 자동 생성합니다
-            
+
             ### 요청 예시
             - 특정 알림만 수정: {"dailyRecordNotificationEnabled": false}
-            - 모든 알림 수정: {"dailyRecordNotificationEnabled": true, "exerciseNotificationEnabled": false, "habitNotificationEnabled": true}
-            
+            - 모든 알림 수정: {"dailyRecordNotificationEnabled": true, "exerciseNotificationEnabled": false, "habitNotificationEnabled": true, "scheduleNotificationEnabled": true}
+
             ### 사용 시나리오
             - 설정 화면에서 개별 알림 토글
             - 모든 알림 일괄 활성화/비활성화
@@ -217,7 +221,8 @@ public class NotificationController {
                             "dailyRecordNotificationEnabled": false,
                             "exerciseNotificationEnabled": true,
                             "habitNotificationEnabled": true,
-                            "goalSettingNotificationEnabled": false
+                            "goalSettingNotificationEnabled": false,
+                            "scheduleNotificationEnabled": true
                           }
                         }
                         """
@@ -252,13 +257,14 @@ public class NotificationController {
         log.info("알림 설정 업데이트 요청 수신");
 
         String userId = authentication.getName();
-        
+
         NotificationSettingsCommand command = new NotificationSettingsCommand(
                 UserId.from(userId),
                 request.getDailyRecordNotificationEnabled(),
                 request.getExerciseNotificationEnabled(),
                 request.getHabitNotificationEnabled(),
-                request.getGoalSettingNotificationEnabled()
+                request.getGoalSettingNotificationEnabled(),
+                request.getScheduleNotificationEnabled()
         );
 
         NotificationSettingsResponse updatedSettings = notificationApplicationService.updateNotificationSettings(command);

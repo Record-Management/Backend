@@ -45,4 +45,11 @@ public class UpdateNotificationSettingsRequest {
         nullable = true
     )
     private Boolean goalSettingNotificationEnabled;
+
+    @Schema(
+        description = "일정 알림 활성화 여부",
+        example = "true",
+        nullable = true
+    )
+    private Boolean scheduleNotificationEnabled;
 }
