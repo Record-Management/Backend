@@ -216,4 +216,23 @@ public class NotificationApplicationService implements NotificationReadStatusSer
                     return true; // 기본값: 활성화
                 });
     }
+
+    /**
+     * 사용자의 일정 알림이 활성화되어 있는지 확인
+     * 설정이 없으면 기본 설정을 생성하여 일관성 보장
+     *
+     * @param userId 사용자 ID
+     * @return 일정 알림 활성화 여부
+     */
+    @Transactional
+    public boolean isScheduleNotificationEnabled(UserId userId) {
+        return notificationSettingsRepository.findByUserId(userId)
+                .map(NotificationSettings::isScheduleNotificationEnabled)
+                .orElseGet(() -> {
+                    log.info("알림 설정이 없어 기본 설정으로 생성: userId={}", userId.getValue());
+                    NotificationSettings newSettings = new NotificationSettings(userId);
+                    notificationSettingsRepository.save(newSettings);
+                    return true; // 기본값: 활성화
+                });
+    }
 }
