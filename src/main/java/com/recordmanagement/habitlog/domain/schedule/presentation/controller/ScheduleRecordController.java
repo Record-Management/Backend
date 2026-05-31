@@ -74,6 +74,60 @@ public class ScheduleRecordController {
                - 생성 가능 여부는 GET /api/daily-records/creation-limits 로 확인할 수 있습니다
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "일정 생성 성공"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "400",
+        description = "일정 생성 제한 초과 또는 입력값 오류",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = {
+                @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    name = "일정 생성 제한 초과",
+                    summary = "오늘 일정 2개 제한 초과",
+                    value = """
+                        {
+                            "statusCode": 400,
+                            "code": "E40414",
+                            "message": "오늘 등록할 수 있는 일정은 최대 2개입니다.",
+                            "data": null
+                        }
+                        """
+                ),
+                @io.swagger.v3.oas.annotations.media.ExampleObject(
+                    name = "입력값 오류",
+                    summary = "필수 항목 누락 또는 형식 오류",
+                    value = """
+                        {
+                            "statusCode": 400,
+                            "code": "E40001",
+                            "message": "잘못된 입력 값입니다.",
+                            "data": null
+                        }
+                        """
+                )
+            }
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                    "statusCode": 401,
+                    "code": "E40101",
+                    "message": "인증이 필요합니다.",
+                    "data": null
+                }
+                """
+            )
+        )
+    )
     public ResponseEntity<ScheduleResponse> createSchedule(
             Authentication authentication,
             @Valid @RequestBody CreateScheduleRequest request) {
@@ -86,6 +140,61 @@ public class ScheduleRecordController {
     @Operation(summary = "일정 기록 수정",
                description = "기존 일정 기록을 수정합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "일정 수정 성공"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "400",
+        description = "입력값 오류",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                    {
+                        "statusCode": 400,
+                        "code": "E40001",
+                        "message": "잘못된 입력 값입니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                    "statusCode": 401,
+                    "code": "E40101",
+                    "message": "인증이 필요합니다.",
+                    "data": null
+                }
+                """
+            )
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "404",
+        description = "일정을 찾을 수 없음",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                    {
+                        "statusCode": 404,
+                        "code": "E40401",
+                        "message": "요청한 자원을 찾을 수 없습니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
     public ResponseEntity<ScheduleResponse> updateSchedule(
             Authentication authentication,
             @PathVariable String scheduleRecordId,
@@ -101,6 +210,44 @@ public class ScheduleRecordController {
     @Operation(summary = "일정 기록 삭제",
                description = "일정 기록을 삭제합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "204",
+        description = "일정 삭제 성공"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                    "statusCode": 401,
+                    "code": "E40101",
+                    "message": "인증이 필요합니다.",
+                    "data": null
+                }
+                """
+            )
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "404",
+        description = "일정을 찾을 수 없음",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                    {
+                        "statusCode": 404,
+                        "code": "E40401",
+                        "message": "요청한 자원을 찾을 수 없습니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
     public ResponseEntity<Void> deleteSchedule(
             Authentication authentication,
             @PathVariable String scheduleRecordId) {
@@ -113,6 +260,44 @@ public class ScheduleRecordController {
     @Operation(summary = "일정 기록 단건 조회",
                description = "특정 일정 기록을 조회합니다.",
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "일정 조회 성공"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                    "statusCode": 401,
+                    "code": "E40101",
+                    "message": "인증이 필요합니다.",
+                    "data": null
+                }
+                """
+            )
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "404",
+        description = "일정을 찾을 수 없음",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                    {
+                        "statusCode": 404,
+                        "code": "E40401",
+                        "message": "요청한 자원을 찾을 수 없습니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
     public ResponseEntity<ScheduleResponse> getSchedule(
             Authentication authentication,
             @PathVariable String scheduleRecordId) {
@@ -130,6 +315,44 @@ public class ScheduleRecordController {
                - 예: 3월 1일 ~ 3월 31일 조회 시, 2월 28일 ~ 3월 5일 일정도 포함됨
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "일정 목록 조회 성공"
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "400",
+        description = "입력값 오류",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                    {
+                        "statusCode": 400,
+                        "code": "E40001",
+                        "message": "잘못된 입력 값입니다.",
+                        "data": null
+                    }
+                    """
+            )
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                    "statusCode": 401,
+                    "code": "E40101",
+                    "message": "인증이 필요합니다.",
+                    "data": null
+                }
+                """
+            )
+        )
+    )
     public ResponseEntity<List<ScheduleResponse>> getSchedulesByDateRange(
             Authentication authentication,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
