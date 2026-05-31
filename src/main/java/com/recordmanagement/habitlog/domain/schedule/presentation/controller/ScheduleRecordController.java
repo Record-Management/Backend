@@ -50,9 +50,16 @@ public class ScheduleRecordController {
 
                ## 알림 타입
                - NONE: 알림 없음
-               - ONE_DAY_BEFORE: 1일 전 오전 9:00
-               - TWO_DAYS_BEFORE: 2일 전 오전 9:00
-               - CUSTOM: 사용자 지정 (startDate 당일 customHours:customMinutes에 알림, customHours/customMinutes 필수)
+               - ONE_DAY_BEFORE: 시작일 1일 전 오전 9:00에 알림 (예: 6월 10일 일정 → 6월 9일 09:00 알림)
+               - TWO_DAYS_BEFORE: 시작일 2일 전 오전 9:00에 알림 (예: 6월 10일 일정 → 6월 8일 09:00 알림)
+               - CUSTOM: startDate 당일 사용자 지정 시간에 알림 (예: 6월 10일 일정, 01:00 설정 → 6월 10일 01:00 알림)
+                 * customHours: 알림 시간 (0-23, CUSTOM일 때 필수)
+                 * customMinutes: 알림 분 (0-59, CUSTOM일 때 필수)
+
+               **중요:**
+               - 알림은 설정 > 기록별 알림에서 '일정 알림'이 활성화된 경우에만 발송됩니다
+               - 알림 시간이 이미 지난 경우 해당 알림은 발송되지 않습니다
+               - 알림 히스토리에는 일정명(title)이 메시지로 저장됩니다
 
                ## 반복 타입
                - NONE: 반복 없음
@@ -60,6 +67,11 @@ public class ScheduleRecordController {
                - WEEK: 매주
                - MONTH: 매월 (31일 일정은 30일까지 있는 달은 누락)
                - YEAR: 매년 (2월 29일 일정은 평년은 누락)
+
+               ## 생성 제한
+               - 오늘 생성할 수 있는 일정은 최대 2개입니다
+               - 생성 시간(createdAt) 기준으로 판단합니다
+               - 생성 가능 여부는 GET /api/daily-records/creation-limits 로 확인할 수 있습니다
                """,
                security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<ScheduleResponse> createSchedule(

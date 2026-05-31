@@ -299,9 +299,9 @@ public class NotificationController {
             
             ### 응답 필드 상세
             - **id**: 알림 고유 식별자 (예: "notification-123")
-            - **type**: 알림 타입 (DAILY_RECORD_REMINDER, EXERCISE_REMINDER, HABIT_REMINDER, GOAL_SETTING_REMINDER)
-            - **title**: 알림 제목 (하루 기록, 운동 기록, 습관 기록, 목표 설정)
-            - **message**: 피그마 명세에 맞는 알림 메시지
+            - **type**: 알림 타입 (DAILY_RECORD_REMINDER, EXERCISE_REMINDER, HABIT_REMINDER, GOAL_SETTING_REMINDER, SCHEDULE_REMINDER)
+            - **title**: 알림 제목 (하루 기록, 운동 기록, 습관 기록, 목표 설정, 일정 기록)
+            - **message**: 피그마 명세에 맞는 알림 메시지 (일정 알림의 경우 일정명)
             - **sentAt**: 발송 시간 (ISO 8601 형태: "2025-11-17T19:00:00")
             - **isRead**: 읽음 여부 (boolean)
             
@@ -366,6 +366,14 @@ public class NotificationController {
                                 },
                                 {
                                   "id": "notification-120",
+                                  "type": "SCHEDULE_REMINDER",
+                                  "title": "일정 기록",
+                                  "message": "한강 러닝가기",
+                                  "sentAt": "2025-11-15T09:00:00",
+                                  "isRead": true
+                                },
+                                {
+                                  "id": "notification-119",
                                   "type": "GOAL_SETTING_REMINDER",
                                   "title": "목표 설정",
                                   "message": "아직 목표를 설정하지 않으셨어요! 지금부터 새로운 목표를 만들어볼까요?",
@@ -376,7 +384,7 @@ public class NotificationController {
                               "pageInfo": {
                                 "page": 0,
                                 "size": 20,
-                                "totalElements": 18,
+                                "totalElements": 19,
                                 "totalPages": 1
                               }
                             },
