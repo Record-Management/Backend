@@ -88,19 +88,20 @@ public class AuthApplicationService {
     public SocialLoginResult socialLogin(SocialLoginCommand command) {
         SocialUserInfo socialUserInfo = socialLoginService.getUserInfo(command.getSocialType(), command.getAccessToken());
 
-        // socialId로 기존 사용자 조회 (단순하고 안정적)
-        Optional<UserResponse> existingUser = userRegistrationService.findBySocialLogin(command.getSocialType(), socialUserInfo.getSocialId());
+        // 1. 탈퇴한 사용자 복구 시도 (7일 이내면 자동 복구)
+        Optional<UserResponse> restoredUser = userLifecycleService.restoreWithdrawnUser(
+                command.getSocialType(),
+                socialUserInfo.getSocialId()
+        );
 
         UserResponse user;
         boolean isNewUser = false;
 
-        if (existingUser.isPresent()) {
-            user = existingUser.get();
-            
-            // 탈퇴 사용자 복구는 UserLifecycleService에서 처리됨 (이미 위에서 처리됨)
-            log.info("기존 사용자 로그인: userId={}, socialType={}", user.getId(), command.getSocialType());
+        if (restoredUser.isPresent()) {
+            user = restoredUser.get();
+            log.info("사용자 로그인 (탈퇴 복구 포함): userId={}, socialType={}", user.getId(), command.getSocialType());
         } else {
-            // 신규 사용자 가입
+            // 2. 복구할 사용자가 없으면 신규 가입
             user = createNewUser(socialUserInfo, command.getSocialType());
             isNewUser = true;
             log.info("신규 사용자 가입: userId={}, socialType={}", user.getId(), command.getSocialType());
