@@ -244,22 +244,46 @@ public class RecordApplicationService {
             allRecords.addAll(habitResponses);
         }
 
-        // 4. 일정 기록 조회 (별도 처리 - 타입 필터링과 무관하게 항상 조회)
+        // 4. 일정 기록 조회 (일반 일정 + 반복 일정)
         Map<LocalDate, List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord>> schedulesByDate = new HashMap<>();
+
+        // 일반 일정 조회 (startDate ~ endDate와 겹치는 일정)
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
-            scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate);
+            new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate));
 
-        // 각 일정을 startDate~endDate 범위의 각 날짜별로 그룹핑
+        // 반복 일정 조회 (캘린더 범위와 겹칠 가능성이 있는 반복 일정)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
+            scheduleRecordRepository.findRepeatableSchedules().stream()
+                .filter(s -> s.getUserId().equals(userIdObj))
+                .filter(s -> {
+                    // 반복 종료일이 캘린더 시작일 이전이면 제외
+                    LocalDate repeatEnd = s.getRepeatEndsOn() != null ? s.getRepeatEndsOn() : endDate;
+                    return !repeatEnd.isBefore(startDate);
+                })
+                .filter(s -> {
+                    // 일정 시작일이 캘린더 종료일 이후면 제외
+                    return !s.getStartDate().isAfter(endDate);
+                })
+                .toList();
+
+        // 중복 제거하며 반복 일정 추가
+        Set<String> existingIds = scheduleRecords.stream()
+            .map(s -> s.getId().value())
+            .collect(Collectors.toSet());
+
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord repeatSchedule : repeatSchedules) {
+            if (!existingIds.contains(repeatSchedule.getId().value())) {
+                scheduleRecords.add(repeatSchedule);
+            }
+        }
+
+        // 각 일정을 반복 타입에 따라 날짜별로 그룹핑
         for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
-            LocalDate scheduleStart = schedule.getStartDate();
-            LocalDate scheduleEnd = schedule.getEndDate();
+            // 반복 타입에 따라 표시할 날짜 계산
+            List<LocalDate> scheduleDates = calculateScheduleDates(schedule, startDate, endDate);
 
-            // 캘린더 조회 범위와 일정 범위의 교집합 계산
-            LocalDate displayStart = scheduleStart.isBefore(startDate) ? startDate : scheduleStart;
-            LocalDate displayEnd = scheduleEnd.isAfter(endDate) ? endDate : scheduleEnd;
-
-            // 교집합 범위의 각 날짜마다 일정 추가
-            for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
+            // 각 날짜에 일정 추가
+            for (LocalDate date : scheduleDates) {
                 schedulesByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
             }
         }
@@ -916,6 +940,123 @@ public class RecordApplicationService {
                 .canCreateRecord(canCreateRecord)
                 .canCreateSchedule(canCreateSchedule)
                 .build();
+    }
+
+    /**
+     * 일정의 반복 타입에 따라 캘린더에 표시할 날짜 계산
+     *
+     * @param schedule 일정
+     * @param calendarStart 캘린더 조회 시작일
+     * @param calendarEnd 캘린더 조회 종료일
+     * @return 표시할 날짜 리스트
+     */
+    private List<LocalDate> calculateScheduleDates(
+            com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule,
+            LocalDate calendarStart,
+            LocalDate calendarEnd) {
+
+        List<LocalDate> dates = new ArrayList<>();
+        LocalDate scheduleStart = schedule.getStartDate();
+        LocalDate scheduleEnd = schedule.getEndDate();
+        com.recordmanagement.habitlog.domain.schedule.domain.model.RepeatType repeatType = schedule.getRepeatType();
+        LocalDate repeatEndsOn = schedule.getRepeatEndsOn();
+
+        // 반복 종료일 결정 (설정된 경우 그 값 사용, 아니면 캘린더 끝)
+        LocalDate effectiveRepeatEnd = repeatEndsOn != null ? repeatEndsOn : calendarEnd;
+
+        switch (repeatType) {
+            case NONE -> {
+                // 반복 없음: startDate ~ endDate 범위만 표시
+                LocalDate displayStart = scheduleStart.isBefore(calendarStart) ? calendarStart : scheduleStart;
+                LocalDate displayEnd = scheduleEnd.isAfter(calendarEnd) ? calendarEnd : scheduleEnd;
+
+                for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
+                    dates.add(date);
+                }
+            }
+            case DAY -> {
+                // 매일 반복: startDate부터 매일, repeatEndsOn까지
+                LocalDate displayStart = scheduleStart.isBefore(calendarStart) ? calendarStart : scheduleStart;
+                LocalDate displayEnd = effectiveRepeatEnd.isAfter(calendarEnd) ? calendarEnd : effectiveRepeatEnd;
+
+                // startDate ~ endDate 범위가 1일 이상인 경우 각 날짜의 범위를 반복
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                for (LocalDate repeatDate = displayStart; !repeatDate.isAfter(displayEnd); repeatDate = repeatDate.plusDays(1)) {
+                    // 일정의 각 날짜 범위 추가 (예: 3일 일정이면 각 반복마다 3일씩)
+                    for (int i = 0; i < daysInSchedule && !repeatDate.plusDays(i).isAfter(displayEnd); i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd)) {
+                            dates.add(date);
+                        }
+                    }
+                }
+            }
+            case WEEK -> {
+                // 매주 반복: startDate부터 매주 같은 요일, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+                    repeatDate = repeatDate.plusWeeks(1); // 1주 후
+                }
+            }
+            case MONTH -> {
+                // 매월 반복: startDate부터 매월 같은 날, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+
+                    // 다음 달 같은 날로 이동 (31일이 없는 달은 스킵)
+                    try {
+                        repeatDate = repeatDate.plusMonths(1);
+                    } catch (Exception e) {
+                        // 날짜가 유효하지 않으면 (예: 1월 31일 -> 2월 31일) 해당 월은 스킵
+                        break;
+                    }
+                }
+            }
+            case YEAR -> {
+                // 매년 반복: startDate부터 매년 같은 날, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+
+                    // 다음 해 같은 날로 이동 (2월 29일이 평년에는 없으므로 스킵)
+                    try {
+                        repeatDate = repeatDate.plusYears(1);
+                    } catch (Exception e) {
+                        // 날짜가 유효하지 않으면 (예: 2월 29일 윤년 -> 평년) 해당 년도는 스킵
+                        break;
+                    }
+                }
+            }
+        }
+
+        return dates;
     }
 
 }
