@@ -35,54 +35,75 @@ public class CalendarController {
     
     @Operation(summary = "캘린더 조회", description = """
             월별 기록 현황을 조회합니다. 타입별 필터링이 가능합니다.
-            
+
             ### 캘린더 표시 로직 (v1.8.6) - 프론트 분기처리 최적화
-            
+
             **과거 날짜**: 작성된 기록만 표시, 미작성은 빈 배열
             - 작성된 기록: `records: [실제기록객체]` → 색상 아이콘
             - 미작성 기록: `records: []` → 프론트에서 `length === 0 && 과거날짜`로 회색 아이콘 처리
             - 장점: 플레이스홀더 객체 없어서 타입 분기처리 불필요
-            
+
             **현재 날짜 (오늘)**: 작성된 기록만 표시, 미작성은 빈 배열
             - 작성된 기록: `records: [실제기록객체]` → 색상/회색 아이콘
             - 미작성 기록: `records: []` → 프론트에서 `length === 0 && 현재날짜`로 빈 공간 처리
             - 습관: 3단계 시스템 (미작성=빈공간, 작성=isCompleted:false, 완료=isCompleted:true)
             - 홈 화면: `records.length >= 2`로 간단한 작성 제한 체크
-            
+
             **미래 날짜**: 완전 빈 배열
             - `records: []` → 프론트에서 `length === 0 && 미래날짜`로 빈 공간 처리
             - DB에 미래 자동생성 기록이 있어도 API 응답에서 제외
-            
+
             ### 메인 기록 타입 표시 (v1.9.0)
             - 각 날짜에 `mainRecordTypeForDate` 필드가 추가되어 해당 날짜의 메인 기록 타입을 표시합니다
             - **목표 기간 내**: 해당 목표의 메인 기록 타입 반환 (HABIT/EXERCISE/DAILY)
             - **목표 미설정 기간**: `null` 반환 (목표가 설정되지 않은 기간)
             - 클라이언트는 이 값을 기준으로 캘린더 아이콘을 결정할 수 있습니다
-            
+
             ### 습관 기록 특별 처리 (v1.9.1)
             - **메인 습관 자동 생성**: 메인 습관 기록 생성 시 목표 종료일까지 DB에 자동 생성
             - **오늘까지만 응답**: DB의 미래 기록은 API에서 제외 (실제 행동 기반)
             - **메인 습관 표시 로직** (mainRecordTypeForDate = HABIT인 경우):
               * 미작성 (자동생성 그대로): records 빈 배열
-              * 작성 (사용자 수정): isCompleted=false로 표시  
+              * 작성 (사용자 수정): isCompleted=false로 표시
               * 완료: isCompleted=true로 표시
             - **다른 타입 사용자**: 모든 습관 기록 표시 (서브 기록으로)
-            
+
             ### isCompleted 필드 상태
             - **습관 기록**: 실제 완료 체크 여부 (true=완료, false=미완료, null=미작성)
             - **일상/운동 기록**: 기록 존재 자체가 완료 (항상 true)
-            
+
             ### 사용자 타입별 특징
             **습관 타입 사용자 (HABIT)**:
             - 과거: 모든 습관 기록 + 미작성 회색 표시
             - 현재: 작성된 습관만 표시 (3단계: 빈공간→회색→색상)
             - 미래: 표시하지 않음
-            
+
             **운동/일상 타입 사용자 (EXERCISE/DAILY)**:
-            - 과거: 모든 기록 + 미작성 회색 표시  
+            - 과거: 모든 기록 + 미작성 회색 표시
             - 현재: 작성된 기록만 표시
             - 미래: 표시하지 않음
             - 메인 기록 + 서브 습관 기록 조합 가능
+
+            ### 일정 표시 로직 (v1.5.1)
+
+            **일정 요약 정보** (schedules 필드):
+            - **title**: 대표 일정명 (첫 번째 일정)
+            - **extraScheduleCount**: 추가 일정 개수 (표시되지 않은 일정 수)
+              * 일정 1개: `null` ("+N" 표시 안 함)
+              * 일정 2개: `1` ("+1" 표시)
+              * 일정 3개: `2` ("+2" 표시)
+            - **color**: 대표 일정 색상
+
+            **반복 일정 표시**:
+            - **NONE**: 반복 없음 (startDate ~ endDate 범위만 표시)
+            - **DAY**: 매일 반복 (startDate부터 매일 표시)
+            - **WEEK**: 매주 반복 (startDate와 같은 요일에만 표시)
+            - **MONTH**: 매월 반복 (startDate와 같은 날짜에만 표시, 31일 일정은 30일까지 있는 달 자동 스킵)
+            - **YEAR**: 매년 반복 (startDate와 같은 월-일에만 표시, 2월 29일 일정은 평년 자동 스킵)
+
+            **반복 종료일** (repeatEndsOn):
+            - 설정 시: 해당 날짜까지만 반복 (이후 캘린더에서 제외)
+            - 미설정 시: 계속 반복
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -115,7 +136,7 @@ public class CalendarController {
                                     ],
                                     "schedules": {
                                         "title": "회의",
-                                        "size": 3,
+                                        "extraScheduleCount": 2,
                                         "color": "BLUE"
                                     }
                                 },
@@ -137,7 +158,7 @@ public class CalendarController {
                                     ],
                                     "schedules": {
                                         "title": "점심 약속",
-                                        "size": 1,
+                                        "extraScheduleCount": null,
                                         "color": "PINK"
                                     }
                                 },
@@ -187,7 +208,7 @@ public class CalendarController {
                                     "records": [],
                                     "schedules": {
                                         "title": "병원 예약",
-                                        "size": 2,
+                                        "extraScheduleCount": 1,
                                         "color": "GREEN"
                                     }
                                 },
@@ -244,7 +265,7 @@ public class CalendarController {
                                     "records": [],
                                     "schedules": {
                                         "title": "여행",
-                                        "size": 5,
+                                        "extraScheduleCount": 4,
                                         "color": "ORANGE"
                                     }
                                 },

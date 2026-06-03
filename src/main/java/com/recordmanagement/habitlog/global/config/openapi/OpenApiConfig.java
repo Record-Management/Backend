@@ -72,6 +72,11 @@ public class OpenApiConfig {
                           * 일정 1개: extraScheduleCount = null
                           * 일정 2개: extraScheduleCount = 1 ("+1" 표시)
                           * 일정 3개: extraScheduleCount = 2 ("+2" 표시)
+                        - **반복 일정 기능 개선**: 반복 타입(DAY/WEEK/MONTH/YEAR) 일정이 정확하게 표시됩니다
+                          * 캘린더 조회: 반복 타입별 정확한 날짜 계산 (매주 → 같은 요일만, 매월 → 같은 날짜만)
+                          * 일일 기록 조회: 반복 일정이 해당 날짜에 정확히 표시됨
+                          * 알림 발송: 반복 일정이 반복될 때마다 알림 정상 발송
+                          * repeatEndsOn(반복 종료일) 정확히 적용
 
                         ### v1.5.0 업데이트 (2026.05.16)
                         - **일정 기록 기능**: 일정 CRUD 기능 추가 (제목, 기간, 알림, 반복, 색상)

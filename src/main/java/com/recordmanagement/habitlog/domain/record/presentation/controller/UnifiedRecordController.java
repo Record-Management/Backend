@@ -31,27 +31,27 @@ public class UnifiedRecordController {
         this.recordApplicationService = recordApplicationService;
     }
     
-    @Operation(summary = "일일 기록 통합 조회", 
+    @Operation(summary = "일일 기록 통합 조회",
                description = """
                    특정 날짜의 모든 타입 기록(일상, 운동, 습관)을 통합하여 조회합니다.
-                   
+
                    ## 캘린더 시스템과 동일한 표시 로직 (v1.9.1)
-                   
+
                    **과거 날짜**: 해당 날짜에 실제로 작성된 모든 기록 반환
                    - 작성된 기록만 포함 (`records: [실제기록객체들]`)
                    - 미작성 시 빈 배열 (`records: []`) - 프론트에서 분기처리
                    - 목적: 플레이스홀더 없이 간단한 데이터 구조
-                   
+
                    **현재 날짜 (오늘)**: 해당 날짜에 작성된 모든 기록 반환
                    - 작성된 기록만 포함 (`records: [실제기록객체들]`)
                    - 미작성 시 빈 배열 (`records: []`)
                    - 습관 기록: 메인 습관은 3단계 (미작성=숨김, 작성=isCompleted:false, 완료=isCompleted:true)
                    - 홈 화면 제한 체크: `records.length >= 2`로 간단히 처리
-                   
+
                    **미래 날짜**: 빈 배열 반환 (`records: []`)
                    - DB에 미래 자동 생성 기록이 있어도 API에서 제외
                    - 목적: 실제 행동 기반, 미리 계획하지 않음
-                   
+
                    ## 습관 기록 특별 처리 (v1.9.1)
                    - **습관 타입 사용자**: 목표 기간 내 메인 습관 기록 (오늘까지만)
                      * 미작성 (자동생성 그대로): API 응답에서 제외
@@ -59,7 +59,20 @@ public class UnifiedRecordController {
                      * 완료: isCompleted=true로 포함
                    - **운동/일상 타입 사용자**: 모든 날짜의 습관 기록 (서브 기록)
                    - **자동 생성 제외**: 사용자가 수정하지 않은 자동 생성 기록은 API 응답에서 제외
-                   
+
+                   ## 일정 표시 로직 (v1.5.1)
+
+                   **일정 상세 정보** (schedules 배열):
+                   - 해당 날짜의 모든 일정을 상세 정보와 함께 반환
+                   - 각 일정 객체: scheduleId, title, startDate, endDate, color, memo
+
+                   **반복 일정 포함**:
+                   - 해당 날짜에 표시되어야 하는 반복 일정도 자동으로 포함됩니다
+                   - **WEEK**: 매주 같은 요일에만 표시 (예: 수요일 시작 → 매주 수요일)
+                   - **MONTH**: 매월 같은 날짜에만 표시 (예: 15일 시작 → 매월 15일)
+                   - **YEAR**: 매년 같은 월-일에만 표시 (예: 6월 10일 시작 → 매년 6월 10일)
+                   - **repeatEndsOn**: 반복 종료일이 지난 일정은 제외됨
+
                    ## 이미지 URL 처리
                    - 조회 시 자동으로 새로운 Pre-signed URL 생성 (1시간 유효)
                    - 이미지 접근 시마다 최신 URL 제공
