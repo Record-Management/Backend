@@ -298,7 +298,7 @@ public class RecordApplicationService {
     /**
      * 일정 요약 정보 생성
      * - title: 대표 일정명 (첫 번째 일정)
-     * - size: 일정 개수
+     * - extraScheduleCount: 추가 일정 개수 (표시되지 않은 일정 수, 1개면 null)
      * - color: 대표 일정 색상 (첫 번째 일정)
      */
     private ScheduleSummary createScheduleSummary(List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> schedules) {
@@ -309,9 +309,12 @@ public class RecordApplicationService {
         // 첫 번째 일정을 대표로 사용
         com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord firstSchedule = schedules.get(0);
 
+        // 추가 일정 개수 계산 (1개면 null, 2개 이상이면 size - 1)
+        Integer extraScheduleCount = schedules.size() > 1 ? schedules.size() - 1 : null;
+
         return ScheduleSummary.builder()
                 .title(firstSchedule.getTitle())
-                .size(schedules.size())
+                .extraScheduleCount(extraScheduleCount)
                 .color(firstSchedule.getColor())
                 .build();
     }

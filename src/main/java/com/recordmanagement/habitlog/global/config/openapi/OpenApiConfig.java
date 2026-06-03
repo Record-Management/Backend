@@ -65,10 +65,18 @@ public class OpenApiConfig {
 
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
 
+                        ### v1.5.1 업데이트 (2026.06.03)
+                        - **캘린더 일정 표시 개선**: ScheduleSummary 필드 변경으로 클라이언트 사용성 향상
+                          * 변경 전: `size` (전체 일정 개수) - 클라이언트에서 size - 1 계산 필요
+                          * 변경 후: `extraScheduleCount` (추가 일정 개수) - 서버에서 계산하여 직접 사용 가능
+                          * 일정 1개: extraScheduleCount = null
+                          * 일정 2개: extraScheduleCount = 1 ("+1" 표시)
+                          * 일정 3개: extraScheduleCount = 2 ("+2" 표시)
+
                         ### v1.5.0 업데이트 (2026.05.16)
                         - **일정 기록 기능**: 일정 CRUD 기능 추가 (제목, 기간, 알림, 반복, 색상)
                         - **일정 알림 시스템**: CUSTOM 알림 타입에 분(minutes) 단위 설정 추가 (0-59)
-                        - **캘린더 API 개선**: 일정 정보를 schedules 필드로 분리 (ScheduleSummary: title, size, color)
+                        - **캘린더 API 개선**: 일정 정보를 schedules 필드로 분리 (ScheduleSummary: title, extraScheduleCount, color)
                         - **일일 기록 API 개선**: 일정 정보를 schedules 배열로 분리 (ScheduleDetail: 상세 정보)
                         - **기록 제한 정책 변경**: 타입별 2개 제한 → 전체 합산 2개 제한으로 통합
                           * 변경 전: DAILY 2개, EXERCISE 2개, HABIT 2개 (각각)

@@ -116,13 +116,13 @@ class CalendarWithScheduleTest {
 
         assertThat(may15.schedules()).isNotNull();
         assertThat(may15.schedules().getTitle()).isEqualTo("팀 회의");
-        assertThat(may15.schedules().getSize()).isEqualTo(1);
+        assertThat(may15.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
         assertThat(may15.schedules().getColor()).isEqualTo(ScheduleColor.BLUE);
     }
 
     @Test
-    @DisplayName("같은 날짜에 여러 일정이 있으면 size가 정확히 반영된다")
-    void getCalendar_WithMultipleSchedules_ReturnCorrectSize() {
+    @DisplayName("같은 날짜에 여러 일정이 있으면 extraScheduleCount가 정확히 반영된다")
+    void getCalendar_WithMultipleSchedules_ReturnCorrectExtraScheduleCount() {
         // given: 5월 20일에 일정 3개 생성
         LocalDate targetDate = LocalDate.of(2026, 5, 20);
 
@@ -147,14 +147,14 @@ class CalendarWithScheduleTest {
                 testUserId, 2026, 5, null
         );
 
-        // then: 5월 20일의 schedules size가 2 (일정 생성 제한으로 최대 2개)
+        // then: 5월 20일의 schedules extraScheduleCount가 1 (일정 2개 중 1개 추가)
         CalendarRecordResponse may20 = response.monthlyRecords().stream()
                 .filter(r -> r.date().equals(targetDate))
                 .findFirst()
                 .orElseThrow();
 
         assertThat(may20.schedules()).isNotNull();
-        assertThat(may20.schedules().getSize()).isEqualTo(2);
+        assertThat(may20.schedules().getExtraScheduleCount()).isEqualTo(1); // 일정 2개 → +1
         assertThat(may20.schedules().getTitle()).isEqualTo("아침 운동"); // 첫 번째 일정이 대표
         assertThat(may20.schedules().getColor()).isEqualTo(ScheduleColor.GREEN);
     }
@@ -195,7 +195,7 @@ class CalendarWithScheduleTest {
 
             assertThat(dayRecord.schedules()).isNotNull();
             assertThat(dayRecord.schedules().getTitle()).isEqualTo("제주도 여행");
-            assertThat(dayRecord.schedules().getSize()).isEqualTo(1);
+            assertThat(dayRecord.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
             assertThat(dayRecord.schedules().getColor()).isEqualTo(ScheduleColor.YELLOW);
         }
 
@@ -235,7 +235,7 @@ class CalendarWithScheduleTest {
 
         assertThat(may25Daily.schedules()).isNotNull();
         assertThat(may25Daily.schedules().getTitle()).isEqualTo("병원 예약");
-        assertThat(may25Daily.schedules().getSize()).isEqualTo(1);
+        assertThat(may25Daily.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
 
         // when: EXERCISE 타입으로 필터링해서 조회
         CalendarResponse exerciseFilterResponse = recordApplicationService.getCalendar(
@@ -250,7 +250,7 @@ class CalendarWithScheduleTest {
 
         assertThat(may25Exercise.schedules()).isNotNull();
         assertThat(may25Exercise.schedules().getTitle()).isEqualTo("병원 예약");
-        assertThat(may25Exercise.schedules().getSize()).isEqualTo(1);
+        assertThat(may25Exercise.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
 
         // when: HABIT 타입으로 필터링해서 조회
         CalendarResponse habitFilterResponse = recordApplicationService.getCalendar(
@@ -265,7 +265,7 @@ class CalendarWithScheduleTest {
 
         assertThat(may25Habit.schedules()).isNotNull();
         assertThat(may25Habit.schedules().getTitle()).isEqualTo("병원 예약");
-        assertThat(may25Habit.schedules().getSize()).isEqualTo(1);
+        assertThat(may25Habit.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
     }
 
     @Test
@@ -352,7 +352,7 @@ class CalendarWithScheduleTest {
 
         assertThat(may28After.schedules()).isNotNull();
         assertThat(may28After.schedules().getTitle()).isEqualTo("새로운 일정");
-        assertThat(may28After.schedules().getSize()).isEqualTo(1);
+        assertThat(may28After.schedules().getExtraScheduleCount()).isNull(); // 일정 1개면 null
         assertThat(may28After.schedules().getColor()).isEqualTo(ScheduleColor.INDIGO);
     }
 
