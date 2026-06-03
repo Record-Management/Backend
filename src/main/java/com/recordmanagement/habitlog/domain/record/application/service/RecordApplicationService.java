@@ -537,9 +537,31 @@ public class RecordApplicationService {
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList());
 
-        // 4. 일정 기록 조회 (별도 처리)
+        // 4. 일정 기록 조회 (일반 일정 + 반복 일정)
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
-            scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, date, date);
+            new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, date, date));
+
+        // 반복 일정 조회 (해당 날짜에 표시되어야 하는 반복 일정)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
+            scheduleRecordRepository.findRepeatableSchedules().stream()
+                .filter(s -> s.getUserId().equals(userIdObj))
+                .filter(s -> {
+                    // 이 반복 일정이 해당 날짜에 표시되어야 하는지 확인
+                    List<LocalDate> scheduleDates = calculateScheduleDates(s, date, date);
+                    return !scheduleDates.isEmpty();
+                })
+                .toList();
+
+        // 중복 제거하며 반복 일정 추가
+        Set<String> existingIds = scheduleRecords.stream()
+            .map(s -> s.getId().value())
+            .collect(Collectors.toSet());
+
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord repeatSchedule : repeatSchedules) {
+            if (!existingIds.contains(repeatSchedule.getId().value())) {
+                scheduleRecords.add(repeatSchedule);
+            }
+        }
 
         List<ScheduleDetail> schedules = scheduleRecords.stream()
             .map(ScheduleDetail::from)
