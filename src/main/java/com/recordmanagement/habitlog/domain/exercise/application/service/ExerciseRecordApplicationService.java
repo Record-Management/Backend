@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecordId;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordQueryRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class ExerciseRecordApplicationService {
     
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final RecordRepository recordRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
@@ -293,24 +295,11 @@ public class ExerciseRecordApplicationService {
     /**
      * 운동 목표의 완료일수 계산
      * 하루에 운동 기록이 하나라도 있으면 완료로 간주
+     * (성능 최적화: N번 쿼리 대신 1번 DISTINCT COUNT 쿼리)
      */
-    private int calculateCompletedDaysForExercise(UserId userId, 
+    private int calculateCompletedDaysForExercise(UserId userId,
                                                  java.time.LocalDate startDate, java.time.LocalDate endDate) {
-        int completedDays = 0;
-        java.time.LocalDate currentDate = startDate;
-        
-        while (!currentDate.isAfter(endDate)) {
-            // 해당 날짜에 운동 기록이 있는지 확인
-            var exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDate(userId, currentDate);
-            boolean hasRecord = !exerciseRecords.isEmpty();
-            
-            if (hasRecord) {
-                completedDays++;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return completedDays;
+        return exerciseRecordQueryRepository.countDistinctRecordDatesByUserIdAndDateRange(
+            userId, startDate, endDate);
     }
 }
