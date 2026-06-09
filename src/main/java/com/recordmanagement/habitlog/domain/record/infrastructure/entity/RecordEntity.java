@@ -21,7 +21,8 @@ import java.util.List;
 @Table(name = "records", indexes = {
     @Index(name = "idx_user_id_record_date", columnList = "user_id, record_date"),
     @Index(name = "idx_user_id_type", columnList = "user_id, type"),
-    @Index(name = "idx_user_id_created_at", columnList = "user_id, created_at")
+    @Index(name = "idx_user_id_created_at", columnList = "user_id, created_at"),
+    @Index(name = "idx_user_id_record_date_type", columnList = "user_id, record_date, type")
 })
 @Data
 @Builder

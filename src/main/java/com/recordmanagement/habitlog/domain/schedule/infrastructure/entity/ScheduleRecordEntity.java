@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
 @Table(name = "schedule_records", indexes = {
     @Index(name = "idx_user_id_start_date", columnList = "user_id, start_date"),
     @Index(name = "idx_user_id_end_date", columnList = "user_id, end_date"),
-    @Index(name = "idx_user_id_repeat_type", columnList = "user_id, repeat_type")
+    @Index(name = "idx_user_id_repeat_type", columnList = "user_id, repeat_type"),
+    @Index(name = "idx_user_id_created_at", columnList = "user_id, created_at")
 })
 @Data
 @Builder
