@@ -91,6 +91,14 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
     }
 
     @Override
+    public List<ScheduleRecord> findRepeatableSchedulesByUserId(UserId userId) {
+        return jpaScheduleRecordRepository.findRepeatableSchedulesByUserId(userId.getValue(), LocalDate.now())
+                .stream()
+                .map(ScheduleRecordEntity::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public int countByUserIdAndCreatedAtToday(UserId userId, LocalDate today) {
         return jpaScheduleRecordRepository.countByUserIdAndCreatedAtToday(userId.getValue(), today);
     }

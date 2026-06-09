@@ -59,7 +59,7 @@ public interface JpaScheduleRecordRepository extends JpaRepository<ScheduleRecor
     );
 
     /**
-     * 반복 일정 조회
+     * 반복 일정 조회 (전체 사용자)
      * - 반복 타입이 NONE이 아니고
      * - 반복 종료일이 null이거나 아직 종료되지 않은 일정
      */
@@ -67,6 +67,21 @@ public interface JpaScheduleRecordRepository extends JpaRepository<ScheduleRecor
            "WHERE s.repeatType <> 'NONE' " +
            "AND (s.repeatEndsOn IS NULL OR s.repeatEndsOn >= :today)")
     List<ScheduleRecordEntity> findRepeatableSchedules(@Param("today") LocalDate today);
+
+    /**
+     * 특정 사용자의 반복 일정 조회 (성능 최적화)
+     * - 반복 타입이 NONE이 아니고
+     * - 반복 종료일이 null이거나 아직 종료되지 않은 일정
+     * - DB 레벨에서 userId로 필터링 (인덱스 활용)
+     */
+    @Query("SELECT s FROM ScheduleRecordEntity s " +
+           "WHERE s.userId = :userId " +
+           "AND s.repeatType <> 'NONE' " +
+           "AND (s.repeatEndsOn IS NULL OR s.repeatEndsOn >= :today)")
+    List<ScheduleRecordEntity> findRepeatableSchedulesByUserId(
+            @Param("userId") String userId,
+            @Param("today") LocalDate today
+    );
 
     /**
      * 오늘 생성된 일정 개수 조회 (createdAt 기준)

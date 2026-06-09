@@ -251,10 +251,9 @@ public class RecordApplicationService {
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
             new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate));
 
-        // 반복 일정 조회 (캘린더 범위와 겹칠 가능성이 있는 반복 일정)
+        // 반복 일정 조회 (DB에서 사용자 필터링으로 성능 최적화)
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
-            scheduleRecordRepository.findRepeatableSchedules().stream()
-                .filter(s -> s.getUserId().equals(userIdObj))
+            scheduleRecordRepository.findRepeatableSchedulesByUserId(userIdObj).stream()
                 .filter(s -> {
                     // 반복 종료일이 캘린더 시작일 이전이면 제외
                     LocalDate repeatEnd = s.getRepeatEndsOn() != null ? s.getRepeatEndsOn() : endDate;
@@ -541,10 +540,9 @@ public class RecordApplicationService {
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
             new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, date, date));
 
-        // 반복 일정 조회 (해당 날짜에 표시되어야 하는 반복 일정)
+        // 반복 일정 조회 (DB에서 사용자 필터링으로 성능 최적화)
         List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
-            scheduleRecordRepository.findRepeatableSchedules().stream()
-                .filter(s -> s.getUserId().equals(userIdObj))
+            scheduleRecordRepository.findRepeatableSchedulesByUserId(userIdObj).stream()
                 .filter(s -> {
                     // 이 반복 일정이 해당 날짜에 표시되어야 하는지 확인
                     List<LocalDate> scheduleDates = calculateScheduleDates(s, date, date);
