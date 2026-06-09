@@ -29,7 +29,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class ExerciseRecordApplicationService {
-    
+
+    // 비즈니스 상수
+    private static final int MAX_DAILY_RECORDS = 2;
+    private static final int MAX_RECORD_TYPES_PER_DAY = 2;
+
     private final ExerciseRecordRepository exerciseRecordRepository;
     private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final RecordRepository recordRepository;
@@ -46,7 +50,7 @@ public class ExerciseRecordApplicationService {
         // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
         int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
 
-        if (totalRecordCount >= 2) {
+        if (totalRecordCount >= MAX_DAILY_RECORDS) {
             throw new CustomException(ErrorCode.EXERCISE_RECORD_LIMIT_EXCEEDED);
         }
 
@@ -245,7 +249,7 @@ public class ExerciseRecordApplicationService {
         if (habitCount > 0) recordTypeCount++;
         
         // 이미 2가지 기록 종류가 있다면 운동기록을 추가할 수 없음
-        if (recordTypeCount >= 2) {
+        if (recordTypeCount >= MAX_RECORD_TYPES_PER_DAY) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
     }

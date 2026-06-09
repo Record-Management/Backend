@@ -69,6 +69,7 @@ public class RecordApplicationService {
 
     // 비즈니스 상수
     private static final int MAX_DAILY_RECORDS = 2;
+    private static final int MAX_RECORD_TYPES_PER_DAY = 2;
     private static final String AUTO_GENERATED_MEMO_PREFIX = "자동 생성된";
 
     private final RecordRepository recordRepository;
@@ -775,8 +776,8 @@ public class RecordApplicationService {
         boolean hasNewType = !validationStrategyFactory
                 .getStrategy(newRecordType)
                 .hasExistingRecord(userId, recordDate);
-        
-        if (hasNewType && recordTypeCount >= 2) {
+
+        if (hasNewType && recordTypeCount >= MAX_RECORD_TYPES_PER_DAY) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
     }
