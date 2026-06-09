@@ -10,7 +10,6 @@ import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -57,7 +56,7 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
         return jpaExerciseRecordRepository.findByUserIdAndRecordDate(userId.getValue(), recordDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -65,7 +64,7 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
         return jpaExerciseRecordRepository.findByUserIdAndRecordDateBetween(userId.getValue(), startDate, endDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override

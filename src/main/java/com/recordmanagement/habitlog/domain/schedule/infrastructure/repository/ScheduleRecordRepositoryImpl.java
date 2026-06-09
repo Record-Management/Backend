@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
@@ -45,7 +44,7 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
         return jpaScheduleRecordRepository.findByUserIdAndDateRange(userId.getValue(), startDate, endDate)
                 .stream()
                 .map(ScheduleRecordEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -77,7 +76,7 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
                 notificationDate, oneDayAfter, twoDaysAfter, notificationHour, notificationMinute
         ).stream()
                 .map(ScheduleRecordEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -85,7 +84,7 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
         return jpaScheduleRecordRepository.findRepeatableSchedules(LocalDate.now())
                 .stream()
                 .map(ScheduleRecordEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -93,7 +92,7 @@ public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
         return jpaScheduleRecordRepository.findRepeatableSchedulesByUserId(userId.getValue(), LocalDate.now())
                 .stream()
                 .map(ScheduleRecordEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

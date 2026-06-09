@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class HabitRecordRepositoryImpl implements HabitRecordRepository {
@@ -46,7 +45,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findByUserIdAndRecordDate(userId.getValue(), recordDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -54,7 +53,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findByUserIdAndRecordDateBetween(userId.getValue(), startDate, endDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -141,6 +140,6 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findHabitsForNotification(currentTime, today)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
