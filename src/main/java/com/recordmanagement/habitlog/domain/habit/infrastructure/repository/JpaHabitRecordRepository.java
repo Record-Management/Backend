@@ -39,9 +39,15 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
         @Param("endDate") LocalDate endDate
     );
 
+    /**
+     * 특정 기간 내 습관 기록이 존재하는지 확인 (성능 최적화)
+     * - Spring Data JPA가 자동으로 EXISTS 쿼리 생성
+     */
+    boolean existsByUserIdAndRecordDateBetween(String userId, LocalDate startDate, LocalDate endDate);
+
     // 사용자 ID로 모든 습관 기록 삭제 (회원 탈퇴 시)
     void deleteByUserId(String userId);
-    
+
     // 특정 날짜에 메인 습관 기록 존재 여부 확인
     boolean existsByUserIdAndRecordDateAndIsMainRecord(String userId, LocalDate recordDate, boolean isMainRecord);
     

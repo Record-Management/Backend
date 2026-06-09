@@ -117,6 +117,12 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     }
 
     @Override
+    public boolean existsByUserIdAndRecordDateBetween(UserId userId, LocalDate startDate, LocalDate endDate) {
+        return jpaHabitRecordRepository.existsByUserIdAndRecordDateBetween(
+            userId.getValue(), startDate, endDate);
+    }
+
+    @Override
     public void deleteByUserId(String userId) {
         jpaHabitRecordRepository.deleteByUserId(userId);
     }

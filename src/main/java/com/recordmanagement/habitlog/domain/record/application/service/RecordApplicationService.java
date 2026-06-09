@@ -657,12 +657,12 @@ public class RecordApplicationService {
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
         
         // 사용자가 모든 습관을 포기했는지 확인 (전체 습관 기간에 습관 기록이 하나도 없는 경우)
-        boolean hasAnyHabitRecord = habitRecordRepository.findByUserIdAndRecordDateBetween(
+        boolean hasAnyHabitRecord = habitRecordRepository.existsByUserIdAndRecordDateBetween(
             userId, habitStartDate, habitEndDate
-        ).size() > 0;
-        
+        );
+
         if (!hasAnyHabitRecord) {
-            log.info("전체 습관 기간에 습관 기록이 없어 플레이스홀더 생성 생략: userId={}, habitPeriod=[{} ~ {}]", 
+            log.info("전체 습관 기간에 습관 기록이 없어 플레이스홀더 생성 생략: userId={}, habitPeriod=[{} ~ {}]",
                     userId.getValue(), habitStartDate, habitEndDate);
             return;
         }
