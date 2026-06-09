@@ -25,6 +25,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ScheduleRecordApplicationService {
 
+    // 비즈니스 상수
+    private static final int MAX_DAILY_SCHEDULES = 2;
+
     private final ScheduleRecordRepository scheduleRecordRepository;
 
     /**
@@ -34,13 +37,13 @@ public class ScheduleRecordApplicationService {
     public ScheduleResponse create(String userId, CreateScheduleCommand command) {
         log.info("Creating schedule for user: {}", userId);
 
-        // 오늘 생성한 일정 개수 체크 (createdAt 기준 최대 2개)
+        // 오늘 생성한 일정 개수 체크 (createdAt 기준)
         int todayScheduleCount = scheduleRecordRepository.countByUserIdAndCreatedAtToday(
             UserId.of(userId),
             LocalDate.now()
         );
 
-        if (todayScheduleCount >= 2) {
+        if (todayScheduleCount >= MAX_DAILY_SCHEDULES) {
             throw new CustomException(ErrorCode.SCHEDULE_RECORD_LIMIT_EXCEEDED);
         }
 

@@ -66,7 +66,11 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class RecordApplicationService {
-    
+
+    // 비즈니스 상수
+    private static final int MAX_DAILY_RECORDS = 2;
+    private static final String AUTO_GENERATED_MEMO_PREFIX = "자동 생성된";
+
     private final RecordRepository recordRepository;
     private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final ExerciseRecordSecurityRepository exerciseRecordSecurityRepository;
@@ -105,10 +109,10 @@ public class RecordApplicationService {
     
     @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
-        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        // 하루 최대 기록 제한 검증 (전체 타입 합쳐서)
         int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
 
-        if (totalRecordCount >= 2) {
+        if (totalRecordCount >= MAX_DAILY_RECORDS) {
             throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
         }
 
@@ -482,7 +486,7 @@ public class RecordApplicationService {
         }
         
         // 자동 생성된 기록이지만 사용자가 수정한 경우 (메모가 변경됨) 표시
-        if (record.memo() != null && record.memo().contains("자동 생성된")) {
+        if (record.memo() != null && record.memo().contains(AUTO_GENERATED_MEMO_PREFIX)) {
             return true; // 자동 생성된 그대로 남아있는 경우만 숨김
         }
         
