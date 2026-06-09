@@ -67,7 +67,14 @@ public class RecordRepositoryImpl implements RecordRepository {
     public int countByUserIdAndRecordDateAndType(UserId userId, LocalDate recordDate, RecordType type) {
         return jpaRecordRepository.countByUserIdAndRecordDateAndType(userId.getValue(), recordDate, type);
     }
-    
+
+    @Override
+    public int countDistinctRecordDatesByUserIdAndDateRangeAndType(
+            UserId userId, LocalDate startDate, LocalDate endDate, RecordType type) {
+        return jpaRecordRepository.countDistinctRecordDatesByUserIdAndDateRangeAndType(
+            userId.getValue(), startDate, endDate, type);
+    }
+
     @Override
     public boolean existsById(RecordId recordId) {
         return jpaRecordRepository.existsById(recordId.value());

@@ -46,10 +46,22 @@ public interface ExerciseRecordQueryRepository {
 
     /**
      * 사용자의 특정 날짜 운동 기록 개수 조회
-     * 
+     *
      * @param userId 사용자 ID
      * @param recordDate 조회할 날짜
      * @return 해당 날짜의 운동 기록 개수
      */
     int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
+
+    /**
+     * 특정 기간 내 운동 기록이 있는 날짜 수를 조회 (성능 최적화)
+     * - 목표 달성률 계산 시 사용
+     * - N번 쿼리 대신 1번 쿼리로 처리
+     *
+     * @param userId 사용자 ID
+     * @param startDate 시작 날짜
+     * @param endDate 종료 날짜
+     * @return 기록이 있는 날짜 수
+     */
+    int countDistinctRecordDatesByUserIdAndDateRange(UserId userId, LocalDate startDate, LocalDate endDate);
 }

@@ -816,45 +816,18 @@ public class RecordApplicationService {
      * 특정 기간 동안의 완료일수 계산
      * 하루에 해당 기록 타입의 기록이 하나라도 있으면 완료로 간주
      */
-    private int calculateCompletedDays(UserId userId, RecordType recordType, 
+    private int calculateCompletedDays(UserId userId, RecordType recordType,
                                       java.time.LocalDate startDate, java.time.LocalDate endDate) {
-        int completedDays = 0;
-        java.time.LocalDate currentDate = startDate;
-        
-        while (!currentDate.isAfter(endDate)) {
-            boolean hasRecord = false;
-            
-            // 기록 타입에 따라 완료 여부 판단
-            switch (recordType) {
-                case DAILY -> {
-                    // 일상 기록: 해당 날짜에 일상 기록이 있으면 완료
-                    int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
-                        userId, currentDate, RecordType.DAILY);
-                    hasRecord = dailyRecordCount > 0;
-                }
-                case EXERCISE -> {
-                    // 운동 기록: 해당 날짜에 운동 기록이 있으면 완료
-                    var exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDate(
-                        userId, currentDate);
-                    hasRecord = !exerciseRecords.isEmpty();
-                }
-                case HABIT -> {
-                    // 습관 기록: 해당 날짜에 완료된 습관 기록이 있으면 완료
-                    var habitRecords = habitRecordRepository.findByUserIdAndRecordDate(
-                        userId, currentDate);
-                    hasRecord = habitRecords.stream().anyMatch(
-                        habit -> habit.isCompleted());
-                }
-            }
-            
-            if (hasRecord) {
-                completedDays++;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return completedDays;
+        // 성능 최적화: N번 쿼리 대신 1번 쿼리로 기록이 있는 날짜 수 조회
+        return switch (recordType) {
+            case DAILY -> recordRepository.countDistinctRecordDatesByUserIdAndDateRangeAndType(
+                userId, startDate, endDate, RecordType.DAILY);
+            case EXERCISE -> exerciseRecordQueryRepository.countDistinctRecordDatesByUserIdAndDateRange(
+                userId, startDate, endDate);
+            case HABIT -> habitRecordRepository.countCompletedHabitsByUserIdAndDateRange(
+                userId, startDate, endDate);
+            default -> 0;
+        };
     }
     
     /**

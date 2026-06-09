@@ -30,7 +30,14 @@ public interface HabitRecordRepository {
     boolean existsByIdAndUserId(HabitRecordId id, UserId userId);
     
     int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
-    
+
+    /**
+     * 특정 기간 내 완료된 습관 기록이 있는 날짜 수를 조회 (성능 최적화)
+     * - 목표 달성률 계산 시 사용
+     * - N번 쿼리 대신 1번 쿼리로 처리
+     */
+    int countCompletedHabitsByUserIdAndDateRange(UserId userId, LocalDate startDate, LocalDate endDate);
+
     boolean existsMainRecordByUserIdAndRecordDate(UserId userId, LocalDate recordDate);
     
     /**
