@@ -746,7 +746,7 @@ public class RecordApplicationService {
      */
     private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
         int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
-        int exerciseCount = exerciseRecordQueryRepository.findByUserIdAndRecordDate(userId, recordDate).size();
+        int exerciseCount = exerciseRecordQueryRepository.countByUserIdAndRecordDate(userId, recordDate);
         int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
 
         return dailyCount + exerciseCount + habitCount;
