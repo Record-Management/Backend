@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -145,11 +144,11 @@ public class ExerciseRecordApplicationService {
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
                 .map(this::updateImageUrls)
-                .collect(Collectors.toList());
-        
-        log.info("일일 운동기록 조회 완료: userId=[{}], date=[{}], count=[{}]", 
+                .toList();
+
+        log.info("일일 운동기록 조회 완료: userId=[{}], date=[{}], count=[{}]",
                 userIdValue, date, responseList.size());
-        
+
         return new DailyExerciseRecordResponse(date, responseList);
     }
     
@@ -165,11 +164,11 @@ public class ExerciseRecordApplicationService {
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
                 .map(this::updateImageUrls)
-                .collect(Collectors.toList());
-        
-        log.info("기간별 운동기록 조회 완료: userId=[{}], startDate=[{}], endDate=[{}], count=[{}]", 
+                .toList();
+
+        log.info("기간별 운동기록 조회 완료: userId=[{}], startDate=[{}], endDate=[{}], count=[{}]",
                 userIdValue, startDate, endDate, responseList.size());
-        
+
         return responseList;
     }
     

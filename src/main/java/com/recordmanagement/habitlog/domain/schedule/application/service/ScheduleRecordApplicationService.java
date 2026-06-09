@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -150,7 +149,7 @@ public class ScheduleRecordApplicationService {
 
         return schedules.stream()
             .map(ScheduleResponse::from)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     /**

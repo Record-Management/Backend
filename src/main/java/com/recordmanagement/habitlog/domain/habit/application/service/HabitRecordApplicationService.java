@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 습관 기록 Application Service
@@ -190,7 +189,7 @@ public class HabitRecordApplicationService {
         
         return habitRecords.stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
