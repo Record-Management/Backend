@@ -6,7 +6,6 @@ import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordR
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.habit.infrastructure.entity.HabitRecordEntity;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -15,7 +14,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-@Transactional
 public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     
     private final JpaHabitRecordRepository jpaHabitRecordRepository;

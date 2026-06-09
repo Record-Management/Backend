@@ -6,7 +6,6 @@ import com.recordmanagement.habitlog.domain.schedule.domain.repository.ScheduleR
 import com.recordmanagement.habitlog.domain.schedule.infrastructure.entity.ScheduleRecordEntity;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-@Transactional
 public class ScheduleRecordRepositoryImpl implements ScheduleRecordRepository {
 
     private final JpaScheduleRecordRepository jpaScheduleRecordRepository;
