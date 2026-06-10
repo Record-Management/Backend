@@ -6,16 +6,13 @@ import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordR
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import com.recordmanagement.habitlog.domain.habit.infrastructure.entity.HabitRecordEntity;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
-@Transactional
 public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     
     private final JpaHabitRecordRepository jpaHabitRecordRepository;
@@ -48,7 +45,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findByUserIdAndRecordDate(userId.getValue(), recordDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -56,7 +53,7 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findByUserIdAndRecordDateBetween(userId.getValue(), startDate, endDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -112,7 +109,19 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
     public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
         return jpaHabitRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
     }
-    
+
+    @Override
+    public int countCompletedHabitsByUserIdAndDateRange(UserId userId, LocalDate startDate, LocalDate endDate) {
+        return jpaHabitRecordRepository.countCompletedHabitsByUserIdAndDateRange(
+            userId.getValue(), startDate, endDate);
+    }
+
+    @Override
+    public boolean existsByUserIdAndRecordDateBetween(UserId userId, LocalDate startDate, LocalDate endDate) {
+        return jpaHabitRecordRepository.existsByUserIdAndRecordDateBetween(
+            userId.getValue(), startDate, endDate);
+    }
+
     @Override
     public void deleteByUserId(String userId) {
         jpaHabitRecordRepository.deleteByUserId(userId);
@@ -137,6 +146,6 @@ public class HabitRecordRepositoryImpl implements HabitRecordRepository {
         return jpaHabitRecordRepository.findHabitsForNotification(currentTime, today)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

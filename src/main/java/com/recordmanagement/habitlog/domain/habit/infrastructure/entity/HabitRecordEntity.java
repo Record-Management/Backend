@@ -13,7 +13,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "habit_records")
+@Table(name = "habit_records", indexes = {
+    @Index(name = "idx_user_id_record_date", columnList = "user_id, record_date"),
+    @Index(name = "idx_user_id_record_date_main", columnList = "user_id, record_date, is_main_record"),
+    @Index(name = "idx_user_id_record_date_completed", columnList = "user_id, record_date, is_completed")
+})
 @Data
 @Builder
 @AllArgsConstructor

@@ -53,6 +53,9 @@ public class NotificationSettings {
     @Schema(description = "목표 미설정 알림 활성화 여부", example = "true")
     private boolean goalSettingNotificationEnabled;
 
+    @Schema(description = "일정 알림 활성화 여부", example = "true")
+    private boolean scheduleNotificationEnabled;
+
     @Schema(description = "설정 생성 시간", example = "2025-10-23T12:34:56")
     private LocalDateTime createdAt;
 
@@ -77,6 +80,7 @@ public class NotificationSettings {
         this.exerciseNotificationEnabled = true;
         this.habitNotificationEnabled = true;
         this.goalSettingNotificationEnabled = true;
+        this.scheduleNotificationEnabled = true;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -96,6 +100,7 @@ public class NotificationSettings {
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
         this.goalSettingNotificationEnabled = true; // 기본값 true
+        this.scheduleNotificationEnabled = true; // 기본값 true
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -116,6 +121,29 @@ public class NotificationSettings {
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
         this.goalSettingNotificationEnabled = goalSettingEnabled;
+        this.scheduleNotificationEnabled = true; // 기본값 true
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 모든 알림 설정으로 생성자 (일정 알림 포함)
+     *
+     * @param userId 사용자 ID
+     * @param dailyRecordEnabled 메인 기록 알림 활성화 여부
+     * @param exerciseEnabled 운동 기록 알림 활성화 여부
+     * @param habitEnabled 습관 기록 알림 활성화 여부
+     * @param goalSettingEnabled 목표 미설정 알림 활성화 여부
+     * @param scheduleEnabled 일정 알림 활성화 여부
+     */
+    public NotificationSettings(UserId userId, boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean goalSettingEnabled, boolean scheduleEnabled) {
+        this.id = NotificationSettingsId.generate();
+        this.userId = userId;
+        this.dailyRecordNotificationEnabled = dailyRecordEnabled;
+        this.exerciseNotificationEnabled = exerciseEnabled;
+        this.habitNotificationEnabled = habitEnabled;
+        this.goalSettingNotificationEnabled = goalSettingEnabled;
+        this.scheduleNotificationEnabled = scheduleEnabled;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -161,6 +189,16 @@ public class NotificationSettings {
     }
 
     /**
+     * 일정 알림 설정 업데이트
+     *
+     * @param enabled 활성화 여부
+     */
+    public void updateScheduleNotification(boolean enabled) {
+        this.scheduleNotificationEnabled = enabled;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
      * 모든 알림 설정 업데이트
      *
      * @param dailyRecordEnabled 메인 기록 알림 활성화 여부
@@ -187,6 +225,24 @@ public class NotificationSettings {
         this.exerciseNotificationEnabled = exerciseEnabled;
         this.habitNotificationEnabled = habitEnabled;
         this.goalSettingNotificationEnabled = goalSettingEnabled;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    /**
+     * 모든 알림 설정 업데이트 (일정 알림 포함)
+     *
+     * @param dailyRecordEnabled 메인 기록 알림 활성화 여부
+     * @param exerciseEnabled 운동 기록 알림 활성화 여부
+     * @param habitEnabled 습관 기록 알림 활성화 여부
+     * @param goalSettingEnabled 목표 미설정 알림 활성화 여부
+     * @param scheduleEnabled 일정 알림 활성화 여부
+     */
+    public void updateAllNotifications(boolean dailyRecordEnabled, boolean exerciseEnabled, boolean habitEnabled, boolean goalSettingEnabled, boolean scheduleEnabled) {
+        this.dailyRecordNotificationEnabled = dailyRecordEnabled;
+        this.exerciseNotificationEnabled = exerciseEnabled;
+        this.habitNotificationEnabled = habitEnabled;
+        this.goalSettingNotificationEnabled = goalSettingEnabled;
+        this.scheduleNotificationEnabled = scheduleEnabled;
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -225,9 +281,10 @@ public class NotificationSettings {
      * @return true 모든 알림 비활성화, false 하나 이상 활성화
      */
     public boolean isAllNotificationsDisabled() {
-        return !dailyRecordNotificationEnabled && 
-               !exerciseNotificationEnabled && 
+        return !dailyRecordNotificationEnabled &&
+               !exerciseNotificationEnabled &&
                !habitNotificationEnabled &&
-               !goalSettingNotificationEnabled;
+               !goalSettingNotificationEnabled &&
+               !scheduleNotificationEnabled;
     }
 }

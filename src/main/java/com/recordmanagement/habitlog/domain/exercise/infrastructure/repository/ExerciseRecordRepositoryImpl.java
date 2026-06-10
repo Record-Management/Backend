@@ -3,30 +3,28 @@ package com.recordmanagement.habitlog.domain.exercise.infrastructure.repository;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecordId;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordAdminRepository;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordQueryRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.exercise.infrastructure.entity.ExerciseRecordEntity;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 운동 기록 저장소 구현체
- * 
+ *
  * ISP 적용: 분리된 인터페이스들을 모두 구현
- * - 기본 비즈니스 인터페이스와 관리자 인터페이스 모두 구현
+ * - 기본 비즈니스 인터페이스와 관리자 인터페이스, 조회 인터페이스 모두 구현
  * - 클라이언트는 필요한 인터페이스만 의존 가능
- * 
+ *
  * @author 전우선
  * @since 2025.10.24
  * @version 2.0.0 (ISP 적용)
  */
 @Repository
-@Transactional
-public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, ExerciseRecordAdminRepository {
+public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, ExerciseRecordAdminRepository, ExerciseRecordQueryRepository {
     
     private final JpaExerciseRecordRepository jpaExerciseRecordRepository;
     
@@ -58,7 +56,7 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
         return jpaExerciseRecordRepository.findByUserIdAndRecordDate(userId.getValue(), recordDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -66,7 +64,7 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
         return jpaExerciseRecordRepository.findByUserIdAndRecordDateBetween(userId.getValue(), startDate, endDate)
                 .stream()
                 .map(this::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @Override
@@ -124,7 +122,13 @@ public class ExerciseRecordRepositoryImpl implements ExerciseRecordRepository, E
     public int countByUserIdAndRecordDate(UserId userId, LocalDate recordDate) {
         return jpaExerciseRecordRepository.countByUserIdAndRecordDate(userId.getValue(), recordDate);
     }
-    
+
+    @Override
+    public int countDistinctRecordDatesByUserIdAndDateRange(UserId userId, LocalDate startDate, LocalDate endDate) {
+        return jpaExerciseRecordRepository.countDistinctRecordDatesByUserIdAndDateRange(
+            userId.getValue(), startDate, endDate);
+    }
+
     @Override
     public void deleteByUserId(String userId) {
         jpaExerciseRecordRepository.deleteByUserId(userId);

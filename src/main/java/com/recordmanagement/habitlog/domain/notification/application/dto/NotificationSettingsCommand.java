@@ -17,4 +17,5 @@ public class NotificationSettingsCommand {
     Boolean exerciseNotificationEnabled;
     Boolean habitNotificationEnabled;
     Boolean goalSettingNotificationEnabled;
+    Boolean scheduleNotificationEnabled;
 }

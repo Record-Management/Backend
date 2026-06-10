@@ -5,13 +5,14 @@ import java.util.List;
 
 public record DailyRecordResponse(
     LocalDate date,
-    List<UnifiedRecordResponse> records
+    List<UnifiedRecordResponse> records,
+    List<ScheduleDetail> schedules
 ) {
     
-    public static DailyRecordResponse of(LocalDate date, List<UnifiedRecordResponse> records) {
+    public static DailyRecordResponse of(LocalDate date, List<UnifiedRecordResponse> records, List<ScheduleDetail> schedules) {
         List<UnifiedRecordResponse> sortedRecords = records.stream()
             .sorted((a, b) -> b.createdAt().compareTo(a.createdAt())) // 최신순
             .toList();
-        return new DailyRecordResponse(date, sortedRecords);
+        return new DailyRecordResponse(date, sortedRecords, schedules);
     }
 }

@@ -23,10 +23,31 @@ public interface JpaHabitRecordRepository extends JpaRepository<HabitRecordEntit
     boolean existsByHabitRecordIdAndUserId(String habitRecordId, String userId);
     
     int countByUserIdAndRecordDate(String userId, LocalDate recordDate);
-    
+
+    /**
+     * 특정 기간 내 완료된 습관 기록이 있는 날짜 수를 조회 (성능 최적화)
+     * - DISTINCT를 사용하여 중복 날짜 제거
+     * - 목표 달성률 계산 시 N번 쿼리 대신 1번 쿼리로 처리
+     */
+    @Query("SELECT COUNT(DISTINCT h.recordDate) FROM HabitRecordEntity h " +
+           "WHERE h.userId = :userId " +
+           "AND h.recordDate BETWEEN :startDate AND :endDate " +
+           "AND h.isCompleted = true")
+    int countCompletedHabitsByUserIdAndDateRange(
+        @Param("userId") String userId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
+    /**
+     * 특정 기간 내 습관 기록이 존재하는지 확인 (성능 최적화)
+     * - Spring Data JPA가 자동으로 EXISTS 쿼리 생성
+     */
+    boolean existsByUserIdAndRecordDateBetween(String userId, LocalDate startDate, LocalDate endDate);
+
     // 사용자 ID로 모든 습관 기록 삭제 (회원 탈퇴 시)
     void deleteByUserId(String userId);
-    
+
     // 특정 날짜에 메인 습관 기록 존재 여부 확인
     boolean existsByUserIdAndRecordDateAndIsMainRecord(String userId, LocalDate recordDate, boolean isMainRecord);
     

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * User Repository 구현체
@@ -131,7 +130,7 @@ public class UserRepositoryImpl implements UserRepository {
         return userJpaRepository.findByDeletionScheduledAtBeforeAndDeletedAtIsNotNull(currentTime)
                 .stream()
                 .map(UserEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -144,7 +143,7 @@ public class UserRepositoryImpl implements UserRepository {
         return userJpaRepository.findByDeletedAtIsNull()
                 .stream()
                 .map(UserEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -158,6 +157,6 @@ public class UserRepositoryImpl implements UserRepository {
         return userJpaRepository.findByMainRecordTypeAndDeletedAtIsNull(mainRecordType)
                 .stream()
                 .map(UserEntity::toDomain)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

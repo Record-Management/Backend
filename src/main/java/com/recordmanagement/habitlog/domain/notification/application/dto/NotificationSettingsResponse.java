@@ -32,6 +32,9 @@ public class NotificationSettingsResponse {
     @Schema(description = "목표 미설정 알림 활성화 여부", example = "true")
     private final boolean goalSettingNotificationEnabled;
 
+    @Schema(description = "일정 알림 활성화 여부", example = "true")
+    private final boolean scheduleNotificationEnabled;
+
     /**
      * 도메인 모델로부터 응답 DTO 생성
      *
@@ -44,7 +47,8 @@ public class NotificationSettingsResponse {
             settings.isDailyRecordNotificationEnabled(),
             settings.isExerciseNotificationEnabled(),
             settings.isHabitNotificationEnabled(),
-            settings.isGoalSettingNotificationEnabled()
+            settings.isGoalSettingNotificationEnabled(),
+            settings.isScheduleNotificationEnabled()
         );
     }
 }

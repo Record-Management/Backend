@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 습관 기록 Application Service
@@ -50,7 +49,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class HabitRecordApplicationService {
-    
+
+    // 비즈니스 상수
+    private static final int MAX_DAILY_RECORDS = 2;
+    private static final int MAX_RECORD_TYPES_PER_DAY = 2;
+
     private final HabitRecordRepository habitRecordRepository;
     private final RecordRepository recordRepository;
     private final ExerciseRecordRepository exerciseRecordRepository;
@@ -87,17 +90,19 @@ public class HabitRecordApplicationService {
             }
         }
         
-        // 하루 최대 2개 습관기록 제한 검증
-        int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
-            command.userId(), 
-            command.recordDate()
-        );
-        
-        if (habitRecordCount >= 2) {
+        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= MAX_DAILY_RECORDS) {
             throw new CustomException(ErrorCode.HABIT_RECORD_LIMIT_EXCEEDED);
         }
-        
-        // 전체 기록 종류 최대 2가지 제한 검증 (습관기록이 없는 경우에만)
+
+        // 전체 기록 종류 최대 2가지 제한 검증
+        int habitRecordCount = habitRecordRepository.countByUserIdAndRecordDate(
+            command.userId(),
+            command.recordDate()
+        );
+
         if (habitRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
@@ -184,7 +189,7 @@ public class HabitRecordApplicationService {
         
         return habitRecords.stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
@@ -447,6 +452,17 @@ public class HabitRecordApplicationService {
     }
     
     /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
+    /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
      */
     private void validateRecordTypeLimit(UserId userId, LocalDate recordDate) {
@@ -462,7 +478,7 @@ public class HabitRecordApplicationService {
         if (exerciseCount > 0) recordTypeCount++;
         
         // 이미 2가지 기록 종류가 있다면 습관기록을 추가할 수 없음
-        if (recordTypeCount >= 2) {
+        if (recordTypeCount >= MAX_RECORD_TYPES_PER_DAY) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
     }
@@ -596,25 +612,11 @@ public class HabitRecordApplicationService {
     /**
      * 습관 목표의 완료일수 계산
      * 하루에 완료된 습관 기록이 하나라도 있으면 완료로 간주
+     * (성능 최적화: N번 쿼리 대신 1번 DISTINCT COUNT 쿼리)
      */
-    private int calculateCompletedDaysForHabit(UserId userId, 
+    private int calculateCompletedDaysForHabit(UserId userId,
                                               java.time.LocalDate startDate, java.time.LocalDate endDate) {
-        int completedDays = 0;
-        java.time.LocalDate currentDate = startDate;
-        
-        while (!currentDate.isAfter(endDate)) {
-            // 해당 날짜에 완료된 습관 기록이 있는지 확인
-            var habitRecords = habitRecordRepository.findByUserIdAndRecordDate(userId, currentDate);
-            boolean hasCompletedRecord = habitRecords.stream()
-                .anyMatch(habit -> habit.isCompleted());
-            
-            if (hasCompletedRecord) {
-                completedDays++;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return completedDays;
+        return habitRecordRepository.countCompletedHabitsByUserIdAndDateRange(
+            userId, startDate, endDate);
     }
 }

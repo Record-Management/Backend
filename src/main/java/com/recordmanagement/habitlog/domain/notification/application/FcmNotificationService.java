@@ -7,6 +7,7 @@ import com.recordmanagement.habitlog.domain.notification.application.util.Notifi
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationHistory;
 import com.recordmanagement.habitlog.domain.notification.domain.model.NotificationType;
 import com.recordmanagement.habitlog.domain.notification.application.service.NotificationApplicationService;
+import com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.recordmanagement.habitlog.domain.user.domain.model.User;
 import com.recordmanagement.habitlog.domain.user.domain.model.UserId;
@@ -328,6 +329,78 @@ public class FcmNotificationService {
         } else {
             log.error("습관별 시간 지정 알림 발송 실패: habitRecordId={}, userId={}",
                     habitRecord.getId().getValue(), user.getId().getValue());
+        }
+    }
+
+    /**
+     * 일정 알림 발송
+     * 일정의 알림 시간에 맞춰 개별 알림 발송
+     *
+     * @param scheduleRecord 일정 기록
+     */
+    @Transactional
+    public void sendScheduleNotification(ScheduleRecord scheduleRecord) {
+        log.info("일정 알림 발송 시작: scheduleRecordId={}, title={}, userId={}",
+                scheduleRecord.getId().value(),
+                scheduleRecord.getTitle(),
+                scheduleRecord.getUserId().getValue());
+
+        // 사용자 정보 조회
+        User user = userRepository.findById(scheduleRecord.getUserId())
+                .filter(u -> !u.isWithdrawn()) // 탈퇴한 사용자 제외
+                .orElse(null);
+
+        if (user == null) {
+            log.warn("사용자를 찾을 수 없거나 탈퇴한 사용자입니다: userId={}", scheduleRecord.getUserId().getValue());
+            return;
+        }
+
+        // FCM 토큰 확인
+        if (user.getFcmToken() == null || user.getFcmToken().trim().isEmpty()) {
+            log.warn("FCM 토큰이 없어 알림을 발송할 수 없습니다: userId={}", user.getId().getValue());
+            return;
+        }
+
+        // 일정 알림 설정 확인
+        boolean isScheduleNotificationEnabled = notificationApplicationService.isScheduleNotificationEnabled(scheduleRecord.getUserId());
+        if (!isScheduleNotificationEnabled) {
+            log.info("일정 알림이 비활성화되어 있습니다: userId={}", scheduleRecord.getUserId().getValue());
+            return;
+        }
+
+        // 알림 메시지 생성
+        String title = "일정 기록";
+        String body = scheduleRecord.getTitle(); // 일정명이 메시지로 표시됨
+
+        // 추가 데이터 설정
+        Map<String, String> data = new HashMap<>();
+        data.put("notificationType", NotificationType.SCHEDULE_REMINDER.name());
+        data.put("scheduleRecordId", scheduleRecord.getId().value());
+        data.put("imageUrl", NotificationImageUtil.getImageUrl(RecordType.DAILY));
+
+        // 알림 발송
+        boolean success = notificationSender.sendNotification(
+                user.getFcmToken(),
+                title,
+                body,
+                data
+        );
+
+        if (success) {
+            // 알림 발송 성공 시 히스토리 저장
+            NotificationHistory history = new NotificationHistory(
+                    user.getId(),
+                    NotificationType.SCHEDULE_REMINDER,
+                    title,
+                    body // 일정명이 message로 저장됨
+            );
+            notificationHistoryApplicationService.saveNotificationHistory(history);
+
+            log.info("일정 알림 발송 성공: scheduleRecordId={}, title={}",
+                    scheduleRecord.getId().value(), scheduleRecord.getTitle());
+        } else {
+            log.error("일정 알림 발송 실패: scheduleRecordId={}, userId={}",
+                    scheduleRecord.getId().value(), user.getId().getValue());
         }
     }
 }

@@ -63,8 +63,9 @@ public class RecordController {
             - 작성 순서와는 무관하게 결정됩니다
             
             **기록 제한:**
-            - 하루 최대 2개의 일상 기록 작성 가능
+            - 하루 전체 기록(일상+운동+습관) 합쳐서 최대 2개 작성 가능
             - 하루 최대 2가지 기록 타입 작성 가능
+            - 예시: 일상 1개 + 운동 1개 = 2개 (가능) / 일상 2개 + 운동 1개 = 3개 (불가능)
             """,
             security = @SecurityRequirement(name = "bearerAuth"))
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -114,13 +115,13 @@ public class RecordController {
             mediaType = "application/json",
             examples = {
                 @ExampleObject(
-                    name = "하루 1개 제한 초과",
-                    summary = "일상기록 하루 1개 제한 초과",
+                    name = "하루 2개 제한 초과",
+                    summary = "전체 기록 하루 2개 제한 초과",
                     value = """
                         {
                             "statusCode": 400,
                             "code": "E40407",
-                            "message": "하루에 등록할 수 있는 일상 기록은 최대 2개입니다.",
+                            "message": "하루에 등록할 수 있는 기록은 최대 2개입니다.",
                             "data": null
                         }
                         """
@@ -379,16 +380,86 @@ public class RecordController {
     public ResponseEntity<ApiResponse<Void>> deleteRecord(
             @PathVariable String recordId,
             Authentication authentication) {
-        
+
         log.info("하루 기록 삭제 요청: recordId=[{}]", recordId);
-        
+
         String userIdValue = authentication.getName();
-        
+
         recordApplicationService.deleteRecord(recordId, userIdValue);
-        
+
         log.info("하루 기록 삭제 완료: recordId=[{}]", recordId);
-        
+
         return ResponseEntity.ok(ApiResponse.success("하루 기록이 성공적으로 삭제되었습니다", null));
     }
-    
+
+    @Operation(summary = "기록/일정 생성 제한 조회", description = """
+            기록과 일정의 생성 가능 여부를 조회합니다.
+
+            **기록 제한 (canCreateRecord):**
+            - 하루 전체 기록(일상+운동+습관) 합쳐서 최대 2개 작성 가능
+            - recordDate 기준으로 판단
+
+            **일정 제한 (canCreateSchedule):**
+            - 오늘 생성할 수 있는 일정은 최대 2개
+            - createdAt(생성 시간) 기준으로 판단
+
+            **파라미터:**
+            - date: 조회할 날짜 (선택, 기본값: 오늘)
+            """,
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "200",
+        description = "생성 제한 조회 성공",
+        content = @Content(
+            mediaType = "application/json",
+            examples = @ExampleObject(value = """
+                {
+                    "canCreateRecord": true,
+                    "canCreateSchedule": false
+                }
+                """)
+        )
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+        responseCode = "401",
+        description = "인증 실패 (토큰 없음/만료/잘못됨)",
+        content = @io.swagger.v3.oas.annotations.media.Content(
+            mediaType = "application/json",
+            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                value = """
+                {
+                  "error": "토큰이 만료되었거나 유효하지 않습니다."
+                }
+                """
+            )
+        )
+    )
+    @GetMapping("/creation-limits")
+    public ResponseEntity<com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse> getCreationLimits(
+            @RequestParam(required = false) String date,
+            Authentication authentication) {
+
+        log.info("생성 제한 조회 요청: date=[{}]", date);
+
+        // 인증이 없는 경우 테스트용 사용자 ID 사용
+        String userIdValue;
+        if (authentication != null && authentication.getName() != null) {
+            userIdValue = authentication.getName();
+        } else {
+            userIdValue = "test-user-001";
+        }
+
+        LocalDate queryDate = (date != null && !date.isEmpty())
+                ? LocalDate.parse(date)
+                : LocalDate.now();
+
+        com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse response =
+                recordApplicationService.getCreationLimits(userIdValue, queryDate);
+
+        log.info("생성 제한 조회 완료: canCreateRecord=[{}], canCreateSchedule=[{}]",
+                response.isCanCreateRecord(), response.isCanCreateSchedule());
+
+        return ResponseEntity.ok(response);
+    }
+
 }

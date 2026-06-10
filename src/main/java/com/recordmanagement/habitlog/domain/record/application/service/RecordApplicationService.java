@@ -5,6 +5,8 @@ import com.recordmanagement.habitlog.domain.record.application.dto.CalendarRespo
 import com.recordmanagement.habitlog.domain.record.application.dto.CreateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.dto.DailyRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.RecordResponse;
+import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleDetail;
+import com.recordmanagement.habitlog.domain.record.application.dto.ScheduleSummary;
 import com.recordmanagement.habitlog.domain.record.application.dto.UnifiedRecordResponse;
 import com.recordmanagement.habitlog.domain.record.application.dto.UpdateRecordCommand;
 import com.recordmanagement.habitlog.domain.record.application.strategy.RecordTypeValidationStrategyFactory;
@@ -40,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +66,12 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class RecordApplicationService {
-    
+
+    // 비즈니스 상수
+    private static final int MAX_DAILY_RECORDS = 2;
+    private static final int MAX_RECORD_TYPES_PER_DAY = 2;
+    private static final String AUTO_GENERATED_MEMO_PREFIX = "자동 생성된";
+
     private final RecordRepository recordRepository;
     private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final ExerciseRecordSecurityRepository exerciseRecordSecurityRepository;
@@ -74,8 +82,9 @@ public class RecordApplicationService {
     private final MainRecordDeterminationService mainRecordDeterminationService;
     private final RecordTypeValidationStrategyFactory validationStrategyFactory;
     private final ApplicationContext applicationContext;
+    private final com.recordmanagement.habitlog.domain.schedule.domain.repository.ScheduleRecordRepository scheduleRecordRepository;
     
-    public RecordApplicationService(RecordRepository recordRepository, 
+    public RecordApplicationService(RecordRepository recordRepository,
                                    ExerciseRecordQueryRepository exerciseRecordQueryRepository,
                                    ExerciseRecordSecurityRepository exerciseRecordSecurityRepository,
                                    HabitRecordRepository habitRecordRepository,
@@ -84,7 +93,8 @@ public class RecordApplicationService {
                                    S3FileService s3FileService,
                                    MainRecordDeterminationService mainRecordDeterminationService,
                                    RecordTypeValidationStrategyFactory validationStrategyFactory,
-                                   ApplicationContext applicationContext) {
+                                   ApplicationContext applicationContext,
+                                   com.recordmanagement.habitlog.domain.schedule.domain.repository.ScheduleRecordRepository scheduleRecordRepository) {
         this.recordRepository = recordRepository;
         this.exerciseRecordQueryRepository = exerciseRecordQueryRepository;
         this.exerciseRecordSecurityRepository = exerciseRecordSecurityRepository;
@@ -95,28 +105,27 @@ public class RecordApplicationService {
         this.mainRecordDeterminationService = mainRecordDeterminationService;
         this.validationStrategyFactory = validationStrategyFactory;
         this.applicationContext = applicationContext;
+        this.scheduleRecordRepository = scheduleRecordRepository;
     }
     
     @CacheEvict(value = "calendar", allEntries = true)
     public RecordResponse createRecord(CreateRecordCommand command) {
-        // 기존 기록 개수 조회 (메인 기록 결정에 필요)
-        int existingRecordCount = 0;
-        
-        // 일상 기록인 경우 하루 최대 2개 제한 검증
-        if (command.type() == RecordType.DAILY) {
-            existingRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
-                command.userId(), 
-                command.recordDate(), 
-                RecordType.DAILY
-            );
-            
-            if (existingRecordCount >= 2) {
-                throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
-            }
+        // 하루 최대 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= MAX_DAILY_RECORDS) {
+            throw new CustomException(ErrorCode.DAILY_RECORD_LIMIT_EXCEEDED);
         }
-        
+
         // 전체 기록 종류 최대 2가지 제한 검증
         validateRecordTypeLimit(command.userId(), command.recordDate(), RecordType.DAILY);
+
+        // 기존 기록 개수 조회 (메인 기록 결정에 필요)
+        int existingRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
+            command.userId(),
+            command.recordDate(),
+            RecordType.DAILY
+        );
         
         // 메인 기록 결정
         boolean isMainRecord = mainRecordDeterminationService.determineMainRecord(
@@ -206,9 +215,9 @@ public class RecordApplicationService {
         User user = userRepository.findById(userIdObj)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
         
-        // 모든 타입의 기록을 통합하여 조회
+        // 모든 타입의 기록을 통합하여 조회 (일정 제외)
         List<UnifiedRecordResponse> allRecords = new ArrayList<>();
-        
+
         // 1. 일상 기록 조회 (type이 null이거나 DAILY인 경우)
         if (type == null || type == RecordType.DAILY) {
             List<Record> dailyRecords = recordRepository.findByUserIdAndRecordDateBetweenAndTypeIn(
@@ -218,7 +227,7 @@ public class RecordApplicationService {
                 .map(UnifiedRecordResponse::fromRecord)
                 .toList());
         }
-        
+
         // 2. 운동 기록 조회 (type이 null이거나 EXERCISE인 경우)
         if (type == null || type == RecordType.EXERCISE) {
             List<ExerciseRecord> exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDateBetween(
@@ -228,19 +237,60 @@ public class RecordApplicationService {
                 .map(UnifiedRecordResponse::fromExerciseRecord)
                 .toList());
         }
-        
+
         // 3. 습관 기록 조회 (type이 null이거나 HABIT인 경우)
         if (type == null || type == RecordType.HABIT) {
             // 습관 기록은 습관 목표 기간 내에서만 조회
             List<HabitRecord> habitRecords = getHabitRecordsInGoalPeriod(userIdObj, startDate, endDate);
-            
+
             // 습관 타입 사용자의 특별한 캘린더 표시 로직 적용
             List<UnifiedRecordResponse> habitResponses = applyHabitTypeCalendarLogic(
                 user, habitRecords, startDate, endDate);
             allRecords.addAll(habitResponses);
         }
-        
-        // TODO: 4. 일정 기록 조회 (type이 null이거나 SCHEDULE인 경우)
+
+        // 4. 일정 기록 조회 (일반 일정 + 반복 일정)
+        Map<LocalDate, List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord>> schedulesByDate = new HashMap<>();
+
+        // 일반 일정 조회 (startDate ~ endDate와 겹치는 일정)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
+            new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, startDate, endDate));
+
+        // 반복 일정 조회 (DB에서 사용자 필터링으로 성능 최적화)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
+            scheduleRecordRepository.findRepeatableSchedulesByUserId(userIdObj).stream()
+                .filter(s -> {
+                    // 반복 종료일이 캘린더 시작일 이전이면 제외
+                    LocalDate repeatEnd = s.getRepeatEndsOn() != null ? s.getRepeatEndsOn() : endDate;
+                    return !repeatEnd.isBefore(startDate);
+                })
+                .filter(s -> {
+                    // 일정 시작일이 캘린더 종료일 이후면 제외
+                    return !s.getStartDate().isAfter(endDate);
+                })
+                .toList();
+
+        // 중복 제거하며 반복 일정 추가
+        Set<String> existingIds = scheduleRecords.stream()
+            .map(s -> s.getId().value())
+            .collect(Collectors.toSet());
+
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord repeatSchedule : repeatSchedules) {
+            if (!existingIds.contains(repeatSchedule.getId().value())) {
+                scheduleRecords.add(repeatSchedule);
+            }
+        }
+
+        // 각 일정을 반복 타입에 따라 날짜별로 그룹핑
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule : scheduleRecords) {
+            // 반복 타입에 따라 표시할 날짜 계산
+            List<LocalDate> scheduleDates = calculateScheduleDates(schedule, startDate, endDate);
+
+            // 각 날짜에 일정 추가
+            for (LocalDate date : scheduleDates) {
+                schedulesByDate.computeIfAbsent(date, k -> new ArrayList<>()).add(schedule);
+            }
+        }
         
         // 날짜별로 그룹핑 (UnifiedRecordResponse 기준)
         Map<LocalDate, List<UnifiedRecordResponse>> recordsByDate = allRecords.stream()
@@ -254,15 +304,18 @@ public class RecordApplicationService {
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
             // 해당 날짜의 실제 기록들
             List<UnifiedRecordResponse> dateRecords = recordsByDate.getOrDefault(date, new ArrayList<>());
-            
+
             // 해당 날짜의 메인 기록 타입 결정
             RecordType mainRecordTypeForDate = determineMainRecordTypeForDate(user, date);
-            
+
             // 요구사항에 맞는 캘린더 레코드 생성
-            List<CalendarRecordResponse.RecordSummary> summaries = 
+            List<CalendarRecordResponse.RecordSummary> summaries =
                 createCalendarSummariesWithDisplayLogic(user, mainRecordTypeForDate, date, dateRecords, today);
-            
-            calendarRecords.add(new CalendarRecordResponse(date, mainRecordTypeForDate, summaries));
+
+            // 해당 날짜의 일정 요약 정보 생성
+            ScheduleSummary scheduleSummary = createScheduleSummary(schedulesByDate.get(date));
+
+            calendarRecords.add(new CalendarRecordResponse(date, mainRecordTypeForDate, summaries, scheduleSummary));
         }
         
         calendarRecords.sort((a, b) -> a.date().compareTo(b.date()));
@@ -271,8 +324,32 @@ public class RecordApplicationService {
     }
     
     /**
+     * 일정 요약 정보 생성
+     * - title: 대표 일정명 (첫 번째 일정)
+     * - extraScheduleCount: 추가 일정 개수 (표시되지 않은 일정 수, 1개면 null)
+     * - color: 대표 일정 색상 (첫 번째 일정)
+     */
+    private ScheduleSummary createScheduleSummary(List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> schedules) {
+        if (schedules == null || schedules.isEmpty()) {
+            return null;
+        }
+
+        // 첫 번째 일정을 대표로 사용
+        com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord firstSchedule = schedules.get(0);
+
+        // 추가 일정 개수 계산 (1개면 null, 2개 이상이면 size - 1)
+        Integer extraScheduleCount = schedules.size() > 1 ? schedules.size() - 1 : null;
+
+        return ScheduleSummary.builder()
+                .title(firstSchedule.getTitle())
+                .extraScheduleCount(extraScheduleCount)
+                .color(firstSchedule.getColor())
+                .build();
+    }
+
+    /**
      * 요구사항에 맞는 캘린더 표시 로직 적용
-     * 
+     *
      * 과거: 하루/운동 미작성 시 빈 배열(프론트에서 회색 처리), 습관 미완료 시 회색 아이콘
      * 현재: 하루/운동 미작성 시 빈칸, 습관 미작성 시 빈칸/작성 시 회색/완료 시 색상
      * 미래: 모든 기록 빈칸 (이미 상위에서 필터링됨)
@@ -339,7 +416,15 @@ public class RecordApplicationService {
                 .toList());
         }
         // 미작성인 경우: 아무것도 추가하지 않음 (빈 배열로 프론트에서 처리)
-        
+
+        // 일정 기록 처리 (항상 표시)
+        List<UnifiedRecordResponse> scheduleRecords = recordsByType.getOrDefault(RecordType.SCHEDULE, new ArrayList<>());
+        if (!scheduleRecords.isEmpty()) {
+            summaries.addAll(scheduleRecords.stream()
+                .map(CalendarRecordResponse.RecordSummary::from)
+                .toList());
+        }
+
         return summaries;
     }
     
@@ -367,7 +452,7 @@ public class RecordApplicationService {
         
         // 습관 기록 처리: 작성된 것만 표시 (미작성 시 빈칸, 자동 생성 기록도 실제 작성된 것으로 간주)
         List<UnifiedRecordResponse> habitRecords = recordsByType.getOrDefault(RecordType.HABIT, new ArrayList<>());
-        
+
         // 습관 타입 사용자의 자동 생성 기록 특별 처리
         if (mainRecordTypeForDate == RecordType.HABIT) {
             // 메인 습관: 미작성시 숨김, 작성시 isCompleted=false로 표시, 완료시 isCompleted=true로 표시
@@ -381,7 +466,13 @@ public class RecordApplicationService {
                 .map(CalendarRecordResponse.RecordSummary::from)
                 .toList());
         }
-        
+
+        // 일정 기록 처리 (항상 표시)
+        List<UnifiedRecordResponse> scheduleRecords = recordsByType.getOrDefault(RecordType.SCHEDULE, new ArrayList<>());
+        summaries.addAll(scheduleRecords.stream()
+            .map(CalendarRecordResponse.RecordSummary::from)
+            .toList());
+
         return summaries;
     }
     
@@ -396,7 +487,7 @@ public class RecordApplicationService {
         }
         
         // 자동 생성된 기록이지만 사용자가 수정한 경우 (메모가 변경됨) 표시
-        if (record.memo() != null && record.memo().contains("자동 생성된")) {
+        if (record.memo() != null && record.memo().contains(AUTO_GENERATED_MEMO_PREFIX)) {
             return true; // 자동 생성된 그대로 남아있는 경우만 숨김
         }
         
@@ -449,15 +540,42 @@ public class RecordApplicationService {
         allRecords.addAll(habitRecords.stream()
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList());
-        
-        // TODO: 4. 일정 기록 조회
-        
+
+        // 4. 일정 기록 조회 (일반 일정 + 반복 일정)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> scheduleRecords =
+            new ArrayList<>(scheduleRecordRepository.findByUserIdAndDateRange(userIdObj, date, date));
+
+        // 반복 일정 조회 (DB에서 사용자 필터링으로 성능 최적화)
+        List<com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord> repeatSchedules =
+            scheduleRecordRepository.findRepeatableSchedulesByUserId(userIdObj).stream()
+                .filter(s -> {
+                    // 이 반복 일정이 해당 날짜에 표시되어야 하는지 확인
+                    List<LocalDate> scheduleDates = calculateScheduleDates(s, date, date);
+                    return !scheduleDates.isEmpty();
+                })
+                .toList();
+
+        // 중복 제거하며 반복 일정 추가
+        Set<String> existingIds = scheduleRecords.stream()
+            .map(s -> s.getId().value())
+            .collect(Collectors.toSet());
+
+        for (com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord repeatSchedule : repeatSchedules) {
+            if (!existingIds.contains(repeatSchedule.getId().value())) {
+                scheduleRecords.add(repeatSchedule);
+            }
+        }
+
+        List<ScheduleDetail> schedules = scheduleRecords.stream()
+            .map(ScheduleDetail::from)
+            .toList();
+
         // Pre-signed URL 재생성
         List<UnifiedRecordResponse> recordsWithUpdatedUrls = allRecords.stream()
             .map(this::updateImageUrls)
             .toList();
-        
-        return DailyRecordResponse.of(date, recordsWithUpdatedUrls);
+
+        return DailyRecordResponse.of(date, recordsWithUpdatedUrls, schedules);
     }
     
     @Transactional(readOnly = true)
@@ -539,12 +657,12 @@ public class RecordApplicationService {
         LocalDate habitEndDate = habitStartDate.plusDays(user.getGoalDays() - 1);
         
         // 사용자가 모든 습관을 포기했는지 확인 (전체 습관 기간에 습관 기록이 하나도 없는 경우)
-        boolean hasAnyHabitRecord = habitRecordRepository.findByUserIdAndRecordDateBetween(
+        boolean hasAnyHabitRecord = habitRecordRepository.existsByUserIdAndRecordDateBetween(
             userId, habitStartDate, habitEndDate
-        ).size() > 0;
-        
+        );
+
         if (!hasAnyHabitRecord) {
-            log.info("전체 습관 기간에 습관 기록이 없어 플레이스홀더 생성 생략: userId={}, habitPeriod=[{} ~ {}]", 
+            log.info("전체 습관 기간에 습관 기록이 없어 플레이스홀더 생성 생략: userId={}, habitPeriod=[{} ~ {}]",
                     userId.getValue(), habitStartDate, habitEndDate);
             return;
         }
@@ -597,7 +715,8 @@ public class RecordApplicationService {
             null, // notificationTime
             null, // memo
             false, // isCompleted (미완료 상태)
-            true // isMainRecord (메인 기록)
+            true, // isMainRecord (메인 기록)
+            null, null, null, null, null, null, null // SCHEDULE 필드 없음
         );
     }
     
@@ -623,8 +742,19 @@ public class RecordApplicationService {
     }
     
     /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordQueryRepository.countByUserIdAndRecordDate(userId, recordDate);
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
+    /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
-     * 
+     *
      * OCP 적용: Strategy 패턴으로 switch 문 제거
      * - 새로운 기록 타입 추가 시 기존 코드 수정 불필요
      * - 각 기록 타입별 검증 전략이 독립적으로 동작
@@ -646,8 +776,8 @@ public class RecordApplicationService {
         boolean hasNewType = !validationStrategyFactory
                 .getStrategy(newRecordType)
                 .hasExistingRecord(userId, recordDate);
-        
-        if (hasNewType && recordTypeCount >= 2) {
+
+        if (hasNewType && recordTypeCount >= MAX_RECORD_TYPES_PER_DAY) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
     }
@@ -691,45 +821,18 @@ public class RecordApplicationService {
      * 특정 기간 동안의 완료일수 계산
      * 하루에 해당 기록 타입의 기록이 하나라도 있으면 완료로 간주
      */
-    private int calculateCompletedDays(UserId userId, RecordType recordType, 
+    private int calculateCompletedDays(UserId userId, RecordType recordType,
                                       java.time.LocalDate startDate, java.time.LocalDate endDate) {
-        int completedDays = 0;
-        java.time.LocalDate currentDate = startDate;
-        
-        while (!currentDate.isAfter(endDate)) {
-            boolean hasRecord = false;
-            
-            // 기록 타입에 따라 완료 여부 판단
-            switch (recordType) {
-                case DAILY -> {
-                    // 일상 기록: 해당 날짜에 일상 기록이 있으면 완료
-                    int dailyRecordCount = recordRepository.countByUserIdAndRecordDateAndType(
-                        userId, currentDate, RecordType.DAILY);
-                    hasRecord = dailyRecordCount > 0;
-                }
-                case EXERCISE -> {
-                    // 운동 기록: 해당 날짜에 운동 기록이 있으면 완료
-                    var exerciseRecords = exerciseRecordQueryRepository.findByUserIdAndRecordDate(
-                        userId, currentDate);
-                    hasRecord = !exerciseRecords.isEmpty();
-                }
-                case HABIT -> {
-                    // 습관 기록: 해당 날짜에 완료된 습관 기록이 있으면 완료
-                    var habitRecords = habitRecordRepository.findByUserIdAndRecordDate(
-                        userId, currentDate);
-                    hasRecord = habitRecords.stream().anyMatch(
-                        habit -> habit.isCompleted());
-                }
-            }
-            
-            if (hasRecord) {
-                completedDays++;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return completedDays;
+        // 성능 최적화: N번 쿼리 대신 1번 쿼리로 기록이 있는 날짜 수 조회
+        return switch (recordType) {
+            case DAILY -> recordRepository.countDistinctRecordDatesByUserIdAndDateRangeAndType(
+                userId, startDate, endDate, RecordType.DAILY);
+            case EXERCISE -> exerciseRecordQueryRepository.countDistinctRecordDatesByUserIdAndDateRange(
+                userId, startDate, endDate);
+            case HABIT -> habitRecordRepository.countCompletedHabitsByUserIdAndDateRange(
+                userId, startDate, endDate);
+            default -> 0;
+        };
     }
     
     /**
@@ -800,10 +903,158 @@ public class RecordApplicationService {
             .map(UnifiedRecordResponse::fromHabitRecord)
             .toList();
         
-        log.debug("습관 타입 사용자의 습관 기록 표시: userId={}, 표시된 기록 수={}", 
+        log.debug("습관 타입 사용자의 습관 기록 표시: userId={}, 표시된 기록 수={}",
                 user.getId().getValue(), result.size());
-        
+
         return result;
     }
-    
+
+    /**
+     * 기록/일정 생성 제한 조회
+     *
+     * @param userId 사용자 ID
+     * @param date 조회할 날짜 (기록은 recordDate 기준, 일정은 createdAt 기준)
+     * @return 생성 제한 정보 (canCreateRecord, canCreateSchedule)
+     */
+    @Transactional(readOnly = true)
+    public com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse getCreationLimits(
+            String userId, LocalDate date) {
+        log.info("생성 제한 조회: userId={}, date={}", userId, date);
+
+        UserId userIdObj = UserId.of(userId);
+
+        // 기록 생성 가능 여부 (recordDate 기준 DAILY+EXERCISE+HABIT 합계 < 2)
+        int totalRecordCount = getTotalRecordCount(userIdObj, date);
+        boolean canCreateRecord = totalRecordCount < 2;
+
+        // 일정 생성 가능 여부 (createdAt 기준 일정 개수 < 2)
+        int scheduleCount = scheduleRecordRepository.countByUserIdAndCreatedAtToday(userIdObj, date);
+        boolean canCreateSchedule = scheduleCount < 2;
+
+        log.info("생성 제한 조회 결과: canCreateRecord={}, canCreateSchedule={}",
+                canCreateRecord, canCreateSchedule);
+
+        return com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse.builder()
+                .canCreateRecord(canCreateRecord)
+                .canCreateSchedule(canCreateSchedule)
+                .build();
+    }
+
+    /**
+     * 일정의 반복 타입에 따라 캘린더에 표시할 날짜 계산
+     *
+     * @param schedule 일정
+     * @param calendarStart 캘린더 조회 시작일
+     * @param calendarEnd 캘린더 조회 종료일
+     * @return 표시할 날짜 리스트
+     */
+    private List<LocalDate> calculateScheduleDates(
+            com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord schedule,
+            LocalDate calendarStart,
+            LocalDate calendarEnd) {
+
+        List<LocalDate> dates = new ArrayList<>();
+        LocalDate scheduleStart = schedule.getStartDate();
+        LocalDate scheduleEnd = schedule.getEndDate();
+        com.recordmanagement.habitlog.domain.schedule.domain.model.RepeatType repeatType = schedule.getRepeatType();
+        LocalDate repeatEndsOn = schedule.getRepeatEndsOn();
+
+        // 반복 종료일 결정 (설정된 경우 그 값 사용, 아니면 캘린더 끝)
+        LocalDate effectiveRepeatEnd = repeatEndsOn != null ? repeatEndsOn : calendarEnd;
+
+        switch (repeatType) {
+            case NONE -> {
+                // 반복 없음: startDate ~ endDate 범위만 표시
+                LocalDate displayStart = scheduleStart.isBefore(calendarStart) ? calendarStart : scheduleStart;
+                LocalDate displayEnd = scheduleEnd.isAfter(calendarEnd) ? calendarEnd : scheduleEnd;
+
+                for (LocalDate date = displayStart; !date.isAfter(displayEnd); date = date.plusDays(1)) {
+                    dates.add(date);
+                }
+            }
+            case DAY -> {
+                // 매일 반복: startDate부터 매일, repeatEndsOn까지
+                LocalDate displayStart = scheduleStart.isBefore(calendarStart) ? calendarStart : scheduleStart;
+                LocalDate displayEnd = effectiveRepeatEnd.isAfter(calendarEnd) ? calendarEnd : effectiveRepeatEnd;
+
+                // startDate ~ endDate 범위가 1일 이상인 경우 각 날짜의 범위를 반복
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                for (LocalDate repeatDate = displayStart; !repeatDate.isAfter(displayEnd); repeatDate = repeatDate.plusDays(1)) {
+                    // 일정의 각 날짜 범위 추가 (예: 3일 일정이면 각 반복마다 3일씩)
+                    for (int i = 0; i < daysInSchedule && !repeatDate.plusDays(i).isAfter(displayEnd); i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd)) {
+                            dates.add(date);
+                        }
+                    }
+                }
+            }
+            case WEEK -> {
+                // 매주 반복: startDate부터 매주 같은 요일, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+                    repeatDate = repeatDate.plusWeeks(1); // 1주 후
+                }
+            }
+            case MONTH -> {
+                // 매월 반복: startDate부터 매월 같은 날, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+
+                    // 다음 달 같은 날로 이동 (31일이 없는 달은 스킵)
+                    try {
+                        repeatDate = repeatDate.plusMonths(1);
+                    } catch (Exception e) {
+                        // 날짜가 유효하지 않으면 (예: 1월 31일 -> 2월 31일) 해당 월은 스킵
+                        break;
+                    }
+                }
+            }
+            case YEAR -> {
+                // 매년 반복: startDate부터 매년 같은 날, repeatEndsOn까지
+                LocalDate repeatDate = scheduleStart;
+                long daysInSchedule = java.time.temporal.ChronoUnit.DAYS.between(scheduleStart, scheduleEnd) + 1;
+
+                while (!repeatDate.isAfter(effectiveRepeatEnd)) {
+                    // 일정의 각 날짜 범위 추가
+                    for (int i = 0; i < daysInSchedule; i++) {
+                        LocalDate date = repeatDate.plusDays(i);
+                        if (!date.isBefore(calendarStart) && !date.isAfter(calendarEnd) && !date.isAfter(effectiveRepeatEnd)) {
+                            dates.add(date);
+                        }
+                    }
+
+                    // 다음 해 같은 날로 이동 (2월 29일이 평년에는 없으므로 스킵)
+                    try {
+                        repeatDate = repeatDate.plusYears(1);
+                    } catch (Exception e) {
+                        // 날짜가 유효하지 않으면 (예: 2월 29일 윤년 -> 평년) 해당 년도는 스킵
+                        break;
+                    }
+                }
+            }
+        }
+
+        return dates;
+    }
+
 }

@@ -43,6 +43,11 @@ public enum NotificationType {
     GOAL_SETTING_REMINDER("목표 미설정 알림"),
 
     /**
+     * 일정 알림
+     */
+    SCHEDULE_REMINDER("일정 알림"),
+
+    /**
      * 시스템 공지사항
      */
     SYSTEM_ANNOUNCEMENT("시스템 공지사항"),

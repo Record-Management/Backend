@@ -1,0 +1,97 @@
+package com.recordmanagement.habitlog.domain.schedule.infrastructure.repository;
+
+import com.recordmanagement.habitlog.domain.schedule.domain.model.NotificationType;
+import com.recordmanagement.habitlog.domain.schedule.domain.model.RepeatType;
+import com.recordmanagement.habitlog.domain.schedule.infrastructure.entity.ScheduleRecordEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+public interface JpaScheduleRecordRepository extends JpaRepository<ScheduleRecordEntity, String> {
+
+    Optional<ScheduleRecordEntity> findByScheduleRecordIdAndUserId(String scheduleRecordId, String userId);
+
+    /**
+     * 특정 날짜 범위와 겹치는 일정 조회
+     * (일정의 startDate <= 조회 endDate AND 일정의 endDate >= 조회 startDate)
+     */
+    @Query("SELECT s FROM ScheduleRecordEntity s " +
+           "WHERE s.userId = :userId " +
+           "AND s.startDate <= :endDate " +
+           "AND s.endDate >= :startDate " +
+           "ORDER BY s.startDate ASC")
+    List<ScheduleRecordEntity> findByUserIdAndDateRange(
+            @Param("userId") String userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    void deleteByScheduleRecordIdAndUserId(String scheduleRecordId, String userId);
+
+    void deleteByUserId(String userId);
+
+    boolean existsByScheduleRecordIdAndUserId(String scheduleRecordId, String userId);
+
+    /**
+     * 알림이 필요한 일정 조회
+     * - ONE_DAY_BEFORE: startDate - 1일, 09:00
+     * - TWO_DAYS_BEFORE: startDate - 2일, 09:00
+     * - CUSTOM: startDate 당일, customHours:customMinutes
+     */
+    @Query("SELECT s FROM ScheduleRecordEntity s " +
+           "WHERE s.notificationType <> 'NONE' " +
+           "AND (" +
+           "  (s.notificationType = 'ONE_DAY_BEFORE' AND s.startDate = :oneDayAfter AND :hour = 9 AND :minute = 0) " +
+           "  OR (s.notificationType = 'TWO_DAYS_BEFORE' AND s.startDate = :twoDaysAfter AND :hour = 9 AND :minute = 0) " +
+           "  OR (s.notificationType = 'CUSTOM' AND s.startDate = :notificationDate " +
+           "      AND s.notificationCustomHours = :hour AND s.notificationCustomMinutes = :minute) " +
+           ")")
+    List<ScheduleRecordEntity> findSchedulesForNotification(
+            @Param("notificationDate") LocalDate notificationDate,
+            @Param("oneDayAfter") LocalDate oneDayAfter,
+            @Param("twoDaysAfter") LocalDate twoDaysAfter,
+            @Param("hour") int hour,
+            @Param("minute") int minute
+    );
+
+    /**
+     * 반복 일정 조회 (전체 사용자)
+     * - 반복 타입이 NONE이 아니고
+     * - 반복 종료일이 null이거나 아직 종료되지 않은 일정
+     */
+    @Query("SELECT s FROM ScheduleRecordEntity s " +
+           "WHERE s.repeatType <> 'NONE' " +
+           "AND (s.repeatEndsOn IS NULL OR s.repeatEndsOn >= :today)")
+    List<ScheduleRecordEntity> findRepeatableSchedules(@Param("today") LocalDate today);
+
+    /**
+     * 특정 사용자의 반복 일정 조회 (성능 최적화)
+     * - 반복 타입이 NONE이 아니고
+     * - 반복 종료일이 null이거나 아직 종료되지 않은 일정
+     * - DB 레벨에서 userId로 필터링 (인덱스 활용)
+     */
+    @Query("SELECT s FROM ScheduleRecordEntity s " +
+           "WHERE s.userId = :userId " +
+           "AND s.repeatType <> 'NONE' " +
+           "AND (s.repeatEndsOn IS NULL OR s.repeatEndsOn >= :today)")
+    List<ScheduleRecordEntity> findRepeatableSchedulesByUserId(
+            @Param("userId") String userId,
+            @Param("today") LocalDate today
+    );
+
+    /**
+     * 오늘 생성된 일정 개수 조회 (createdAt 기준)
+     * - createdAt의 날짜 부분만 비교
+     */
+    @Query("SELECT COUNT(s) FROM ScheduleRecordEntity s " +
+           "WHERE s.userId = :userId " +
+           "AND FUNCTION('DATE', s.createdAt) = :today")
+    int countByUserIdAndCreatedAtToday(
+            @Param("userId") String userId,
+            @Param("today") LocalDate today
+    );
+}

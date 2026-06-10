@@ -3,6 +3,7 @@ package com.recordmanagement.habitlog.domain.record.application.dto;
 import com.recordmanagement.habitlog.domain.record.domain.model.Record;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.habit.domain.model.HabitRecord;
+import com.recordmanagement.habitlog.domain.schedule.domain.model.ScheduleRecord;
 import com.recordmanagement.habitlog.domain.user.domain.model.RecordType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -45,9 +46,18 @@ public record UnifiedRecordResponse(
     LocalTime notificationTime,
     String memo,
     Boolean isCompleted,
-    
+
     // 메인 기록 여부 (EXERCISE, HABIT 기록용)
-    Boolean isMainRecord
+    Boolean isMainRecord,
+
+    // SCHEDULE 기록 필드
+    String title,
+    LocalDate startDate,
+    LocalDate endDate,
+    String color,
+    String location,
+    String scheduleNotificationType,
+    String scheduleRepeatType
 ) {
     
     /**
@@ -66,7 +76,8 @@ public record UnifiedRecordResponse(
             record.getContent(),
             null, null, null, null, null, null,
             null, null, null, null, null,
-            null // 일상 기록은 isMainRecord가 없음
+            null, // 일상 기록은 isMainRecord가 없음
+            null, null, null, null, null, null, null // SCHEDULE 필드 없음
         );
     }
     
@@ -90,7 +101,8 @@ public record UnifiedRecordResponse(
             exerciseRecord.getWeight(),
             exerciseRecord.getDailyNote(),
             null, null, null, null, null, // 운동 기록은 habit 필드가 없음
-            null // 운동 기록은 isMainRecord가 없음
+            null, // 운동 기록은 isMainRecord가 없음
+            null, null, null, null, null, null, null // SCHEDULE 필드 없음
         );
     }
     
@@ -113,7 +125,35 @@ public record UnifiedRecordResponse(
             habitRecord.getNotificationTime(),
             habitRecord.getMemo(),
             habitRecord.isCompleted(),
-            habitRecord.isMainRecord() // 습관 기록의 isMainRecord
+            habitRecord.isMainRecord(), // 습관 기록의 isMainRecord
+            null, null, null, null, null, null, null // SCHEDULE 필드 없음
+        );
+    }
+
+    /**
+     * 일정 기록을 통합 응답으로 변환
+     * recordDate는 캘린더에 표시될 특정 날짜 (startDate~endDate 범위 내)
+     */
+    public static UnifiedRecordResponse fromScheduleRecord(ScheduleRecord scheduleRecord, LocalDate displayDate) {
+        return new UnifiedRecordResponse(
+            scheduleRecord.getId().value(),
+            RecordType.SCHEDULE,
+            displayDate, // 캘린더에 표시될 날짜
+            null, // 일정은 recordTime이 없음
+            scheduleRecord.getCreatedAt(),
+            scheduleRecord.getUpdatedAt(),
+            null, // 일정은 imageUrls가 없음
+            null, null, // 일정은 emotion, content가 없음
+            null, null, null, null, null, null, // 일정은 exercise 필드가 없음
+            null, null, null, null, null, // 일정은 habit 필드가 없음
+            null, // 일정은 isMainRecord가 없음
+            scheduleRecord.getTitle(),
+            scheduleRecord.getStartDate(),
+            scheduleRecord.getEndDate(),
+            scheduleRecord.getColor() != null ? scheduleRecord.getColor().name() : null,
+            scheduleRecord.getLocation(),
+            scheduleRecord.getNotificationType() != null ? scheduleRecord.getNotificationType().name() : null,
+            scheduleRecord.getRepeatType() != null ? scheduleRecord.getRepeatType().name() : null
         );
     }
     
@@ -142,7 +182,14 @@ public record UnifiedRecordResponse(
             this.notificationTime,
             this.memo,
             this.isCompleted,
-            this.isMainRecord
+            this.isMainRecord,
+            this.title,
+            this.startDate,
+            this.endDate,
+            this.color,
+            this.location,
+            this.scheduleNotificationType,
+            this.scheduleRepeatType
         );
     }
 }

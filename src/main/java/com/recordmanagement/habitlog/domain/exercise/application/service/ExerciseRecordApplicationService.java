@@ -5,6 +5,7 @@ import com.recordmanagement.habitlog.global.config.exception.CustomException;
 import com.recordmanagement.habitlog.global.config.exception.ErrorCode;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecord;
 import com.recordmanagement.habitlog.domain.exercise.domain.model.ExerciseRecordId;
+import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordQueryRepository;
 import com.recordmanagement.habitlog.domain.exercise.domain.repository.ExerciseRecordRepository;
 import com.recordmanagement.habitlog.domain.record.domain.repository.RecordRepository;
 import com.recordmanagement.habitlog.domain.habit.domain.repository.HabitRecordRepository;
@@ -21,15 +22,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class ExerciseRecordApplicationService {
-    
+
+    // 비즈니스 상수
+    private static final int MAX_DAILY_RECORDS = 2;
+    private static final int MAX_RECORD_TYPES_PER_DAY = 2;
+
     private final ExerciseRecordRepository exerciseRecordRepository;
+    private final ExerciseRecordQueryRepository exerciseRecordQueryRepository;
     private final RecordRepository recordRepository;
     private final HabitRecordRepository habitRecordRepository;
     private final S3FileService s3FileService;
@@ -38,20 +43,22 @@ public class ExerciseRecordApplicationService {
     
     @CacheEvict(value = "calendar", allEntries = true)
     public ExerciseRecordResponse createExerciseRecord(CreateExerciseRecordCommand command) {
-        log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]", 
+        log.info("운동기록 생성 시작: userId=[{}], exerciseType=[{}], recordDate=[{}]",
                 command.userId().getValue(), command.exerciseType(), command.recordDate());
-        
-        // 하루 최대 2개 운동기록 제한 검증
-        int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
-            command.userId(), 
-            command.recordDate()
-        );
-        
-        if (exerciseRecordCount >= 2) {
+
+        // 하루 최대 2개 기록 제한 검증 (전체 타입 합쳐서)
+        int totalRecordCount = getTotalRecordCount(command.userId(), command.recordDate());
+
+        if (totalRecordCount >= MAX_DAILY_RECORDS) {
             throw new CustomException(ErrorCode.EXERCISE_RECORD_LIMIT_EXCEEDED);
         }
-        
-        // 전체 기록 종류 최대 2가지 제한 검증 (운동기록이 없는 경우에만)
+
+        // 전체 기록 종류 최대 2가지 제한 검증
+        int exerciseRecordCount = exerciseRecordRepository.countByUserIdAndRecordDate(
+            command.userId(),
+            command.recordDate()
+        );
+
         if (exerciseRecordCount == 0) {
             validateRecordTypeLimit(command.userId(), command.recordDate());
         }
@@ -137,11 +144,11 @@ public class ExerciseRecordApplicationService {
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
                 .map(this::updateImageUrls)
-                .collect(Collectors.toList());
-        
-        log.info("일일 운동기록 조회 완료: userId=[{}], date=[{}], count=[{}]", 
+                .toList();
+
+        log.info("일일 운동기록 조회 완료: userId=[{}], date=[{}], count=[{}]",
                 userIdValue, date, responseList.size());
-        
+
         return new DailyExerciseRecordResponse(date, responseList);
     }
     
@@ -157,11 +164,11 @@ public class ExerciseRecordApplicationService {
         List<ExerciseRecordResponse> responseList = exerciseRecords.stream()
                 .map(this::toResponse)
                 .map(this::updateImageUrls)
-                .collect(Collectors.toList());
-        
-        log.info("기간별 운동기록 조회 완료: userId=[{}], startDate=[{}], endDate=[{}], count=[{}]", 
+                .toList();
+
+        log.info("기간별 운동기록 조회 완료: userId=[{}], startDate=[{}], endDate=[{}], count=[{}]",
                 userIdValue, startDate, endDate, responseList.size());
-        
+
         return responseList;
     }
     
@@ -215,6 +222,17 @@ public class ExerciseRecordApplicationService {
     }
     
     /**
+     * 하루 전체 기록 개수 조회 (DAILY + EXERCISE + HABIT 합계)
+     */
+    private int getTotalRecordCount(UserId userId, LocalDate recordDate) {
+        int dailyCount = recordRepository.countByUserIdAndRecordDateAndType(userId, recordDate, RecordType.DAILY);
+        int exerciseCount = exerciseRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+        int habitCount = habitRecordRepository.countByUserIdAndRecordDate(userId, recordDate);
+
+        return dailyCount + exerciseCount + habitCount;
+    }
+
+    /**
      * 하루에 등록할 수 있는 기록 종류가 최대 2가지인지 검증
      */
     private void validateRecordTypeLimit(UserId userId, LocalDate recordDate) {
@@ -230,7 +248,7 @@ public class ExerciseRecordApplicationService {
         if (habitCount > 0) recordTypeCount++;
         
         // 이미 2가지 기록 종류가 있다면 운동기록을 추가할 수 없음
-        if (recordTypeCount >= 2) {
+        if (recordTypeCount >= MAX_RECORD_TYPES_PER_DAY) {
             throw new CustomException(ErrorCode.RECORD_TYPE_LIMIT_EXCEEDED);
         }
     }
@@ -280,24 +298,11 @@ public class ExerciseRecordApplicationService {
     /**
      * 운동 목표의 완료일수 계산
      * 하루에 운동 기록이 하나라도 있으면 완료로 간주
+     * (성능 최적화: N번 쿼리 대신 1번 DISTINCT COUNT 쿼리)
      */
-    private int calculateCompletedDaysForExercise(UserId userId, 
+    private int calculateCompletedDaysForExercise(UserId userId,
                                                  java.time.LocalDate startDate, java.time.LocalDate endDate) {
-        int completedDays = 0;
-        java.time.LocalDate currentDate = startDate;
-        
-        while (!currentDate.isAfter(endDate)) {
-            // 해당 날짜에 운동 기록이 있는지 확인
-            var exerciseRecords = exerciseRecordRepository.findByUserIdAndRecordDate(userId, currentDate);
-            boolean hasRecord = !exerciseRecords.isEmpty();
-            
-            if (hasRecord) {
-                completedDays++;
-            }
-            
-            currentDate = currentDate.plusDays(1);
-        }
-        
-        return completedDays;
+        return exerciseRecordQueryRepository.countDistinctRecordDatesByUserIdAndDateRange(
+            userId, startDate, endDate);
     }
 }

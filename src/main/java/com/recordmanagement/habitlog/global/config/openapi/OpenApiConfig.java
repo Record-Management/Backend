@@ -62,9 +62,37 @@ public class OpenApiConfig {
                 .title("HabitLog API")
                 .description("""
                         ## HabitLog 백엔드 API 명세서
-                        
+
                         습관 기록 및 관리를 위한 모바일 앱의 백엔드 API입니다.
-                        
+
+                        ### v1.5.1 업데이트 (2026.06.03)
+                        - **캘린더 일정 표시 개선**: ScheduleSummary 필드 변경으로 클라이언트 사용성 향상
+                          * 변경 전: `size` (전체 일정 개수) - 클라이언트에서 size - 1 계산 필요
+                          * 변경 후: `extraScheduleCount` (추가 일정 개수) - 서버에서 계산하여 직접 사용 가능
+                          * 일정 1개: extraScheduleCount = null
+                          * 일정 2개: extraScheduleCount = 1 ("+1" 표시)
+                          * 일정 3개: extraScheduleCount = 2 ("+2" 표시)
+                        - **반복 일정 기능 개선**: 반복 타입(DAY/WEEK/MONTH/YEAR) 일정이 정확하게 표시됩니다
+                          * 캘린더 조회: 반복 타입별 정확한 날짜 계산 (매주 → 같은 요일만, 매월 → 같은 날짜만)
+                          * 일일 기록 조회: 반복 일정이 해당 날짜에 정확히 표시됨
+                          * 알림 발송: 반복 일정이 반복될 때마다 알림 정상 발송
+                          * repeatEndsOn(반복 종료일) 정확히 적용
+
+                        ### v1.5.0 업데이트 (2026.05.16)
+                        - **일정 기록 기능**: 일정 CRUD 기능 추가 (제목, 기간, 알림, 반복, 색상)
+                        - **일정 알림 시스템**: CUSTOM 알림 타입에 분(minutes) 단위 설정 추가 (0-59)
+                        - **캘린더 API 개선**: 일정 정보를 schedules 필드로 분리 (ScheduleSummary: title, extraScheduleCount, color)
+                        - **일일 기록 API 개선**: 일정 정보를 schedules 배열로 분리 (ScheduleDetail: 상세 정보)
+                        - **기록 제한 정책 변경**: 타입별 2개 제한 → 전체 합산 2개 제한으로 통합
+                          * 변경 전: DAILY 2개, EXERCISE 2개, HABIT 2개 (각각)
+                          * 변경 후: DAILY + EXERCISE + HABIT 합쳐서 2개 (전체)
+                          * 유지: 하루 최대 2가지 타입 제한
+                        - **일정 생성 제한**: 오늘 생성할 수 있는 일정은 최대 2개 (createdAt 기준)
+                          * 일정의 startDate와 무관하게 오늘 생성한 일정 개수로 제한
+                        - **생성 제한 조회 API**: 기록/일정 생성 가능 여부 확인 API 추가
+                          * GET /api/daily-records/creation-limits?date={date}
+                          * 응답: {canCreateRecord: boolean, canCreateSchedule: boolean}
+
                         ### v1.4.4 업데이트 (2025.11.14)
                         - **목표 달성 보고서 정렬 개선**: recentHistory를 종료일 기준으로 정렬
                         - **프론트엔드 UX 향상**: 가장 최근 완료된 목표를 정확히 식별 가능
@@ -110,7 +138,7 @@ public class OpenApiConfig {
                         - **프론트엔드 Android**: [HabitLog Android App](https://github.com/Record-Management/Android)
                         - **문의사항**: Discord - jws0602
                         """)
-                .version("v1.4.4")
+                .version("v1.5.0")
                 .contact(new Contact()
                         .name("전우선 (Jeon Woo Seon)")
                         .email("wooxexn@gmail.com")
