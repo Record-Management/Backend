@@ -937,6 +937,8 @@ public class RecordApplicationService {
         return com.recordmanagement.habitlog.domain.record.application.dto.CreationLimitsResponse.builder()
                 .canCreateRecord(canCreateRecord)
                 .canCreateSchedule(canCreateSchedule)
+                .recordCount(totalRecordCount)
+                .scheduleCount(scheduleCount)
                 .build();
     }
 
